@@ -5,6 +5,13 @@
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Constants and Includes
 
+if [[ -z $SAMESHOME ]]
+then
+    >&2 echo "FATAL:  SAMESHOME not found.  It must be properly defined."
+    exit 99
+fi
+source $SAMESHOME/slib/SamesLib.bashenv
+
 readonly RustBuildName=$SameProjectName
 
 readonly RustMainSrcFs=$HERE/rustmain.rs
@@ -22,36 +29,87 @@ readonly MainBuildTreeReleaseDs=$MainBuildTreeTargetDs/release
 readonly LibSrcFs=$MainBuildTreeSrcDs/lib.rs
 readonly MainSrcFs=$MainBuildTreeSrcDs/main.rs
 
+readonly DebugBinary=$MainBuildTreeDebugDs/$RustBuildName
+readonly ReleaseBinary=$MainBuildTreeReleaseDs/$RustBuildName
+
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# Procedures
+# Internal Procedures
 
-getLibSubtype() {
-    local _optArg="$1"
+_DeployIfSuccessAndConfigured() {
+    local _BuildResult=$1
+    local _Deploy="$2"
+    local _Release="$3"
+    local _SubType="$4"
 
-    case "$_optArg" in
-    a)
-        echo amateur
-        ;;
-    d)
-        echo ndarray
-        ;;
-    n)
-        echo native
-        ;;
-    p)
-        echo polars
-        ;;
-    s)
-        echo spark
-        ;;
-    *)
-        return 1
-        ;;
-    esac
-    return 0
+    local lofs=$SamesBin/rust.main.$_SubType
+    if (( $_BuildResult == 0 ) {
+
+        if $_Deploy
+        then
+            rm -f $lofs
+            if $_Release
+            then
+                cp $ReleaseBinary           $lofs
+            else
+                cp $DebugBinary             $lofs.debugversion
+                ln -s $lofs.debugversion    $lofs
+            fi
+        fi
+    }
 }
 
-cpResultToSameBin() {
+_PickSubTypeFromMenu() {
+}
+
+_PlopRunSource() {
+    cp $ProjectLibFs $LibSrcFs
+    cp $RustMainSrcFs $MainSrcFs
+}
+
+_reCopySourceBackOut() {
+    cp $ProjectLibFs $ProjectLibFs.backup.$(date +%Y%m%d%H%M%S)
+    cp $LibSrcFs $ProjectLibFs
+}
+
+_SetEnvironment() {
+    local libSubtype="$1"
+
+    # Crates always Used:
+    cargo add regex
+
+    # Crates specific to LibSubtype:
+    case "$libSubtype" in
+    amateur)
+        return 0
+        ;;
+    native)
+        cargo add csv
+        return 0
+        ;;
+    polars)
+        cargo add csv
+        return 0
+        ;;
+    spark)
+        cargo add csv
+        return 0
+        ;;
+    esac
+    return 1
+}
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Interface Procedures
+
+dumpRustBuildEnv() {
+    iC "CargoCmd:       $CargoCmd"
+    iC "LibSubType:     $LibSubtype"
+    iC "OnlyCleanTree:  $OnlyCleanTree"
+    iC "ProjectLibFs:   $ProjectLibFs"
+    iC "Release:        $Release"
+}
+
+cpResultToSamesBin() {
     local _release=$1
 
     mkdir -p $SameBin
@@ -69,48 +127,90 @@ initTree() {
     mkdir -p $RustTree
 }
 
-plopRunSource() {
-    cp $ProjectLibFs $LibSrcFs
-    cp $RustMainSrcFs $MainSrcFs
+reInitWorkingTreeFromExhibitSource() {
+    cargo new --vcs none --lib $RustBuildName
+    cd $MainBuildTreeDs
+    _SetEnvironment
+    _PlopRunSource
+    cd $MainBuildTreeSrcDs
+}
+
+runCargoCmd() {
+    local _CargoCmd="$1"
+    local _Deploy="$2"
+    local _Release="$3"
+    local _SubType="$4"
+
+    export CargoCmdQualifiers='--lib'
+    if $Release
+    then
+        export CargoCmdQualifiers="$CargoCmdQualifiers --release"
+    fi
+    case "$_CargoCmd" in
+    build)
+        cargo build $CargoCmdQualifiers
+        _DeployIfSuccessAndConfigured $? $_Deploy $_Release $_SubType
+        ;;
+    check)
+        cargo check $CargoCmdQualifiers
+        ;;
+    clippy)
+        cargo clippy $CargoCmdQualifiers
+        ;;
+    fmt)
+        cargo fmt $CargoCmdQualifiers
+        _reCopySourceBackOut
+        ;;
+    run)
+        cargo run $CargoCmdQualifiers
+        _DeployIfSuccessAndConfigured $? $_Deploy $_Release $_SubType
+        ;;
+    esac
 }
 
 setInitOptions() {
-    local _optArg="$1"
+    local _Option="$1"
+    local _optArg="$2"
     
-    case "$_optArg" in
+    case "$_Option" in
     C)
-        OnlyCleanTree=true
-        ;;
-    D)
-        Deploy=false
-        ;;
-    F)
-        CargoCmd=fmt
-        ;;
-    K)
-        CargoCmd=check
-        ;;
-    L)
         CargoCmd=clippy
         ;;
-    P)
-        Cargocmd=build
-        Release=true
+    c)
+        CargoCmd=check
         ;;
-    R)
+    d)
+        Deploy=true
+        ;;
+    f)
+        CargoCmd=fmt
+        ;;
+    r)
         CargoCmd=run
+        ;;
+    m)
+        # TBD Menu of LibSubtype:
+        export LibSubtype=native # for now.
+        export LibSubtype=$(pickSubTypeFromMenu) # for now.
+        ;;
+    s)
+        if sl_ValidateSubtype $_optArg
+        then
+            export Subtype=$_optArg
+        else
+            _Error "Invalid Lib SubType '$_optArg'."
+            catUsage
+            return 1
+        fi
+        ;;
+    X)
+        OnlyCleanTree=true
         ;;
     ?)
         catUsage
         return 1
         ;;
     *)
-        if ! LibSubType=$(getLibSubtype)
-        then
-            _Error "Invalid option $option."
-            catUsage
-            return 1
-        fi
         ;;
     esac
 }

@@ -1,15 +1,6 @@
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # SBinLib.bashenv
 
-assureInFolder() {
-    local _plFs="$1"
-    if [[ -f $_plFs ]]
-    then
-        return 0
-    fi
-    return 1
-}
-
 echoDebug() {
     local _displayValue="$1"
     local _msgStr="$2"

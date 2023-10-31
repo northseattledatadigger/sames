@@ -5,11 +5,11 @@
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Constants and Includes
 
-source $HERE/../sbin/SBinLib.bashenv
+source $SAMESHOME/sbin/SBinLib.bashenv
 
-readonly SameProjectName=statistics1v
+readonly SamesProjectName=statistics1v
 
-readonly SameBin=$HERE/bin
+readonly SamesBin=$SAMESHOME/bin
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of ProjectSpecs.bashenv

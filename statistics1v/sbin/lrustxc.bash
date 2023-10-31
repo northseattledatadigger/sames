@@ -6,9 +6,12 @@
 # Constants and Includes
 
 readonly HERE=$PWD
+readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+readonly SAMESHOME="$( cd $SCRIPT_DIR/../.. &> /dev/null && pwd )"
+readonly SAMESPROJECTHOME="$( cd $SCRIPT_DIR/.. &> /dev/null && pwd )"
 
-source $HERE/sbin/ProjectSpecs.bashenv
-source $HERE/../sbin/RustXCLib.bashenv
+source $SAMESPROJECTHOME/ProjectSpecs.bashenv
+source $SAMESHOME/slib/RustXCLib.bashenv
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Procedures
@@ -16,6 +19,7 @@ source $HERE/../sbin/RustXCLib.bashenv
 catUsage() {
     cat <<EOU
 USAGE:  $0 <options>
+    -h This help text, without errors nor error exit.
 EOU
 }
 
@@ -45,6 +49,8 @@ setEnvironment() {
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Init
 
+CheckSetupOnly=build
+
 export CargoCmd=build
 export LibSubtype=native
 export Deploy=true
@@ -59,9 +65,9 @@ OptChars="$PrimaryOptChars$SubProjectOptChars"
 
 if (( $# > 0 ))
 then
-    while getopts "chNnprs" option
+    while getopts "?CcDFhKLPRNnprs" option
     do
-        if setInitOptions "$option"
+        if setInitOptions "$option" "$OPTARG"
         then
             continue
         else
@@ -71,11 +77,17 @@ then
 fi
 
 readonly ProjectLibFs=$HERE/$SameProjectName.$LibSubtype.rs
+if $CheckSetupOnly
+then
+    dumpRustBuildEnv
+    exit 0
+fi
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Main
 
-if assureInFolder "$ProjectLibFs"
+# Needs to be completely revamped: TBDxc
+if [[ -f "$ProjectLibFs" ]]
 then
     initTree
     cd $RustTree
@@ -83,19 +95,8 @@ then
     then
         exit 0
     fi
-    cargo new --vcs none --lib $RustBuildName
-    cd $MainBuildTreeDs
-    setEnvironment
-    plopRunSource
-    cd $MainBuildTreeSrcDs
-    if $Release
-    then
-        cargo build --lib --release
-#        cpResultToSameBin true
-    else
-        cargo build --lib
-#        cpResultToSameBin
-    fi
+    reInitWorkingTreeFromExhibitSource
+    runCargoCmd $CargoCmd $Release
     cd $HERE
 fi
 

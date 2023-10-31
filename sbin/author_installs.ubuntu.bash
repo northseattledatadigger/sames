@@ -100,6 +100,7 @@ fi
 
 # And these are what I have recently used.  You may find better combinations
 # for yourself:
+apt-get install bats
 apt-get install build-essential
 apt-get install golang
 # Note Julia does not presently have an apt package.  Perhaps make procedure.

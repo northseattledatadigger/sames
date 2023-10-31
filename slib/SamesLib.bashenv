@@ -1,0 +1,35 @@
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# SamesLib.bashenv
+
+sl_ValidateSubtype() {
+    local _subType="$1"
+
+    case "$_subType" in
+    amateur)
+        return 0
+        ;;
+    ndarray)
+        return 0
+        ;;
+    native)
+        return 0
+        ;;
+    phony)
+        return 1
+        ;;
+    polars)
+        return 0
+        ;;
+    spark)
+        return 0
+        ;;
+    *)
+        return 1
+        ;;
+    esac
+    echoError 99 "Should never reach this location in $0."
+    return 1
+}
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# End of SamesLib.bashenv

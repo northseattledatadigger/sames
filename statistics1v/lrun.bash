@@ -5,12 +5,13 @@
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Constants and Includes
 
-source $HOME/sbin/SBinLib.bashenv
-
 readonly HERE=$PWD
+readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+readonly SAMESHOME="$( cd $SCRIPT_DIR/../.. &> /dev/null && pwd )"
+readonly SAMESPROJECTHOME="$( cd $SCRIPT_DIR/.. &> /dev/null && pwd )"
 
-readonly SameBin=$HERE/bin
-readonly SameBin=$HERE/lib
+source $SAMESHOME/slib/SamesLib.bashenv
+source $SAMESPROJECTHOME/ProjectSpecs.bashenv
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Procedures
@@ -21,89 +22,69 @@ USAGE:  $0 <options>
 EOU
 }
 
-validateSecondaryVariationInBin() {
-    local _svO="$1"
-
-    if [[ -f $SameBin/$ProjectName.$_svO ]]
-    then
+listLanguageOptions() {
 }
 
-validateSecondaryVariationSrc() {
-    local _svO="$1"
-
-    if [[ -f $HERE/$ProjectName.$_svO ]]
-        
-    echoError 9 "No '$ProjectName.$OPTARG.$Rn' is not a valid secondary variation."
+listSubTypeOptions() {
+    local _implLang="$1"
+}
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Init
 
-PrimaryExtension=rb
-RunSecondaryVariation=native
+RunMainApp=true
+IntegrationTests=false
+LanguageImplementation=ruby
+Subtype=native
+UnitTests=false
 
 if (( $# > 0 ))
 then
-    while getopts "chNnprs" option
+    while getopts "Bhil:s:u" option
     do
         case "${option}" in
-        c)
-            PrimaryExtension=c
-            ;;
-        b)
-            PrimaryExtension=cpp
-            ;;
-        f)
-            PrimaryExtension=for
-            ;;
-        g)
-            PrimaryExtension=go
+        B)
+            RunMainApp=false
             ;;
         h)
             catUsage
             exit 0
             ;;
-        j)
-            PrimaryExtension=jl
+        i)
+            IntegrationTests=true
             ;;
-        n)
-            PrimaryExtension=js
+        l)
+            if sl_ValidateLanguageImplementation "$OPTARG"
+            then
+                export LanguageImplementation="$OPTARG"
+            else
+                echoError 1 "Invalid Lib Implementation Language Id '$OPTARG'."
+                catUsage
+                return 1
+            fi
             ;;
-        p)
-            PrimaryExtension=pl
-            ;;
-        r)
-            PrimaryExtension=rb
             ;;
         s)
-            PrimaryExtension=rs
+            if sl_ValidateSubtype $_optArg
+            then
+                export Subtype=$_optArg
+            else
+                echoError 1 "Invalid Lib SubType '$_optArg'."
+                catUsage
+                return 1
+            fi
             ;;
-        v)
-            RunSecondaryVariation="$OPTARG"
-            ;;
-        y)
-            PrimaryExtension=py
+        u)
+            UnitTests=true
             ;;
         *)
-            _Error "Invalid option $option."
+            echoError 2 "Invalid option $option."
             catUsage
             exit 1
             ;;
         esac
     done
-
 fi
-
-if validateSecondaryVariation $OPTARG
-then
-    RunSecondaryVariation="$OPTARG"
-else
-    echoError 9 "'$OPTARG' is not a valid secondary variation."
-    catUsage
-    exit 0
-    ;;
-fi
-
-readonly ProjectLibFs=$HERE/$SameFilename.$LibSubtype.rs
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Main

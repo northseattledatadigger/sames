@@ -1,0 +1,8 @@
+    0.  Reorg lrustxc.bash
+    1.  Get all four languages working over here.
+    2.  Begin making usage of names regular, probably allying most with the rust amateur code.
+    3.  Get some tests started with the rust code.
+    4.  Finish adding in all the features, adding and testing tests along the way.
+    5.  Add in central scripts, probably ONLY in each project, but as much the same as possible, avoiding needless boilerplate.
+    6.  Add to docs, improving explanation, and clarifying usage to recommend ONLY runs within each project folder.
+    7.  review this plan.
