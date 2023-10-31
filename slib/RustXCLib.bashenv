@@ -1,0 +1,119 @@
+#!/bin/bash
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# RustXCLib.bash
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Constants and Includes
+
+readonly RustBuildName=$SameProjectName
+
+readonly RustMainSrcFs=$HERE/rustmain.rs
+readonly RustTree=$HERE/rusttree
+
+readonly MainBuildTreeDs=$RustTree/$RustBuildName
+
+readonly MainBuildTreeSrcDs=$MainBuildTreeDs/src
+readonly MainBuildTreeTargetDs=$MainBuildTreeDs/target
+readonly MainBuildTreeTestsDs=$MainBuildTreeDs/tests
+
+readonly MainBuildTreeDebugDs=$MainBuildTreeTargetDs/debug
+readonly MainBuildTreeReleaseDs=$MainBuildTreeTargetDs/release
+
+readonly LibSrcFs=$MainBuildTreeSrcDs/lib.rs
+readonly MainSrcFs=$MainBuildTreeSrcDs/main.rs
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Procedures
+
+getLibSubtype() {
+    local _optArg="$1"
+
+    case "$_optArg" in
+    a)
+        echo amateur
+        ;;
+    d)
+        echo ndarray
+        ;;
+    n)
+        echo native
+        ;;
+    p)
+        echo polars
+        ;;
+    s)
+        echo spark
+        ;;
+    *)
+        return 1
+        ;;
+    esac
+    return 0
+}
+
+cpResultToSameBin() {
+    local _release=$1
+
+    mkdir -p $SameBin
+    if [[ -n $_release ]]
+    then
+        cp $MainBuildTreeTargetDs/release/$RustBuildName  $SameBin
+    else
+        cp $MainBuildTreeTargetDs/debug/$RustBuildName    $SameBin
+    fi
+}
+
+initTree() {
+    # CAUTION:  Dangerous Routine Must Be Gentle Here.
+    rm -rf $RustTree
+    mkdir -p $RustTree
+}
+
+plopRunSource() {
+    cp $ProjectLibFs $LibSrcFs
+    cp $RustMainSrcFs $MainSrcFs
+}
+
+setInitOptions() {
+    local _optArg="$1"
+    
+    case "$_optArg" in
+    C)
+        OnlyCleanTree=true
+        ;;
+    D)
+        Deploy=false
+        ;;
+    F)
+        CargoCmd=fmt
+        ;;
+    K)
+        CargoCmd=check
+        ;;
+    L)
+        CargoCmd=clippy
+        ;;
+    P)
+        Cargocmd=build
+        Release=true
+        ;;
+    R)
+        CargoCmd=run
+        ;;
+    ?)
+        catUsage
+        return 1
+        ;;
+    *)
+        if ! LibSubType=$(getLibSubtype)
+        then
+            _Error "Invalid option $option."
+            catUsage
+            return 1
+        fi
+        ;;
+    esac
+}
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# End of RustXCLib.bash

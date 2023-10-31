@@ -1,0 +1,67 @@
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# SBinLib.bashenv
+
+assureInFolder() {
+    local _plFs="$1"
+    if [[ -f $_plFs ]]
+    then
+        return 0
+    fi
+    return 1
+}
+
+echoDebug() {
+    local _displayValue="$1"
+    local _msgStr="$2"
+    local msg="Debug[$_displayValue]:  $_msgStr | $(date)"
+    >&2 echo $msg
+}
+
+echoError() {
+    local _resultNo="$1"
+    local _msgStr="$2"
+    local msg="ERROR[$_resultNo]:  $_msgStr | $(date)"
+    >&2 echo $msg
+}
+
+echoFatal() {
+    local _resultNo="$1"
+    local _msgStr="$2"
+    local msg="FATAL[$_resultNo]:  $_msgStr | $(date)"
+    >&2 echo $msg
+}
+
+echoInfo() {
+    local _msgStr="$1"
+    local msg="INFO:  $_msgStr | $(date)"
+    >&2 echo $msg
+}
+
+echoWarning() {
+    local _resultNo="$1"
+    local _msgStr="$2"
+    local msg="WARNING[$_resultNo]:  $_msgStr | $(date)"
+    >&2 echo $msg
+}
+
+iC() {
+    local _msgStr="$1"
+    local msg="Trace:  $_msgStr | $(date)"
+    >&2 echo $msg
+}
+
+trM() {
+    local _traceNo="$1"
+    local _msgStr="$2"
+    local msg="Trace[$_traceNo]:  $_msgStr | $(date)"
+    >&2 echo $msg
+}
+
+trS() {
+    local _msgStr="$1"
+    local msg="tr:$_msgStr"
+    >&2 echo $msg
+}
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# End of SBinLib.bashenv
