@@ -1,0 +1,30 @@
+\documentclass{article}
+\usepackage{xparse}
+
+\ExplSyntaxOn
+\NewDocumentCommand{\parametertable}{mmm}
+ {
+  \seq_set_split:Nnn \l_ella_parametertable_parameters_seq { \\ } { #3 }
+  \begin{tabular}{|l|p{1in}|p{1in}|}
+  \hline
+  Name & \multicolumn{2}{l|}{#1} \\
+  \hline
+  Type & \multicolumn{2}{l|}{#2} \\
+  \hline
+  Parameters & 
+  \seq_use:Nn \l_ella_parametertable_parameters_seq { \\ \cline{2-3} & }
+  \\
+  \hline
+  \end{tabular}
+ }
+\ExplSyntaxOff
+
+\begin{document}
+
+\parametertable{Alice}{Client}{
+  Param1 & Value \\
+  Param2 & Value \\
+  Param3 & Value
+}
+
+\end{document}

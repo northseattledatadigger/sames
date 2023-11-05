@@ -1,0 +1,54 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{caption}
+
+\usepackage{pgfplotstable}
+\pgfplotstableset{
+  empty cells with={---},
+  every head row/.style={before row=\toprule,after row=\midrule},
+  every last row/.style={after row=\bottomrule}
+}
+\pgfplotsset{compat=1.9}
+
+\usepackage{array,booktabs}
+
+\usepackage{filecontents}
+\begin{filecontents*}{data.txt}
+X Y
+0 0
+1 -40.0975460694
+2 -46.1181459826
+3 -49.6399711638
+4 -52.1387458959
+5 -54.0769461561
+6 -55.660571077
+7 -56.9995068696
+8 -58.1593458092
+9 -59.1823962581
+10 -60.0975460694
+\end{filecontents*}
+
+\begin{document}
+  \begin{table}[!ht]
+    \caption{Data table}
+    \label{tab:data}
+    \centering
+    \pgfplotstabletypeset[
+      sci zerofill,
+      precision=3,
+      columns/X/.style={column type=r},
+      columns/Y/.style={dec sep align}
+    ]{data.txt}
+  \end{table}
+
+  \begin{figure}[!ht]
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}
+        \addplot table {data.txt};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Data plot}
+    \label{fig:data}
+  \end{figure}
+\end{document}

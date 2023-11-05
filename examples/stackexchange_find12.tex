@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{pgfplots}
+\begin{document}
+\begin{tikzpicture}
+\begin{axis}[ybar interval, ymax=55,ymin=0, minor y tick num = 3]
+\addplot coordinates { (0, 5) (5, 35) (10, 50) (15, 30) (20, 15) (25, 0) };
+\end{axis}
+\end{tikzpicture}
+\end{document}

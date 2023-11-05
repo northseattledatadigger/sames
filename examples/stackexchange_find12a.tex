@@ -1,0 +1,18 @@
+\documentclass[border=3mm,
+               tikz,
+               preview
+               ]{standalone}
+\usepackage{pgfplots}
+
+    \begin{document}
+%---------------------------------------------------------------%
+\begin{tikzpicture}
+\begin{axis}[
+    ymin=0, ymax=55,
+    minor y tick num = 3,
+    area style,
+    ]
+\addplot+[ybar interval,mark=no] plot coordinates { (0, 5) (5, 35) (10, 50) (15, 30) (20, 15) (25, 0) };
+\end{axis}
+\end{tikzpicture}
+    \end{document}

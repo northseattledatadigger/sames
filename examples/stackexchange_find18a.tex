@@ -1,0 +1,22 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{multirow}
+\newcommand{\mc}[2]{\multicolumn{#1}{c}{#2}}
+
+\begin{document}
+
+\begin{table}[]
+\centering
+\caption{My table}
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+Name & \mc{1}{Alice}  &\\ \hline
+Type & \mc{1}{Client} &\\ \hline
+\multirow{3}{*}{Parameters} & Param1 & Value \\ \cline{2-3} 
+ & Param2 & Value \\ \cline{2-3} 
+ & Param3 & Value \\ \hline
+\end{tabular}
+\end{table}
+
+
+
+\end{document}

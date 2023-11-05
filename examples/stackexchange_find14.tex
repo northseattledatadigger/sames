@@ -1,0 +1,52 @@
+\documentclass[border=4mm]{standalone}  
+\usepackage{filecontents}
+% the filecontents environment saves its content to the specified file (data.dat)
+\begin{filecontents*}{data.dat}
+x  y
+347  237
+408  267
+380  257
+288  200
+192  125
+107  54
+5092  2554
+251  126
+6984  3974
+5614  3271
+14033  7041
+4522  2461
+172  110
+471  236
+1085  545
+301  151
+483  299
+490  299
+501  305
+101  64
+253  127
+819  469
+431  279
+\end{filecontents*}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.14}
+\begin{document} 
+\begin{tikzpicture}
+\begin{axis}[
+    width=12cm,
+    height=6cm,
+    ybar,
+    bar width=0.7,
+    ymin=0,
+    ytick={0,1000,2000,3000,4000,5000,6000,7000,8000},
+    xticklabel style={rotate=45,font=\footnotesize},
+    xticklabels from table={data.dat}{x}, % use the x column from the file for ticklabels
+    xtick=data, % add a tick at every data point,
+    enlarge x limits=0.03, % adjust space between axis edge and plot edge
+    xlabel=Number of something else,
+    ylabel=Number of something
+    ]
+    \addplot table[x expr=\coordindex,y=y] {data.dat}; % \coordindex runs from 0 to N (number of datapoints in table/file
+\end{axis}
+\end{tikzpicture}
+\end{document}
+

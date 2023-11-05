@@ -1,0 +1,27 @@
+Year,Category,Type,Physical Activity (%)
+2013,All ,Total,62.6
+2013,Sex,Male,62.8
+2013,Sex,Female,62.4
+2013,Age,18 - 24,71
+2013,Age,25 - 34,59.6
+2013,Age,35 - 50,61.3
+2013,Age,51 - 64,60.7
+2013,Age,65+,64.4
+2013,Ethnicity,White,69.2
+2013,Ethnicity,Hispanic,56.1
+2013,Ethnicity,Black,55
+2013,Ethnicity,Asian/Other,51
+2013,Education,Less than High School,50.2
+2013,Education,High School Graduate,61.8
+2013,Education,Some College,63.7
+2013,Education,College Graduate,70.3
+2013,Income,"Less than $15,000",59.2
+2013,Income,"$15,000 - 24,999",59.1
+2013,Income,"$25,000 - 34,999",60.1
+2013,Income,"$35,000 - 49,999",64.9
+2013,Income,"$50,000+",70.1
+2013,Overweight Status,Overweight/Obese,60.7
+2013,Overweight Status,Not Overweight,68.7
+2013,"SNAP/CalFresh Status, % FPL",Participant,61.6
+2013,"SNAP/CalFresh Status, % FPL","Likely Eligible, ≤ 130%",52.1
+2013,"SNAP/CalFresh Status, % FPL","Not Eligible, > 185% ",69.6

@@ -1,0 +1,40 @@
+\documentclass{article}
+
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{colortbl}
+
+\pgfplotstableset{% global config, for example in the preamble
+  every head row/.style={before row=\toprule,after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  fixed,precision=2,
+}
+
+\begin{document}
+
+\pgfplotstabletypeset[
+  columns/freq/.style={column name=Frequency (Hz)},
+  columns/conc/.style={column name=Concrete},
+  columns/lino/.style={column name=Linoleum},
+]{2014-01-01.txt}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    xlabel={Frequency (Hz)},
+    ylabel=Absorption Coefficient,
+    legend pos=south east,
+    legend entries={Concrete,Linoleum},
+    ]
+  \addplot table [x=freq,y=conc] {2014-01-01.txt};
+  \addplot table [x=freq,y=lino] {2014-01-01.txt};
+\end{axis}
+\end{tikzpicture}
+\end{figure}
+
+\end{document}
+
+

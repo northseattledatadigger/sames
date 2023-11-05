@@ -10,7 +10,6 @@ readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pw
 readonly SAMESHOME="$( cd $SCRIPT_DIR/../.. &> /dev/null && pwd )"
 readonly SAMESPROJECTHOME="$( cd $SCRIPT_DIR/.. &> /dev/null && pwd )"
 
-source $SAMESHOME/slib/SamesLib.bashenv
 source $SAMESPROJECTHOME/ProjectSpecs.bashenv
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -60,7 +59,7 @@ then
             else
                 echoError 1 "Invalid Lib Implementation Language Id '$OPTARG'."
                 catUsage
-                return 1
+                exit 1
             fi
             ;;
             ;;
@@ -71,7 +70,7 @@ then
             else
                 echoError 1 "Invalid Lib SubType '$_optArg'."
                 catUsage
-                return 1
+                exit 1
             fi
             ;;
         u)
@@ -80,7 +79,7 @@ then
         *)
             echoError 2 "Invalid option $option."
             catUsage
-            exit 1
+            exit 2
             ;;
         esac
     done
@@ -89,5 +88,6 @@ fi
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Main
 
+    
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of lrun.bash

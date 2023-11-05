@@ -1,0 +1,14 @@
+\documentclass[border=5mm]{standalone}
+\usepackage{pgf-pie}
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd{\pgfpie@slice}% this is the macro we're patching
+{\scalefont{#3}\shortstack{#4\\\beforenumber#3\afternumber}}% find this
+{\scalefont{#3}#4}% and replace with this
+{}{}
+\makeatother
+\begin{document}
+\begin{tikzpicture}
+    \pie[text=inside]{30/$\omega$, 70/$1-\omega$}
+\end{tikzpicture}
+\end{document}

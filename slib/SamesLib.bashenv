@@ -1,6 +1,105 @@
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # SamesLib.bashenv
 
+if [[ -z "$SAMESHOME" ]]
+then
+    >&2 echo "FATAL:  SAMESHOME is required, but was missing."
+    exit 99
+fi
+source $SAMESHOME/slib/SBinLib.bashenv
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Constants
+
+readonly StdLibName=SamesLib
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Internal Procedures
+
+_SetProjectConstants() {
+    if [[ -n $SamesProjectName ]]
+    then
+        readonly SamesProjectDs=$SAMESHOME/$SamesProjectName
+    else
+        echoFatal 111 "SamesProjectName NOT specified.  Required!"
+        exit 111
+    fi
+    if [[ -f $SamesProjectDs ]]
+    then
+        readonly SamesProjectBinDs=$SamesProjectDs/bin
+        readonly SamesProjectExtrasDs=$SamesProjectDs/extras
+        readonly SamesProjectNotesDs=$SamesProjectDs/notes
+        readonly SamesProjectSBinDs=$SamesProjectDs/sbin
+        readonly SamesProjectTestsDs=$SamesProjectDs/tests
+    else
+        echoFatal 112 "'$SamesProjectDs' NOT found.  Required!"
+        exit 112
+    fi
+}
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Interface Procedures
+
+sl_ListSubtypeFilesAvailable() {
+    local _extStr="$1"
+
+    ls $SAMESHOME/$StdLibName.*.$_extStr | cat
+}
+
+sl_SetConstants() {
+    local _MustHaveProjectName="$1"
+
+    if [[ -z $SAMESHOME ]]
+    then
+        echoFatal 99 "SAMESHOME Not defined."
+        exit 99
+    elif [[ -f $SAMESHOME ]]
+    then
+        readonly SamesNotesDs=$SAMESHOME/notes
+        readonly SamesSBinDs=$SAMESHOME/sbin
+        readonly SamesSLibDs=$SAMESHOME/slib
+        readonly SamesTestDataDs=$SAMESHOME/testdata
+        readonly SamesTestsDs=$SAMESHOME/tests
+
+    else
+        echoFatal 101 "SAMESHOME specified '$SAMESHOME' Not Found!"
+        exit 101
+    fi
+    if $_MustHaveProjectName
+    then
+        _SetProjectConstants
+    fi
+}
+
+sl_ValidateLanguageImplementation() {
+    local _languageId="$1"
+
+    case "$_languageId" in
+    c)
+        return 1
+        ;;
+    c++)
+        return 1
+        ;;
+    go)
+        return 1
+        ;;
+    perl)
+        return 1
+        ;;
+    python3)
+        return 1
+        ;;
+    ruby)
+        return 0
+        ;;
+    rust)
+        return 1
+        ;;
+    esac
+    return 1
+}
+
 sl_ValidateSubtype() {
     local _subType="$1"
 

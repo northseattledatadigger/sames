@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage[left=1in,right=1in,top=1in,bottom=1in]{geometry} % page margins
+\usepackage{graphicx} % \multicolumn and \includegraphics
+\usepackage{booktabs} % \toprule
+\usepackage{subcaption} % subcaption
+\usepackage{siunitx} % S column type (align by decimal)
+\sisetup{parse-numbers=false} % allow parentheses in number column
+
+\begin{document}
+\setlength{\tabcolsep}{0.2em} % reduce separation between table columns
+
+\begin{figure}
+\caption{Linear Regression of Wellbeing on EF.} \label{calculatingEWEB}
+\begin{minipage}{0.55\textwidth}
+        \begin{tabular}{p{4cm} S
+ S} % p{4cm} makes the table narrower; S treats entries as numbers (i.e. math mode) and centres on decimal point
+        \toprule
+        Ecological Footprint & 0.139^{\mathit{***}} & 0.123^{\mathit{***}} \\
+        & (0.035) & (0.035) \\
+        Income (linear) && -0.072 \\
+        &&(0.122) \\
+        Income (quadratic) && 0.016 \\
+        &&(0.013) \\
+        Income (cubic) &&-0.000 \\
+        && (0.000) \\
+        Constant & 5.561^{\mathit{***}} &5.364^{\mathit{***}} \\
+        & (0.265) & (0.337) \\
+        \midrule
+        R-squared & 0.041 & 0.084  \\
+        \midrule
+        \multicolumn{3}{l}{*** p$ < $0.01, ** p$ < $0.05, * p$ < $0.1}\\ 
+        % ensures the p-value row can straddle multiple columns 
+        \end{tabular}
+\end{minipage}
+\hfill
+\begin{minipage}{0.45\textwidth}
+    \subcaption*{Distribution of EWEB.}
+    \label{fig:EWEBdis}
+    \includegraphics[width=\textwidth]{"<histogram>"}
+\end{minipage}
+\end{figure}
+
+\end{document}

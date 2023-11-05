@@ -1,0 +1,210 @@
+﻿X,Y,OBJECTID,TRAILSYSID,SITENAME,SITEADDR,TOWNNO,PARKING,TRAILRPKNG,RESTROOM,FOOD,WATER,OPENWHEN,PARKINGNUM
+1132443.531,810721.151999995,1,3,Cook Hill Rd.,Cook Hill Rd.,71,Non Parking,False,False,False,False,Year-round,0
+1136254.985,815182.013999999,2,3,Village Hill Rd.,Village Hill Rd.,71,Non Parking,False,False,False,False,Year-round,0
+1138744.683,819279.682999998,3,3,Kingsley Rd.,Kingsley Rd.,71,Non Parking,False,False,False,False,Year-round,0
+1131635.612,806770.863000005,4,3,Highway 87,Highway 87,30,Non Parking,False,False,False,False,Year-round,0
+1112170.46600001,794042.549999997,5,3,Rt. 207,Rt. 207,67,Roadside Parking,False,False,False,False,Year-round,3
+1111024.293,791045.577000007,6,3,Hebron Rt. 85,Rt. 85,64,Parking Lot,True,False,False,False,Year-round,20
+1111256.597,791831.753999993,7,3,North Pond Rd.,North Pond Rd.,64,Non Parking,False,False,False,False,Year-round,0
+1122109.56299999,798805.355000004,8,3,Leonard Bridge Rd.,Leonard Bridge Rd.,71,Non Parking,False,False,False,False,Year-round,0
+1125645.55599999,802592.384000003,9,3,Chesboro Bridge Rd.,Chesboro Bridge Rd.,30,Non Parking,False,False,False,False,Year-round,0
+1110996.29000001,786624.064999998,10,201,Rt. 85,Rt. 85,67,Non Parking,False,False,False,False,Year-round,0
+1115637.764,772726.730000004,11,201,Rt. 16,Rt. 16,28,Parking Lot,True,False,False,False,Year-round,10
+1106713.45999999,787047.317000002,12,3,Old Colchester Rd.,Old Colchester Rd.,67,Parking Lot,False,False,False,False,Year-round,2
+1104882.38600001,784966.039000005,13,3,Grayville Rd.,Grayville Rd.,67,Roadside Parking,False,False,False,False,Year-round,2
+1098048.192,776543.344999999,14,3,Old Hartford Rd.,Old Hartford Rd.,28,Roadside Parking,False,False,False,False,Year-round,2
+1097148.794,775958.753999993,15,3,Rt. 2 Commuter Lot,Rt. 2,28,Parking Lot,False,False,False,False,Year-round,10
+1095654.389,773855.106000006,16,3,Rt. 149,Rt. 149,28,Roadside Parking,False,False,False,False,Year-round,3
+1093589.62899999,773364.378000006,17,3,River Rd.,River Rd.,28,Roadside Parking,False,False,False,False,Year-round,2
+1083895.516,766831.621999994,18,3,Bull Hill Rd.,Bull Hill Rd.,28,Parking Lot,False,False,False,False,Year-round,15
+1070530.267,771602.464000002,19,3,Smith St.,Smith St.,42,Parking Lot,True,False,False,False,Year-round,10
+1147834.639,820335.266000003,20,3,Willimantic,Jackson St.,163,Non Parking,False,False,False,False,Year-round,0
+1171700.745,835220.272,21,3,Chewink Rd.,Chewink Rd.,24,Roadside Parking,False,False,False,False,Year-round,2
+1182028.89300001,844072.020999998,22,3,Goodwin Conservation Center,Potter Rd.,63,Parking Lot,False,False,False,False,Year-round,10
+1208881.245,876410.557999998,23,3,Babbit Hill Rd.,Babbit Hill Rd.,112,Non Parking,False,False,False,False,Year-round,0
+1206488.98899999,876047.452999994,24,3,Covell Rd.,Covell Rd.,112,Non Parking,False,False,False,False,Year-round,0
+1200954.39,865587.746999994,25,3,Brookyln Rd.,Brookyln Rd.,112,Non Parking,False,False,False,False,Year-round,0
+1199149.153,865314.836999997,26,3,Rt. 97,Rt. 97,112,Non Parking,False,False,False,False,Year-round,0
+1193138.92,862850.958000004,27,3,Lewis Rd.,Lewis Rd.,63,Non Parking,False,False,False,False,Year-round,0
+1189091.618,861207.266000003,28,3,Kenyon Rd.,Kenyon Rd.,63,Non Parking,False,False,False,False,Year-round,0
+1186410.51199999,860101.672000006,29,3,Griffin Rd.,Griffin Rd.,63,Non Parking,False,False,False,False,Year-round,0
+1185357.671,855656.824000001,30,3,Station Rd.,Station Rd.,63,Non Parking,False,False,False,False,Year-round,0
+1179743.596,852394.044,31,3,Estabrook Rd.,Estabrook Rd.,630,Non Parking,False,False,False,False,Year-round,0
+1180950.742,844813.402999997,32,3,Potter Rd.,Potter Rd.,63,Non Parking,False,False,False,False,Year-round,0
+1178856.353,840290.151999995,33,3,Brook Rd.,Brook Rd.,63,Non Parking,False,False,False,False,Year-round,0
+1164669.54700001,837309.989999995,34,3,Two Sisters Trailhead,Two Sisters Trailhead,63,Non Parking,False,False,False,False,Year-round,0
+1162066.117,833121.641000003,35,3,Rt. 203,Rt. 203,163,Roadside Parking,False,False,False,False,Year-round,2
+1154290.58,828019.464000002,36,3,Tuckie Rd.,Tuckie Rd.,163,Non Parking,False,False,False,False,Year-round,0
+1153892.418,827332.540999994,37,3,Rt. 66,Rt. 66,163,Non Parking,False,False,False,False,Year-round,0
+1150294.573,823169.630999997,38,3,Rt. 195,Rt. 195,163,Non Parking,False,False,False,False,Year-round,0
+1148460.41500001,820788.322999999,39,3,Milk St.,Milk St.,163,Non Parking,False,False,False,False,Year-round,0
+1214911.05400001,877888.679000005,40,3,Rt. 44,Rt. 44,112,Roadside Parking,False,False,False,False,Year-round,5
+1218011.176,880412.886000007,41,3,Needles Eye Road,Needles Eye Road,112,Non Parking,False,False,False,False,Year-round,0
+1220028.18799999,881527.364999995,42,3,Wrights Crossing Rd.,Wrights Crossing Rd.,112,Non Parking,False,False,False,False,Year-round,0
+1227640.126,885930.128999993,43,3,River Rd.,River Rd.,112,Non Parking,False,False,False,False,Year-round,0
+1228545.713,887470.321999997,44,3,Town Farm Rd.,Town Farm Rd.,112,Non Parking,False,False,False,False,Year-round,0
+1228636.307,892955.120000005,45,203,Simonzi Park,Kennedy Dr.,116,Parking Lot,False,False,False,False,Year-round,15
+1228166.57099999,894403.925999999,46,203,Putnam River Trail,Kennedy Dr.,116,Parking Lot,False,False,False,False,Year-round,20
+1228421.515,894999.204999998,47,203,Putnam River Trail,Kennedy Dr.,116,Parking Lot,False,False,False,False,Year-round,15
+1240344.338,917826.150000006,48,3,Sunset Hill Rd.,Sunset Hill Rd.,141,Roadside Parking,False,False,False,False,Year-round,2
+1235314.234,907142.486000001,49,3,Hwy 193,Hwy 193,141,Non Parking,False,False,False,False,Year-round,0
+1242893.25399999,920757.809,50,3,Lowell Davis Rd.,Lowell Davis Rd.,141,Non Parking,False,False,False,False,Year-round,0
+1252741.29799999,928104.659999996,51,3,Sand Dam Rd.,Sand Dam Rd.,141,Non Parking,False,False,False,False,Year-round,0
+1255774.90800001,929753.773000002,52,3,Thompson Rd.,Thompson Rd.,141,Roadside Parking,False,False,False,False,Year-round,2
+1111324.258,784685.702000007,53,201,Crouch Rd.,Crouch Rd.,67,Non Parking,False,False,False,False,Year-round,0
+1113917.652,777646.630999997,54,201,Old Amston Rd.,Old Amston Rd.,28,Non Parking,False,False,False,False,Year-round,0
+1078361.161,768483.753999993,55,3,Daly Rd.,Daly Rd.,42,Non Parking,False,False,False,False,Year-round,0
+1088755.392,772794.769999996,56,3,Salmon River State Forest,River Rd.,28,Parking Lot,True,False,False,False,Year-round,30
+1046775.36499999,767101.976999998,57,3,Breezy Corners Rd.,Breezy Corners Rd.,113,Non Parking,False,False,False,False,Year-round,0
+1051019.46600001,766556.640000001,58,3,E. Hampton Rd.,E. Hampton Rd.,113,Non Parking,False,False,False,False,Year-round,0
+1052699.046,766916.522,59,3,Depot Hill Rd.,Depot Hill Rd.,42,Non Parking,False,False,False,False,Year-round,0
+1060360.88699999,766470.106000006,60,3,Alden's Crossing Rd.,Alden's Crossing Rd.,42,Non Parking,False,False,False,False,Year-round,0
+1067814.04899999,770340.640000001,61,3,Main St.,Main St.,42,Non Parking,False,False,False,False,Year-round,0
+1043339.236,841941.194000006,62,212,Veteran''s Memorial Park,Sunset Ridge Dr.,43,Parking Lot,False,False,False,False,Year-round,85
+1040532.252,841564.548999995,63,212,Forbes Ave.,Forbes Ave,43,Non Parking,False,False,False,False,Year-round,0
+1046754.964,852630.5,64,213,Chapel Rd.,Chapel Rd.,77,Non Parking,False,False,False,False,Year-round,0
+1048868.831,849910.953999996,65,213,Tolland Turnpike,Tolland Turnpike,77,Non Parking,False,False,False,False,Year-round,0
+1048056.34100001,845175.223000005,66,213,Hwy 44,Hwy 44,77,Non Parking,False,False,False,False,Year-round,0
+1047372.59100001,839808.708000004,67,212,Silver Lane,Silver Lane,77,Non Parking,False,False,False,False,Year-round,0
+1064212.18799999,838972.167999998,68,212,Charter Oak Park,Charter Oak Park,77,Parking Lot,False,False,False,False,Year-round,100
+1064549.65700001,837682.268000007,69,212,Mt. Nebo Park,Spring St.,77,Parking Lot,False,False,False,False,Year-round,50
+1067118.29899999,838662.262999997,70,212,Gardner St.,Gardner St.,77,Non Parking,False,False,False,False,Year-round,0
+1059739.13,838548.530000001,71,212,Prospect St.,Prospect St.,77,Non Parking,False,False,False,False,Year-round,0
+1056898.242,838642.755999997,72,212,Keeney St.,Keeney St.,77,Non Parking,False,False,False,False,Year-round,0
+1053340.43799999,839226.063999996,73,212,Bidwell St.,Bidwell St.,77,Non Parking,False,False,False,False,Year-round,0
+1021216.361,839110.553000003,74,210,Prospect St.,Prospect St.,64,Non Parking,False,False,False,False,Year-round,0
+1022760.859,843252.121999994,75,212,Riverside Park,E Service Rd.,64,Parking Lot,False,False,False,False,Year-round,100
+1022066.89399999,842510.855000004,76,210,Pequot St.,Pequot St.,64,Parking Lot,False,False,False,False,Year-round,100
+1023427.844,836934.111000001,77,210,Van Dyke Ave,Van Dyke Ave,64,Non Parking,False,False,False,False,Year-round,0
+1027922.73999999,837325.131999999,78,210,Silver Lane,Silver Lane,43,Non Parking,False,False,False,False,Year-round,0
+1024461.64,837644.901999995,79,210,Great River Park,River Dr.,43,Parking Lot,False,False,False,False,Year-round,50
+1023689.353,839918.902999997,80,210,River Dr.,River Dr.,43,Roadside Parking,False,False,False,False,Year-round,2
+1024586.82700001,839476.670000002,81,210,Founder's Bridge,Pitkin St.,43,Non Parking,False,False,False,False,Year-round,0
+1024724.48100001,835795.794,82,210,Charter Oak Landing,Reserve Rd.,64,Parking Lot,False,False,False,False,Year-round,30
+1014525.259,752486.494000003,83,1,  Cherry Hill Rd., Cherry Hill Rd.,82,Parking Lot,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1033043.06299999,735702.718999997,84,72,Miller's Pond,Foot Hills Rd.,61,Parking Lot,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1063857.757,710285.910999998,85,17,,Cedar Lake Rd.,26,No Parking,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1064798.346,710046.834999993,86,17,,Cedar Lake Rd.,26,Parking Lot,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1053613.138,726667.215000004,87,17,,Hwy 81,61,Parking Lot,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1061691.57099999,709325.288000003,88,17,Pattaconk Reservoir,State Forest Rd.,26,Parking Lot,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1061799.793,709649.224999994,89,17,Pattaconk Reservoir,State Forest Rd.,26,Parking Lot,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1061453.227,709278.555999994,90,17,Pattaconk Reservoir,State Forest Rd.,26,Parking Lot,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1053584.589,726617.273000002,91,17,,Hwy 81,61,Parking Lot,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1031406.92299999,679842.075000003,92,17,,Blinnished Rd.,76,Parking Lot,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1069477.611,691930.878999993,93,17,,Hwy 80,36,Parking Lot,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1066956.346,691660.652999997,94,17,,Spruce Ledge Rd.,36,Parking Lot,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1067625.45999999,697195.924999997,95,17,,Hwy 145,36,Parking Lot,Unknown,Unknown,Unknown,Unknown,Unknown,0
+1017472.538,756196.457000002,96,1,Wadsworth Falls,Wadsworth Rd.,83,Parking Lot,False,False,False,False,Year-round,0
+1014525.259,752486.494000003,97,1,Wadsworth Falls,Cherry Hill Rd.,82,Parking Lot,False,False,False,False,Year-round,0
+957264.253000006,711066.861000001,98,208,Sherman Ave.,Sherman Ave.,62,Parking Lot,False,False,False,False,Year-round,50
+956937.320999995,715547.781000003,99,208,Todd St.,Todd St.,62,Parking Lot,False,False,False,False,Year-round,10
+954929.998999998,742436.649000004,100,208,Cornwall Ave.,Cornwall Ave.,25,Parking Lot,False,False,False,False,Year-round,20
+952910.633000001,734926.592999995,101,208,Lock 12 Historical Park,Hwy 42,25,Parking Lot,False,False,False,False,Year-round,25
+954054.772,725265.728,102,208,Brooksvale Park,Brooksvale Ave.,62,Parking Lot,False,False,False,False,Year-round,50
+949876.840000004,680370.738999993,103,208,Shelton St.,Shelton St.,93,Non Parking,False,False,False,False,Year-round,0
+952236.631999999,674727.297000006,104,208,Hillhouse Ave.,Hillhouse Ave.,93,Non Parking,False,False,False,False,Year-round,0
+953651.857999995,694419.054000005,105,208,Connolly Pkwy,Connolly Pkwy,62,Non Parking,False,False,False,False,Year-round,0
+961277.817000002,775244.502000004,106,208,Plantsville,Summer St.,131,Parking Lot,False,False,False,False,Year-round,15
+964287.357999995,781128.637999997,107,208,Mill St.,Mill St.,131,Parking Lot,False,False,False,False,Year-round,20
+965050.974999994,784085.123999998,108,208,Hart St.,Hart St.,131,Non Parking,False,False,False,False,Year-round,0
+978415.680000007,857896.697999999,109,208,Sperry Park,Mountain View Ave.,4,Parking Lot,False,False,False,False,Year-round,5
+981341.714000002,865980.458000004,110,208,Latimer Lane,Latimer Lane,128,Parking Lot,False,False,False,False,Year-round,10
+986328.488999993,878794.237000003,111,208,Simsbury,Wilcox St.,128,Parking Lot,False,False,False,False,Year-round,100
+986699.447999999,880295.348000005,112,208,Rotary Park,Iron Horse Blvd,128,Parking Lot,False,False,False,False,Year-round,50
+989722.005999997,887038.941,113,208,Hwy 202,Hwy 202,128,Parking Lot,False,False,False,False,Year-round,10
+993462.488000005,901874.768999994,114,208,Granbrook Park,Hwy 189,40,Parking Lot,False,False,False,False,Year-round,30
+997905.017000005,915641.718999997,115,208,Cooper Hill Rd.,Cooper Hill Rd.,40,Parking Lot,False,False,False,False,Year-round,10
+997550.789000005,915643.738999993,116,208,Cooper Hill Rd.,Cooper Hill Rd.,40,Parking Lot,False,False,False,False,Year-round,15
+994899.987000003,908195.0,117,208,Newgate Conservation Area,Hwy 20,40,Parking Lot,False,False,False,False,Year-round,5
+993248.633000001,903314.167999998,118,208,Hwy 189,Hwy 189,40,Parking Lot,False,False,False,False,Year-round,2
+971062.650999993,826802.482999995,119,209,Tunxis Meade Park,Tunxis Meade Dr.,52,Parking Lot,False,True,False,True,Year-round,100
+960055.944000006,838032.441,120,209,River Rd.,River Rd.,52,Parking Lot,False,False,False,False,Year-round,10
+959268.974000007,840099.733999997,121,209,River Rd.,River Rd.,52,Parking Lot,False,False,False,False,Year-round,70
+953186.494000003,845372.300999999,122,209,Highway 4,Highway 4,20,Parking Lot,False,False,False,False,Year-round,50
+952195.166999996,850092.106999993,123,209,Hwy 179,Hwy 179,20,Roadside Parking,False,False,False,False,Year-round,40
+952707.106999993,856084.314999998,124,209,Collinsville,Main St.,23,Parking Lot,False,False,False,False,Year-round,20
+1121019.612,827056.841000006,125,43,Hop River Rd.,Hop River Rd.,32,Roadside Parking,True,False,False,False,Year-round,5
+1107273.789,827314.358999997,126,43,Lake Rd.,Lake Rd.,1,Roadside Parking,False,False,False,False,Year-round,2
+1096337.95900001,833391.953999996,127,43,Burnap Brook,Burnap Brook Rd.,1,Parking Lot,False,False,False,False,Year-round,4
+1092913.12899999,838440.0,128,43,Bailey Rd.,Bailey Rd.,1,Non Parking,False,False,False,False,Year-round,0
+1090176.49699999,843054.401999995,129,43,Steeles Crossing,Steeles Crossing,1,Roadside Parking,False,False,False,False,Year-round,4
+1078453.29700001,861054.428000003,130,43,Tunnel Rd.,Tunnel Rd.,146,Parking Lot,False,False,False,False,Year-round,2
+1081780.377,848574.084999993,131,43,Bolton Notch,HW 384,12,Parking Lot,False,False,False,False,Year-round,10
+1098350.634,832404.849000007,132,43,Wales Rd.,Wales Rd.,1,Roadside Parking,False,False,False,False,Year-round,2
+1073495.69499999,860298.755999997,133,43,Church St.,Church St.,146,Parking Lot,False,False,False,False,Year-round,7
+1066076.837,852552.943000004,134,43,Colonial Rd.,Colonial Rd.,77,Parking Lot,True,False,False,False,Year-round,10
+1135673.425,823806.339000002,135,43,Flanders Rd.,Flanders Rd.,30,Non Parking,False,False,False,False,Year-round,0
+1133648.354,824127.789000005,136,43,Kings Rd.,Kings Rd.,32,Non Parking,False,False,False,False,Year-round,0
+1114186.236,828713.338,137,43,Parker Bridge Rd.,Parker Bridge Rd.,1,Roadside Parking,False,False,False,False,Year-round,2
+1102500.52500001,830244.306999996,138,43,Long Hill Rd.,Long Hill Rd.,1,Non Parking,False,False,False,False,Year-round,0
+1100343.096,830972.944000006,139,43,Shoddy Mill Rd.,Shoddy Mill Rd.,1,Non Parking,False,False,False,False,Year-round,0
+1074027.336,860225.493000001,140,43,Phoenix St.,Phoenix St.,146,Non Parking,False,False,False,False,Year-round,0
+1074385.373,860308.131999999,141,43,Warren Ave,Warren Ave,146,Non Parking,False,False,False,False,Year-round,0
+1072182.829,860604.945999995,142,43,Dobson Rd.,Dobson Rd.,146,Non Parking,False,False,False,False,Year-round,0
+1069218.258,859153.927000001,143,43,Elm Hill Rd.,Elm Hill Rd.,146,Non Parking,False,False,False,False,Year-round,0
+1067711.81299999,856638.446999997,144,43,Taylor St.,Taylor St.,146,Non Parking,False,False,False,False,Year-round,0
+1074951.104,862570.607999995,145,43,Tankerhoosen Rd.,Tankerhoosen Rd.,146,Non Parking,False,False,False,False,Year-round,0
+1074978.51100001,863967.908999994,146,43,HW 30,HW 30,146,Non Parking,False,False,False,False,Year-round,0
+1073678.2,869900.618000001,147,43,Center Rd.,Center Rd.,146,Non Parking,False,False,False,False,Year-round,0
+1077330.948,875179.516000003,148,43,HW 83,HW 83,146,Non Parking,False,False,False,False,Year-round,0
+1078248.964,875467.099999994,149,43,Spring St.,Spring St.,146,Non Parking,False,False,False,False,Year-round,0
+1078479.073,875513.348000005,150,43,Morrison St.,Morrison St.,146,Non Parking,False,False,False,False,Year-round,0
+863548.311000004,672110.254999995,151,214,Wolfe Park,Purdy Hill Rd.,85,Non Parking,False,False,False,False,Year-round,0
+863301.797999993,675094.372999996,152,214,Wolfe Park,Wolfe Park,85,Parking Lot,False,False,False,False,Year-round,50
+862517.577999994,681507.715000004,153,214,Cutler Farms Rd.,Cutler Farms Rd.,85,Parking Lot,False,False,False,False,Year-round,25
+861888.005999997,687613.386000007,154,214,Pepper St.,Pepper St.,85,Roadside Parking,False,False,False,False,Year-round,3
+1008921.15800001,773425.532000005,155,215,Cucia Park,Smith St.,83,Parking Lot,False,False,False,False,Year-round,20
+1007894.01899999,776741.847000003,156,215,Middle St.,Middle St.,83,Non Parking,False,False,False,False,Year-round,0
+1013366.671,778266.861000001,157,83,Westlake Dr.,Westlake Dr.,83,Non Parking,False,False,False,False,Year-round,0
+1015962.18099999,778281.263999999,158,215,Tuttle Rd.,Tuttle Rd.,83,Non Parking,False,False,False,False,Year-round,0
+1235004.177,850916.118000001,159,204,,,69,Parking Lot,False,False,False,False,Year-round,8
+1235614.051,854087.273000002,160,204,St. James School,Water St.,69,Parking Lot,False,False,False,False,Year-round,20
+1237328.96699999,821765.635000005,161,77,Rt. 14 / Main Street,Rt. 14 / Main Street,109,Parking Lot,False,False,False,False,Year-round,15
+1240601.426,823243.732999995,162,77,Barber Hill Rd.,Barber Hill Rd.,109,Non Parking,False,False,False,False,Year-round,0
+1242651.45999999,823125.136999995,163,77,Brunswick Ave.,Brunswick Ave.,109,Roadside Parking,False,False,False,False,Year-round,2
+1226967.42299999,828980.931999996,164,207,Quinnebaug Hatchery,Trout Hatchery Road,109,Parking Lot,False,False,False,False,Year-round,20
+1226940.94400001,829354.785999998,165,207,Quinnebaug Hatchery,Trout Hatchery Road,109,Roadside Parking,False,False,False,False,Year-round,2
+1237800.62,822144.780000001,166,77,River St.,River St.,109,Non Parking,False,False,False,False,Year-round,0
+1251039.44400001,820578.268999994,167,77,Robert Jordan Community Center,Main St.,136,Parking Lot,False,False,False,False,Year-round,25
+1259879.45100001,815991.474999994,168,77,Hwy 14A,Hwy 14A,136,Non Parking,False,False,False,False,Year-round,0
+1259323.79899999,816045.691,169,77,Spring Lake Rd.,Spring Lake Rd.,136,Non Parking,False,False,False,False,Year-round,0
+1252273.517,819667.545000002,170,77,Hwy 14,Hwy 14,136,Parking Lot,False,False,False,False,Year-round,4
+1250768.50399999,820784.108999997,171,77,Main St.,Main St.,136,Non Parking,False,False,False,False,Year-round,0
+1251324.37800001,820478.253999993,172,0,Industrial Park Rd.,Industrial Park Rd.,136,Non Parking,False,False,False,False,Year-round,0
+1109494.37100001,833982.399000004,173,85,Bear Swamp Rd.,Bear Swamp Rd.,2,Roadside Parking,False,False,False,False,Year-round,2
+1110291.31999999,839460.238000005,174,85,Nathan Hale Homestead,Nathan Hale Rd.,32,Parking Lot,False,False,False,False,Year-round,10
+909170.033000007,681376.516000003,175,302,BJ's Parking Lot,Division St.,2,Parking Lot,True,False,False,False,Year-round,20
+909223.621000007,675808.237000003,176,303,Deerfield Meat,Route 34,36,Parking Lot,True,False,False,False,Year-round,0
+916524.739999995,686660.128999993,177,301,Ansonia Nature center,Deerfield Rd.,2,Parking Lot,True,True,False,False,Year-round,50
+911587.799999997,705998.421000004,178,307,Stop and Shop,RTE 313 & RTE 67,124,Parking Lot,True,False,False,False,Year-round,0
+911414.934,715687.770999998,179,307,DOT,RTE 42,124,Parking Lot,True,False,False,False,Year-round,0
+917199.504999995,706446.847000003,180,308,Seymour Land Trust,Chatfield St.,124,Parking Lot,True,True,False,True,Year-round,4
+913718.961999997,747441.128999993,181,141,Hwy 63,Hwy 63,88,Parking Lot,False,False,False,False,Year-round,15
+911961.056999996,746317.554000005,182,144,King St.,King St.,88,Non Parking,False,False,False,False,Year-round,0
+905275.098000005,746785.341999993,183,144,Shadduck Rd.,Shadduck Rd.,81,Roadside Parking,False,False,False,False,Year-round,2
+888938.908999994,733781.574000001,184,144,Pope Rd.,Pope Rd.,108,Non Parking,False,False,False,False,Year-round,0
+886954.018999994,731278.548999995,185,144,Hwy 188,Hwy 188,130,Roadside Parking,False,False,False,False,Year-round,2
+884282.305000007,731242.338,186,144,Hwy 67,Hwy 67,130,Non Parking,False,False,False,False,Year-round,0
+882484.650000006,731644.722000003,187,144,Curt Smith Rd.,Curt Smith Rd.,130,Non Parking,False,False,False,False,Year-round,0
+876879.692000002,732762.196999997,188,144,Jeremy Swamp Rd.,Jeremy Swamp Rd.,130,Non Parking,False,False,False,False,Year-round,0
+874791.579999998,733156.508000001,189,144,Hwy 484,Hwy 484,130,Non Parking,False,False,False,False,Year-round,0
+890383.387999997,731699.321999997,190,144,Hawley Rd.,Hawley Rd.,108,Non Parking,False,False,False,False,Year-round,0
+893916.261999995,730931.268000007,191,144,Christian St.,Christian St.,108,Non Parking,False,False,False,False,Year-round,0
+899321.125,734020.912,192,144,Riggs St.,Riggs St.,108,Non Parking,False,False,False,False,Year-round,0
+900485.964000002,736746.662,193,144,Towantic Hill Rd.,Towantic Hill Rd.,108,Non Parking,False,False,False,False,Year-round,0
+900873.363999993,738907.498999998,194,144,Long Meadow Rd.,Long Meadow Rd.,108,Non Parking,False,False,False,False,Year-round,0
+903391.140000001,742553.230000004,195,144,South St.,South St.,81,Non Parking,False,False,False,False,Year-round,0
+904860.491999999,743730.531000003,196,144,Wooster Rd.,Wooster Rd.,81,Non Parking,False,False,False,False,Year-round,0
+909221.584999993,745894.849999994,197,144,Allerton Farms Rd.,Allerton Farms Rd.,88,Non Parking,False,False,False,False,Year-round,0
+876080.866999999,651244.410999998,198,1, ,"Trumbull, CT",3,Parking Lot,True,False,False,False,Year-round,0
+870045.300500005,663301.201250002,199,2, ,"Trumbull, CT",3,None,False,False,False,False,Year-round,0
+866747.666250005,666599.197750002,200,4, ,"Trumbull, CT",3,Parking Lot,True,False,False,False,Year-round,0
+864612.636500001,667256.822500005,201,5, ,"Trumbull, CT",3,None,False,False,False,False,Year-round,0
+865337.326250002,668245.965749994,202,6, ,"Trumbull, CT",1,None,False,False,False,False,Year-round,0
+863977.552249998,670222.096249998,203,7,Wolfe Park,"Monroe, CT",2,Parking Lot,True,False,False,False,Year-round,0
+863461.76275,672034.320999995,204,8, ,"Monroe, CT",2,None,False,False,False,False,Year-round,0
+862481.481749997,681589.225250006,205,9, ,"Monroe, CT",2,None,False,False,False,False,Year-round,0
+862699.039499998,682040.403249994,206,10, ,"Monroe, CT",2,None,False,False,False,False,Year-round,0
+862992.473250002,683964.431500003,207,11, ,"Monroe, CT",2,None,False,False,False,False,Year-round,0
+863336.676499993,685600.047250003,208,12, ,"Monroe, CT",2,None,False,False,False,False,Year-round,0
+861904.861750007,687555.532749996,209,13, ,"Monroe, CT",2,None,False,False,False,False,Year-round,0
