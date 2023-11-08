@@ -34,6 +34,7 @@ listSubTypeOptions() {
 RunMainApp=true
 IntegrationTests=false
 LanguageImplementation=ruby
+Project=statistics1v
 Subtype=native
 UnitTests=false
 
@@ -45,6 +46,11 @@ then
         B)
             RunMainApp=false
             ;;
+        c)
+            Command="$OPTARG"
+            ;;
+        f)
+            FullReport=true
         h)
             catUsage
             exit 0
@@ -62,7 +68,12 @@ then
                 exit 1
             fi
             ;;
+        p)
+            if sl_ValidateSubtype $OPTARG
+            Project=$OPTARG
             ;;
+        r)
+            ReadInData="$OPTARG"
         s)
             if sl_ValidateSubtype $_optArg
             then

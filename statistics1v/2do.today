@@ -1,3 +1,0 @@
-    1.  Review existing Ruby library.
-    2.  Debug tests with present context.
-    3.  Put together draft of ruby.main, perhaps TDD with bats tests.

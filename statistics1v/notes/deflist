@@ -1,0 +1,83 @@
+        def genPearsonsFirstSkewnessCoefficient(aMean,modeFloat,stdDev)
+        def genPearsonsSecondSkewnessCoefficient(aMean,medianFloat,stdDev)
+    def genKurtosis
+    def genKurtosis_Biased_DiffFromMeanCalculation
+    def genKurtosis_Unbiased_DiffFromMeanCalculation
+    def genNaturalEstimatorOfPopulationSkewness_b1
+    def genNaturalEstimatorOfPopulationSkewness_g1
+    def genSkewness(formulaId=3)
+    def genStandardDeviation
+    def genThirdDefinitionOfSampleSkewness_G1
+    def genVarianceUsingSubjectAsDiffs
+    def genVarianceUsingSubjectAsSumXs
+    def getCount
+        def newAfterInvalidatedDropped(arrayA,relayErrors=false)
+    def calculateQuartile(qNo)
+    def genArithmeticMean
+    def genCoefficientOfVariation
+    def genGeometricMean
+    def genHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber=nil)
+    def genHistogramAAbySegmentSize(segmentSize,startNumber=nil)
+    def genKurtosis
+    def genMax
+    def genMeanAbsoluteError
+    def genMedian(sVoX=nil)
+    def genMin(sVoX=nil)
+    def genMode
+    def genQuartiles(sVoX=nil)
+    def genRange(sVoX=nil)
+    def genSampleSkewness(aMeanStdDevPair=nil)
+    def genSegmentFrequencyCritical(segmentRange,subRangeStep)
+    def genStandardDeviation
+    def genSum
+    def genVarianceSumOfDifferencesFromMean(populationCalculation=false)
+    def genVarianceXsSquaredMethod(populationCalculation=false)
+    def getSummaryStatistics
+    def isEvenN?
+    def genMode
+    def genBinomialProbability(subjectValue,nTrials,nSuccesses)
+
+Matrix Managment
+    def pushX(xItem)
+        def isAllowedDataVectorClass?(vectorClass)
+        def newFromCSV(fSpec,vcSpec,skipFirstLine=true)
+    def initialize(vectorOfClasses)
+    def getVectorObject(indexNo)
+    def pushTableRow(arrayA)
+
+Extras:
+def genFactorial(nA)
+def genModeFromFrequencyAA(faaA)
+def isANumStr?(strA)
+def isNumericVector?(vA)
+def isUsableNumber?(cA)
+def isUsableNumberVector?(vA)
+def validateStringNumberRange(xFloat)
+        def initialize(startNo,stopNo)
+        def addToCount
+        def hasOverlap?(startNo,stopNo)
+        def isInRange?(xFloat)
+        def newFromDesiredSegmentCount(startNo,maxNo,desiredSegmentCount)
+        def newFromUniformSegmentSize(startNo,maxNo,segmentSize)
+    def _validateNoOverlap(startNo,stopNo)
+    def initialize(lowestValue,highestValue=nil)
+    def addToCounts(xFloat)
+    def genOrderedListOfCountVectors
+    def setOccurrenceRange(startNo,stopNo)
+    def validateRangesComplete
+    def _secondMomentSubjectXs
+    def _thirdMomentSubjectXs
+    def _fourthMomentSubjectXs
+    def initialize(sumXs,nA,populationDistribution=false,isDiffsFromMeanCalculation=true)
+    def addToSums(sFloat)
+    def _assureSortedVectorOfX
+    def initialize(aA=nil)
+    def listVectorElementsForVisualExamination(toStdError=false)
+    def pushX(xFloat)
+    def _addUpXsToSumsOfPowers(populationCalculation=false,sumOfDiffs=true)
+    def _decideHistogramStartNumber(startNumber=nil)
+    def _genHistogramInitialAA(startNo,segmentSize)
+    def initialize(vectorX=Array.new)
+    def nilSOPo
+    def pushX(xFloat)
+    def initialize(vectorX=Array.new)

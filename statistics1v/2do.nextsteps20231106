@@ -1,0 +1,9 @@
+
+    1.  Re-review automation tests
+        a.      First make corrections on known calculation errors found in genSummaryStatistics method.
+        b.      Go back through and fix subsequent obvious and easy problems.
+        c.      Now completely review all areas, and get place-holders for each one, with nice separations and reducing size of sets of things tested in most cases.
+        d.      Look at perhaps breaking out from simple-tests to complex tests.  Simple might just be small n with simple xs, then double and full use of decimals for second.
+        e.      When that is all done, then begin ruby.main app.
+
+    2.  

@@ -1,0 +1,23 @@
+...............................................F..
+
+Failures:
+
+  1) VectorOfContinuous Has a calculateQuartile method which returns the value for a designated quartile.
+     Failure/Error: assert_equal qv, 2.0 # Wrong
+
+     Test::Unit::AssertionFailedError:
+       <3> expected but was
+       <2.0>.
+     # /usr/share/rubygems-integration/all/gems/test-unit-3.3.9/lib/test/unit/assertions.rb:59:in `block in assert_block'
+     # /usr/share/rubygems-integration/all/gems/test-unit-3.3.9/lib/test/unit/assertions.rb:1633:in `_wrap_assertion'
+     # /usr/share/rubygems-integration/all/gems/test-unit-3.3.9/lib/test/unit/assertions.rb:53:in `assert_block'
+     # /usr/share/rubygems-integration/all/gems/test-unit-3.3.9/lib/test/unit/assertions.rb:244:in `assert_equal'
+     # tests/test_SamesLib.simple.rb:483:in `block (2 levels) in <main>'
+
+Finished in 0.01691 seconds (files took 0.16514 seconds to load)
+50 examples, 1 failure
+
+Failed examples:
+
+rspec tests/test_SamesLib.simple.rb:460 # VectorOfContinuous Has a calculateQuartile method which returns the value for a designated quartile.
+
