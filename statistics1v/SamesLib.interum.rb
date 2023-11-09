@@ -284,11 +284,11 @@ class SumsOfPowers
     def genSkewness(formulaId=3)
         case formulaId
         when 1
-            @Skewness = genNaturalEstimatorOfPopulationSkewness_b1
+            @Skewness = calculateNaturalEstimatorOfPopulationSkewness_b1
         when 2
-            @Skewness = genNaturalEstimatorOfPopulationSkewness_g1
+            @Skewness = calculateNaturalEstimatorOfPopulationSkewness_g1
         when 3
-            @Skewness = genThirdDefinitionOfSampleSkewness_G1
+            @Skewness = generateThirdDefinitionOfSampleSkewness_G1
         else
             m = "There is no skewness formula #{formulaId} implemented at this time."
             raise ArgumentError, m

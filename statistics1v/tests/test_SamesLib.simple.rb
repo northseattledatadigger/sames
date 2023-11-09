@@ -27,10 +27,10 @@ include Test::Unit::Assertions
 describe 'calculateFactorial' do
 
     it "Calculates factorial using Ruby's gamma function as per find in stackoverflow." do
-        n = calculateFactorial(4)
+        n = getFactorial(4)
         assert n = 24
         assert_raise ArgumentError do
-            calculateFactorial(25.55)
+            getFactorial(25.55)
         end
     end
 
@@ -172,7 +172,7 @@ describe HistogramOfX do
         localo.addToCounts(3)
         localo.addToCounts(3)
         localo.addToCounts(3)
-        result = localo.genOrderedListOfCountVectors
+        result = localo.generateCountCollection
         assert_equal result[0][0], 1
         assert_equal result[0][1], 3
         assert_equal result[0][2], 3
@@ -189,7 +189,7 @@ describe HistogramOfX do
         localo.addToCounts(3)
         localo.addToCounts(3)
         localo.addToCounts(3)
-        result = localo.genOrderedListOfCountVectors
+        result = localo.generateCountCollection
         assert_equal result[0][0], 1
         assert_equal result[0][1], 4
         assert_equal result[0][2], 6
@@ -206,7 +206,7 @@ describe HistogramOfX do
         localo.addToCounts(3)
         localo.addToCounts(3)
         localo.addToCounts(3)
-        result = localo.genOrderedListOfCountVectors
+        result = localo.generateCountCollection
         assert_equal result[0][0], 1
         assert_equal result[0][1], 3.5
         assert_equal result[0][2], 6
@@ -266,7 +266,7 @@ describe HistogramOfX do
         localo.addToCounts(2)
         localo.addToCounts(22)
         localo.addToCounts(-22)
-        result = localo.genOrderedListOfCountVectors
+        result = localo.generateCountCollection
         assert_equal result[1][0], -64
         assert_equal result[1][1], 0
         assert_equal result[1][2], 1
@@ -302,33 +302,33 @@ describe SumsOfPowers do
 
     it "Generation of Pearson's First Skewness Coefficient with class method." do
         # Need data here for better knowledge.  For now just make sure a number comes out.
-        a = SumsOfPowers.genPearsonsFirstSkewnessCoefficient(25,3,1.57)
+        a = SumsOfPowers.calculatePearsonsFirstSkewnessCoefficient(25,3,1.57)
         assert_equal 14.012738853503183, a
     end
        
     it "Generation of Pearson's Second Skewness Coefficient with class method." do
         # Need data here for better knowledge.  For now just make sure a number comes out.
-        a = SumsOfPowers.genPearsonsSecondSkewnessCoefficient(25,3,1.57)
+        a = SumsOfPowers.calculatePearsonsSecondSkewnessCoefficient(25,3,1.57)
         assert_equal 14.012738853503183, a
         #STDERR.puts "trace a:  #{a}"
     end
        
     it "Generate second moment Subject Xs sum." do
         localo = SumsOfPowers.new(false)
-        assert_respond_to localo, :_secondMomentSubjectXs
-        a = localo._secondMomentSubjectXs
+        assert_respond_to localo, :_calculateSecondMomentSubjectXs
+        a = localo._calculateSecondMomentSubjectXs
     end
 
     it "Generate third moment Subject Xs sum." do
         localo = SumsOfPowers.new(false)
-        assert_respond_to localo, :_thirdMomentSubjectXs
-        a = localo._thirdMomentSubjectXs
+        assert_respond_to localo, :_calculateThirdMomentSubjectXs
+        a = localo._calculateThirdMomentSubjectXs
     end
 
     it "Generate fourth moment Subject Xs sum." do
         localo = SumsOfPowers.new(false)
-        assert_respond_to localo, :_fourthMomentSubjectXs
-        a = localo._fourthMomentSubjectXs
+        assert_respond_to localo, :_calculateFourthMomentSubjectXs
+        a = localo._calculateFourthMomentSubjectXs
     end
 
     it "Adding to the sums.." do
@@ -351,7 +351,7 @@ describe SumsOfPowers do
         localo.addToSums(a[2])
         localo.addToSums(a[3])
         assert_equal 4, localo.N
-        result = localo.genKurtosis
+        result = localo.requestKurtosis
         #STDERR.puts "trace Generating kurtosis:  #{result}"
         assert_equal -4.5, result
     end
@@ -364,7 +364,7 @@ describe SumsOfPowers do
         localo.addToSums(4)
         localo.addToSums(5)
         localo.addToSums(6)
-        result = localo.genSkewness
+        result = localo.requestSkewness
         assert_equal 56.25011459381775, result
     end
 
@@ -375,7 +375,7 @@ describe SumsOfPowers do
         localo.addToSums(3)
         localo.addToSums(4)
         localo.addToSums(4)
-        result = localo.genStandardDeviation
+        result = localo.generateStandardDeviation
         assert_equal 0.5773502691896257, result
     end
 
@@ -386,14 +386,14 @@ describe SumsOfPowers do
         localo.addToSums(3)
         localo.addToSums(4)
         localo.addToSums(5)
-        result = localo.genVarianceUsingSubjectAsDiffs
+        result = localo.calculateVarianceUsingSubjectAsDiffs
         assert_equal 19.666666666666668, result
         localo = SumsOfPowers.new(false)
         localo.addToSums(3)
         localo.addToSums(3)
         localo.addToSums(4)
         localo.addToSums(5)
-        result = localo.genVarianceUsingSubjectAsSumXs
+        result = localo.calculateVarianceUsingSubjectAsSumXs
         assert_equal 0.9166666666666666, result
         #assert_equal 19.666666666666668, result
     end
@@ -493,8 +493,8 @@ describe VectorOfContinuous do
             localo = VectorOfContinuous.newAfterInvalidatedDropped(a,false)
         end
         assert_equal 4, localo.getCount
-        assert_equal 1.5, localo.genMin
-        assert_equal 5876.1234, localo.genMax
+        assert_equal 1.5, localo.requestMin
+        assert_equal 5876.1234, localo.requestMax
     end
 
     it "Has internal focused method to construct a new SumsOfPowers object for moment statistics." do
@@ -527,55 +527,55 @@ describe VectorOfContinuous do
 
     it "Calculates mean in two places." do
         a = [1,2,3]
-        localo = VectorOfContinuous.new(a)
-        vocoam   = localo.genArithmeticMean
+        localo  = VectorOfContinuous.new(a)
+        vocoam  = localo.calculateArithmeticMean
         sopoam  = localo._addUpXsToSumsOfPowers.ArithmeticMean
         assert_equal vocoam, sopoam
     end
 
     it "Generates a coefficient of variation." do
         a = [1,2,3,4,5,6,7,8.9]
-        localo = VectorOfContinuous.new(a)
-        amean       = localo.genArithmeticMean
-        stddev      = localo.genStandardDeviation
+        localo      = VectorOfContinuous.new(a)
+        amean       = localo.calculateArithmeticMean
+        stddev      = localo.requestStandardDeviation
         herecov     = ( stddev / amean ).round(localo.OutputDecimalPrecision)
-        cov         = localo.genCoefficientOfVariation
+        cov         = localo.generateCoefficientOfVariation
         assert_equal cov, herecov
     end
 
     it "Generates a geometric mean." do
-        a = [2,2,2,2]
-        localo = VectorOfContinuous.new(a)
-        amean       = localo.genArithmeticMean
-        gmean       = localo.genGeometricMean
+        a           = [2,2,2,2]
+        localo      = VectorOfContinuous.new(a)
+        amean       = localo.calculateArithmeticMean
+        gmean       = localo.calculateGeometricMean
         assert_equal amean, gmean
-        a = [1,2,3,4,5,6,7,8,9]
-        localo = VectorOfContinuous.new(a)
-        amean       = localo.genArithmeticMean
-        gmean       = localo.genGeometricMean
+        a           = [1,2,3,4,5,6,7,8,9]
+        localo      = VectorOfContinuous.new(a)
+        amean       = localo.calculateArithmeticMean
+        gmean       = localo.calculateGeometricMean
         assert amean > gmean
     end
 
     it "Has two methods to Generate a matrix of histogram data." do
         a = [1,2,3,4,5,6,7,8,9]
         localo = VectorOfContinuous.new(a)
-        hdaa = localo.genHistogramAAbyNumberOfSegments(3,1)
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,1)
         assert_equal 3, hdaa.size
-        hdaa = localo.genHistogramAAbyNumberOfSegments(3,0)
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,0)
         assert_equal 3, hdaa.size
-        hdaa = localo.genHistogramAAbyNumberOfSegments(3,-1)
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,-1)
         assert_equal 3, hdaa.size
-        hdaa = localo.genHistogramAAbyNumberOfSegments(4,1)
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(4,1)
         assert_equal 4, hdaa.size
-        hdaa = localo.genHistogramAAbyNumberOfSegments(5,0)
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(5,0)
         assert_equal 5, hdaa.size
-        hdaa = localo.genHistogramAAbySegmentSize(2,1)
+        hdaa = localo.generateHistogramAAbySegmentSize(2,1)
         diff0 = hdaa[0][1] - hdaa[0][0]
         #STDERR.puts "trace diff0 = hdaa[0][1] - hdaa[0][0]:  #{diff0} == #{hdaa[0][1]} - #{hdaa[0][0]}"
         assert_equal diff0, 2.0
         diff1 = hdaa[1][1] - hdaa[1][0]
         assert_equal diff1, 2
-        hdaa = localo.genHistogramAAbySegmentSize(3,0)
+        hdaa = localo.generateHistogramAAbySegmentSize(3,0)
         diff2 = hdaa[2][1] - hdaa[2][0]
         assert_equal diff2, 3
     end
@@ -583,145 +583,256 @@ describe VectorOfContinuous do
     it "Can calculate kurtosis." do
         a = [1,2,3,4,5,6,7,8,9]
         localo  = VectorOfContinuous.new(a)
-        ek      = localo.genExcessKurtosis(2)
+        ek      = localo.requestExcessKurtosis(2)
         #STDERR.puts "trace ek:  #{ek}"
         assert_equal -1.23, ek
-        ek      = localo.genExcessKurtosis
+        ek      = localo.requestExcessKurtosis
         assert_equal -1.2, ek
-        k       = localo.genKurtosis
+        k       = localo.requestKurtosis
         #STDERR.puts "trace k:  #{k}"
         assert_equal 1.8476, k
 
         localo.UseDiffFromMeanCalculations = false
+        # NOTE:  These need to be implemented so the tests will change. TBD
         assert_raise ArgumentError do
-            localo.genExcessKurtosis(2)
+            localo.requestExcessKurtosis(2)
         end
         assert_raise ArgumentError do
-            localo.genExcessKurtosis
+            localo.requestExcessKurtosis
         end
-        k       = localo.genKurtosis
+        k       = localo.requestKurtosis
         #STDERR.puts "trace k:  #{k}"
         assert_equal 1.8476, k
     end
 
     it "Can get the minimum, median, maximum, and mode." do
-        a = [1,2,3,4,5,6,7,8,9]
-        localo = VectorOfContinuous.new(a)
+        a       = [1,2,3,4,5,6,7,8,9]
+        localo  = VectorOfContinuous.new(a)
         assert_equal localo.getCount, 9
-        assert_equal 1, localo.genMin
-        assert_equal 5, localo.genMedian
-        assert_equal 9, localo.genMax
-        assert_equal 1, localo.genMode # Question here:  should I return a sentinal when it is uniform?  NOTE
-        a = [1,2,3,4,5,6,7,8,9,8,7,8]
-        localo = VectorOfContinuous.new(a)
-        min,max = localo.genRange
+        assert_equal 1, localo.requestMin
+        assert_equal 5, localo.requestMedian
+        assert_equal 9, localo.requestMax
+        assert_equal 1, localo.generateMode # Question here:  should I return a sentinal when it is uniform?  NOTE
+        a       = [1,2,3,4,5,6,7,8,9,8,7,8]
+        localo  = VectorOfContinuous.new(a)
+        min,max = localo.requestRange
         assert_equal localo.getCount, 12
         assert_equal 1, min
         #puts "trace BEGIN median mmmm test"
-        assert_equal 6.5, localo.genMedian
+        assert_equal 6.5, localo.requestMedian
         #puts "trace END median mmmm"
         assert_equal 9, max
-        assert_equal 8, localo.genMode # Question here:  should I return a sentinal when it is uniform?  NOTE
+        assert_equal 8, localo.generateMode # Question here:  should I return a sentinal when it is uniform?  NOTE
     end
 
     it "Has calculation for mean absolute error." do
-        a = [1,2,3,4,5,6,7,8,9]
-        localo = VectorOfContinuous.new(a)
-        mae = localo.genMeanAbsoluteError
+        a       = [1,2,3,4,5,6,7,8,9]
+        localo  = VectorOfContinuous.new(a)
+        mae     = localo.generateMeanAbsoluteError
         assert_equal 2.2222, mae
     end
 
     it "Has a calculateQuartile method which returns the value for a designated quartile." do
-        a  = [1,2,3,4,5]
-        localo = VectorOfContinuous.new(a)
-        qv = localo.calculateQuartile(0)
+        a       = [1,2,3,4,5]
+        localo  = VectorOfContinuous.new(a)
+        qv      = localo.calculateQuartile(0)
         assert_equal qv, 1
         #puts "trace BEGIN first quartile"
-        qv = localo.calculateQuartile(1)
+        qv      = localo.calculateQuartile(1)
         #puts "trace END first quartile"
         assert_equal qv, 2
-        qv = localo.calculateQuartile(2)
+        qv      = localo.calculateQuartile(2)
         assert_equal qv, 3
-        qv = localo.calculateQuartile(3)
+        qv      = localo.calculateQuartile(3)
         assert_equal qv, 4
-        qv = localo.calculateQuartile(4)
+        qv      = localo.calculateQuartile(4)
         assert_equal qv, 5
 
-        a  = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0]
-        sa = a.sort
-        localo = VectorOfContinuous.new(a)
-        #STDERR.puts "trace sa:  #{sa}, #{sa.size}"
-        qv = localo.calculateQuartile(0)
+        a       = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0]
+        sa      = a.sort
+        localo  = VectorOfContinuous.new(a)
+        qv      = localo.calculateQuartile(0)
         assert_equal qv, 0
-        qv = localo.calculateQuartile(1)
-        assert_equal qv, 3.0 # Wrong
-        qv = localo.calculateQuartile(2)
+        qv      = localo.calculateQuartile(1)
+        assert_equal qv, 3.0
+        qv      = localo.calculateQuartile(2)
         assert_equal qv, 7.0
-        qv = localo.calculateQuartile(3)
+        qv      = localo.calculateQuartile(3)
         assert_equal qv, 8.0
-        qv = localo.calculateQuartile(4)
+        qv      = localo.calculateQuartile(4)
         assert_equal qv, 9.0
     end
 
     it "Can calculate skewness." do
-        a = [1,2,3,4,5,6,7,8,9]
-        localo = VectorOfContinuous.new(a)
-        sk = localo.genSkewness
+        a       = [1,2,3,4,5,6,7,8,9]
+        localo  = VectorOfContinuous.new(a)
+        sk      = localo.requestSkewness
         assert_equal 0, sk
-        sk = localo.genSkewness(1)
+        sk      = localo.requestSkewness(1)
         assert_equal 0, sk
-        sk = localo.genSkewness(2)
+        sk      = localo.requestSkewness(2)
         assert_equal 0, sk
-        sk = localo.genSkewness(3)
+        sk      = localo.requestSkewness(3)
         assert_equal 0, sk
-        a = [1,2,2,3,3,3,4,4,4,4,4,4]
-        localo = VectorOfContinuous.new(a)
-        sk = localo.genSkewness
+        a       = [1,2,2,3,3,3,4,4,4,4,4,4]
+        localo  = VectorOfContinuous.new(a)
+        sk      = localo.requestSkewness
         assert_equal -0.9878, sk
-        sk1 = localo.genSkewness(1)
+        sk1     = localo.requestSkewness(1)
         assert_equal -0.7545, sk1
-        sk2 = localo.genSkewness(2)
+        sk2     = localo.requestSkewness(2)
         assert_equal -0.8597, sk2
-        sk3 = localo.genSkewness(3)
+        sk3     = localo.requestSkewness(3)
         assert_equal sk3, sk
-        a = [1,2,2,3,3,3,4,4,4,4,4,4]
-        localo = VectorOfContinuous.new(a)
-        #STDERR.puts "trace sk:  #{sk}"
     end
 
-    it "Has four standard deviation calculations." do
-        a = [1,2,3]
-        localo = VectorOfContinuous.new(a)
-        sdsd = localo.genStandardDeviation
+    it "Has four standard deviation calculations corresponding to the four variance combinations." do
+        a       = [1,2,3]
+        localo  = VectorOfContinuous.new(a)
+        sdsd    = localo.requestStandardDeviation
         localo.UseDiffFromMeanCalculations = false
-        sdsx = localo.genStandardDeviation
+        sdsx    = localo.requestStandardDeviation
         assert_equal sdsd, sdsx
         localo.Population = true
-        sdsd = localo.genStandardDeviation
+        sdsd    = localo.requestStandardDeviation
         localo.UseDiffFromMeanCalculations = false
-        sdsx = localo.genStandardDeviation
+        sdsx    = localo.requestStandardDeviation
         assert_equal sdsd, sdsx
     end
 
     it "Has an method to return the sum." do
-        a = [1,2,2,3,3,3]
-        localo = VectorOfContinuous.new(a)
+        a       = [1,2,2,3,3,3]
+        localo  = VectorOfContinuous.new(a)
         assert_equal localo.getCount, 6
-        assert_equal 14, localo.genSum
+        assert_equal 14, localo.getSum
     end
 
     it "Has two variance generation methods." do
         a = [1,2,2,3,3,3,99.336,5.9,0x259,1133.7,1234]
         localo = VectorOfContinuous.new(a)
-        v = localo.genVarianceSumOfDifferencesFromMean
+        v = localo.requestVarianceSumOfDifferencesFromMean
         assert_equal 231232.125543275, v
-        v = localo.genVarianceXsSquaredMethod
+        v = localo.requestVarianceXsSquaredMethod
         assert_equal 231232.12554327273, v
-        v = localo.genVarianceSumOfDifferencesFromMean(true)
+        v = localo.requestVarianceSumOfDifferencesFromMean(true)
         assert_equal 210211.0232211591, v
-        v = localo.genVarianceXsSquaredMethod(true)
-        #assert_equal 281851.50962308043, v
+        v = localo.requestVarianceXsSquaredMethod(true)
         assert_equal 210211.02322115703, v
     end
 
+    it "Input routine pushX validates arguments." do
+        lvo = VectorOfContinuous.new
+        assert_nothing_raised do
+            lvo.pushX(123.456)
+        end
+        assert_raise ArgumentError do
+            lvo.pushX("asdf")
+        end
+        assert_raise ArgumentError do
+            lvo.pushX("0x9")
+        end
+        assert_raise ArgumentError do
+            lvo.pushX("1234..56")
+        end
+        assert_raise ArgumentError do
+            lvo.pushX("2 34")
+        end
+        lvo.ValidateStringNumbers = true
+        assert_raise RangeError do
+            lvo.pushX("9999999999999999999999999999")
+        end
+    end
+
 end
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Tests for VectorOfDiscrete
+
+describe VectorOfDiscrete do
+
+    it "Constructs with no argument." do
+        assert_nothing_raised do
+            VectorOfDiscrete.new
+        end
+        localo = VectorOfDiscrete.new
+        assert localo.is_a? VectorOfDiscrete
+        localo.pushX(5.333)
+        localo.pushX("Any old string")
+        assert_equal 2, localo.getCount
+    end
+
+    it "Constructs with a Ruby Array." do
+        assert_nothing_raised do
+            VectorOfDiscrete.new([1.5,99,5876.1234,"some old string"])
+        end
+        localo = VectorOfDiscrete.new([1.5,99,5876.1234,"some old string"])
+        assert_equal 4, localo.getCount
+        assert localo.is_a? VectorOfDiscrete
+        #assert localo.size == 4
+    end
+
+    it "Has a Binomial probability calculation." do
+        a = [1,2,3,4,5,6,7,8,9,8]
+        localo = VectorOfDiscrete.new(a)
+        assert_equal 10, localo.getCount
+        assert_respond_to localo, :calculateBinomialProbability
+        #result = localo.genBinomialProbability(8,3,1)
+        #assert result == 0.25
+    end
+
+    it "Has a method to get the Mode." do
+        localo = VectorOfDiscrete.new
+        assert_respond_to localo, :requestMode
+        localo = VectorOfDiscrete.new([1.5,99,5876.1234,"some old string",99])
+        assert_equal 5, localo.getCount
+        result = localo.requestMode
+        assert_equal 99, result
+    end
+
+    it "Has accessor for output decimal precision." do
+        localo = VectorOfDiscrete.new
+        assert_respond_to localo, :OutputDecimalPrecision
+    end
+
+    it "Has reader for the internals." do
+        localo = VectorOfDiscrete.new
+        assert_respond_to localo, :VectorOfX
+        assert_respond_to localo, :FrequenciesAA
+    end
+
+end
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Tests for VectorTable
+
+describe VectorTable do
+# Primary Example:  ./testdata/doexampledata.csv
+#year_month,month_of_release,passenger_type,direction,sex,age,estimate,standard_error,status
+#2001-01,2020-09,Long-term migrant,Arrivals,Female,0-4 years,344,0,Final
+
+    it "Constructs with just a class/column argument." do
+           #2001-01,2020-09,Long-term migrant,Arrivals,Male,0-4 years,341,0,Final
+        vcsa = [nil,nil,nil,nil,nil,nil,VectorOfContinuous,VectorOfContinuous,nil]
+        assert_nothing_raised do
+            VectorTable.new(vcsa)
+        end
+        localo = VectorTable.new(vcsa)
+        assert localo.is_a? VectorTable
+    end
+    
+    it "Allows adding a data row's of vector elements." do
+           #2001-01,2020-09,Long-term migrant,Arrivals,Male,0-4 years,341,0,Final
+        vcsa = [nil,nil,nil,nil,nil,nil,VectorOfContinuous,VectorOfContinuous,nil]
+        localo = VectorTable.new(vcsa)
+        a = ['Nil0','Nil1','Nil2','Nil3','Nil4','Nil5',123456,77,'Nil8']
+        localo.pushTableRow(a)
+        lvi6o = localo.getVectorObject(6)
+        assert lvi6o.is_a? VectorOfContinuous
+        lvi7o = localo.getVectorObject(7)
+        assert lvi7o.is_a? VectorOfContinuous
+    end
+
+end
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# End of test_SamesLib.simple.rb

@@ -360,13 +360,13 @@ class SumsOfPowers
         return ek
     end
 
-    def calculateExcessKurtosis_3_365datascience
+    def generateExcessKurtosis_3_365datascience
         #  https://365datascience.com/calculators/kurtosis-calculator/
         unless @DiffFromMeanInputsUsed
             raise ArgumentError, "May NOT be used with Sum of Xs Data."
         end
         nf                  = @N.to_f
-        stddev              = genStandardDeviation
+        stddev              = generateStandardDeviation
         s4                  = stddev**4
 
         leftnumerator       = nf * ( nf + 1.0 )
@@ -429,23 +429,6 @@ trace Generating kurtosis:  NaN
         return sue_G2
     end
 
-    def calculateNaturalEstimatorOfPopulationSkewness_b1
-        # See 2023/11/05 "Sample Skewness" in:
-        #   https://en.wikipedia.org/wiki/Skewness
-        nreciprocal     = ( 1.0 / @N.to_f )
-        numerator       = nil
-        if @DiffFromMeanInputsUsed then
-            numerator   = nreciprocal * @SumPowerOf3
-        else
-            thirdmoment = _thirdMomentSubjectXs
-            numerator   = nreciprocal * thirdmoment
-        end
-        stddev          = genStandardDeviation
-        denominator     = stddev**3
-        b1              = numerator / denominator
-        return b1
-    end
-
     def calculateNaturalEstimatorOfPopulationSkewness_g1
         # See 2023/11/05 "Sample Skewness" in:
         #   https://en.wikipedia.org/wiki/Skewness
@@ -456,8 +439,8 @@ trace Generating kurtosis:  NaN
             inside_den  = nreciprocal * @SumPowerOf2
             numerator   = nreciprocal * @SumPowerOf3
         else
-            second      = _secondMomentSubjectXs
-            third       = _thirdMomentSubjectXs
+            second      = _calculateSecondMomentSubjectXs
+            third       = _calculateThirdMomentSubjectXs
 
             inside_den  = nreciprocal * second
             numerator   = nreciprocal * third
@@ -493,6 +476,23 @@ trace Generating kurtosis:  NaN
         return v
     end
 
+    def generateNaturalEstimatorOfPopulationSkewness_b1
+        # See 2023/11/05 "Sample Skewness" in:
+        #   https://en.wikipedia.org/wiki/Skewness
+        nreciprocal     = ( 1.0 / @N.to_f )
+        numerator       = nil
+        if @DiffFromMeanInputsUsed then
+            numerator   = nreciprocal * @SumPowerOf3
+        else
+            thirdmoment = _calculateThirdMomentSubjectXs
+            numerator   = nreciprocal * thirdmoment
+        end
+        stddev          = generateStandardDeviation
+        denominator     = stddev**3
+        b1              = numerator / denominator
+        return b1
+    end
+
     def generateStandardDeviation
         sc = self.class
         #STDERR.puts "trace 0 #{sc}.genStandardDeviation:  #{@ArithmeticMean},#{@N},#{@DiffFromMeanInputsUsed},#{@Population},#{@SumOfXs},#{@SumPowerOf2},#{@SumPowerOf3},#{@SumPowerOf4}"
@@ -509,7 +509,7 @@ trace Generating kurtosis:  NaN
     def generateThirdDefinitionOfSampleSkewness_G1
         # See 2023/11/05 "Sample Skewness" in:
         #   https://en.wikipedia.org/wiki/Skewness
-        b1      = calculateNaturalEstimatorOfPopulationSkewness_b1
+        b1      = generateNaturalEstimatorOfPopulationSkewness_b1
         nf      = @N.to_f
         k3      = ( nf**2 ) * b1
         k2_3s2  = ( nf - 1 ) * ( nf - 2 )
@@ -519,7 +519,7 @@ trace Generating kurtosis:  NaN
 
     def requestKurtosis
         # This of course needs to be expanded to use both diffs from mean ANd sum of Xs calculation.
-        kurtosis = genKurtosis_Unbiased_DiffFromMeanCalculation
+        kurtosis = calculateKurtosis_Unbiased_DiffFromMeanCalculation
         return kurtosis
     end
 
@@ -532,11 +532,11 @@ trace Generating kurtosis:  NaN
         skewness = nil
         case formulaId
         when 1
-            skewness = genNaturalEstimatorOfPopulationSkewness_b1
+            skewness = generateNaturalEstimatorOfPopulationSkewness_b1
         when 2
-            skewness = genNaturalEstimatorOfPopulationSkewness_g1
+            skewness = calculateNaturalEstimatorOfPopulationSkewness_g1
         when 3
-            skewness = genThirdDefinitionOfSampleSkewness_G1
+            skewness = generateThirdDefinitionOfSampleSkewness_G1
         else
             m = "There is no skewness formula #{formulaId} implemented at this time."
             raise ArgumentError, m
@@ -576,9 +576,13 @@ end
 class VectorOfX
 
     def _assureSortedVectorOfX(forceSort=false)
-        return unless @SortedVectorOfX
-        return unless forceSort or ( @SortedVectorOfX.size != @VectorOfX.size )
-        @SortedVectorOfX = @VectorOfX.sort
+        if forceSort then
+            @SortedVectorOfX = @VectorOfX.sort
+            return
+        end
+        if not @SortedVectorOfX or ( @SortedVectorOfX.size != @VectorOfX.size ) then
+            @SortedVectorOfX = @VectorOfX.sort
+        end
     end
 
     def initialize(aA=nil)
@@ -648,11 +652,11 @@ class VectorOfContinuous < VectorOfX
         sopo    = SumsOfPowers.new(populationCalculation)
         if sumOfDiffs then
             n       = getCount
-            sum     = genSum
+            sum     = getSum
             sopo.setToDiffsFromMeanState(sum,n)
         end
         if sumOfDiffs then
-            amean   = genArithmeticMean
+            amean   = calculateArithmeticMean
             @VectorOfX.each do |lx|
                 diff = lx - amean
                 sopo.addToSums(diff)
@@ -666,7 +670,7 @@ class VectorOfContinuous < VectorOfX
     end
 
     def _decideHistogramStartNumber(startNumber=nil)
-        startno = genMin        unless startNumber
+        startno = requestMin    unless startNumber
         startno = startNumber.to_f  if startNumber
         return startno
     end
@@ -724,7 +728,7 @@ class VectorOfContinuous < VectorOfX
     def generateCoefficientOfVariation
         @SOPo       = _addUpXsToSumsOfPowers(@Population,@SumOfDiffs) unless @SOPo
         amean       = @SOPo.ArithmeticMean
-        stddev      = @SOPo.genStandardDeviation
+        stddev      = @SOPo.generateStandardDeviation
         unrounded   = stddev / amean
         rounded     = unrounded.round(@OutputDecimalPrecision)
         #STDERR.puts "trace 6 genCoefficientOfVariation #{amean}, #{stddev}, #{@Population}, #{@SumOfDiffs}, #{unrounded}, #{rounded}"
@@ -732,7 +736,7 @@ class VectorOfContinuous < VectorOfX
     end
 
     def generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber=nil)
-        max             = genMax
+        max             = requestMax
         startno         = _decideHistogramStartNumber(startNumber)
         histo = HistogramOfX.newFromDesiredSegmentCount(startno,max,desiredSegmentCount)
         histo.validateRangesComplete
@@ -744,7 +748,7 @@ class VectorOfContinuous < VectorOfX
     end
 
     def generateHistogramAAbySegmentSize(segmentSize,startNumber=nil)
-        max             = genMax
+        max             = requestMax
         startno         = _decideHistogramStartNumber(startNumber)
         histo = HistogramOfX.newFromUniformSegmentSize(startno,max,segmentSize)
         histo.validateRangesComplete
@@ -756,7 +760,7 @@ class VectorOfContinuous < VectorOfX
     end
 
     def generateMeanAbsoluteError
-        amean                   = genArithmeticMean
+        amean                   = calculateArithmeticMean
         nf                      = @VectorOfX.size.to_f
         sumofabsolutediffs      = 0
         @VectorOfX.each do |lx|
@@ -810,7 +814,7 @@ class VectorOfContinuous < VectorOfX
         when 2
             unrounded = @SOPo.calculateExcessKurtosis_2_JR_R
         when 3
-            unrounded = @SOPo.calculateExcessKurtosis_3_365datascience
+            unrounded = @SOPo.generateExcessKurtosis_3_365datascience
         else
             m = "There is no excess kurtosis formula #{formulaId} implemented at this time."
             raise ArgumentError, m
@@ -874,31 +878,31 @@ class VectorOfContinuous < VectorOfX
     def requestSummaryCollection
         @SOPo                   = _addUpXsToSumsOfPowers(true,true)
         amean                   = @SOPo.ArithmeticMean
-        popcov                  = genCoefficientOfVariation
-        gmean                   = genGeometricMean
+        popcov                  = generateCoefficientOfVariation
+        gmean                   = calculateGeometricMean
         is_even                 = isEvenN?
-        kurtosis                = @SOPo.genKurtosis.round(@OutputDecimalPrecision)
-        mae                     = genMeanAbsoluteError.round(@OutputDecimalPrecision)
-        median                  = genMedian
-        min,max                 = genRange
-        mode                    = genMode
+        kurtosis                = @SOPo.requestKurtosis.round(@OutputDecimalPrecision)
+        mae                     = generateMeanAbsoluteError.round(@OutputDecimalPrecision)
+        median                  = requestMedian
+        min,max                 = requestRange
+        mode                    = requestMode
         n                       = getCount
-        population_stddev_diffs = @SOPo.genStandardDeviation.round(@OutputDecimalPrecision)
+        population_stddev_diffs = @SOPo.generateStandardDeviation.round(@OutputDecimalPrecision)
         #STDERR.puts "trace getSummaryStatistics population_stddev_diffs #{population_stddev_diffs}"
         @SOPo.Population        = false
-        sample_stddev_diffs     = @SOPo.genStandardDeviation.round(@OutputDecimalPrecision)
+        sample_stddev_diffs     = @SOPo.generateStandardDeviation.round(@OutputDecimalPrecision)
         #STDERR.puts "trace getSummaryStatistics sample_stddev_diffs #{sample_stddev_diffs}"
-        samplecov               = genCoefficientOfVariation
+        samplecov               = generateCoefficientOfVariation
         nilSOPo
         @SOPo                   = _addUpXsToSumsOfPowers(true,false)
         @SOPo.Population        = true
-        population_stddev_sumxs = @SOPo.genStandardDeviation.round(@OutputDecimalPrecision)
+        population_stddev_sumxs = @SOPo.generateStandardDeviation.round(@OutputDecimalPrecision)
         #STDERR.puts "trace getSummaryStatistics population_stddev_sumxs #{population_stddev_sumxs}"
         @SOPo.Population        = false
-        sample_stddev_sumxs     = @SOPo.genStandardDeviation.round(@OutputDecimalPrecision)
+        sample_stddev_sumxs     = @SOPo.generateStandardDeviation.round(@OutputDecimalPrecision)
         #STDERR.puts "trace getSummaryStatistics sample_stddev_sumxs #{sample_stddev_sumxs}"
-        skewness                = @SOPo.genSkewness.round(@OutputDecimalPrecision)
-        sum                     = genSum
+        skewness                = @SOPo.requestSkewness.round(@OutputDecimalPrecision)
+        sum                     = getSum
         return {
             ArithmeticMeanId    => amean,
             COVPopulationId     => popcov,
@@ -924,14 +928,14 @@ class VectorOfContinuous < VectorOfX
 
     def requestVarianceSumOfDifferencesFromMean(populationCalculation=false)
         @SOPo = _addUpXsToSumsOfPowers(populationCalculation)
-        v = @SOPo.genVarianceUsingSubjectAsDiffs
+        v = @SOPo.calculateVarianceUsingSubjectAsDiffs
         # Note rounding is not done here, as it would be double rounded with stddev.
         return v
     end
 
     def requestVarianceXsSquaredMethod(populationCalculation=false)
         @SOPo = _addUpXsToSumsOfPowers(populationCalculation,false)
-        v = @SOPo.genVarianceUsingSubjectAsSumXs
+        v = @SOPo.calculateVarianceUsingSubjectAsSumXs
         # Note rounding is not done here, as it would be double rounded with stddev.
         return v
     end
@@ -942,7 +946,6 @@ class VectorOfContinuous < VectorOfX
     attr_accessor   :SOPo
     attr_accessor   :UseDiffFromMeanCalculations
     attr_accessor   :ValidateStringNumbers
-
 
 end
 
