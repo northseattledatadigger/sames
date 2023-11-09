@@ -194,20 +194,20 @@ class HistogramOfX
         @FrequencyAA.keys.sort.each do |lstartno|
             lroo = @FrequencyAA[lstartno]
             unless lstartno == lroo.StartNo
-                raise ArgumentError, "Programmer Error on startno assignments."
+                raise RangeError, "Programmer Error on startno assignments."
             end
             if i == 0 then
                 unless lroo.StartNo <= @Min
                     m = "Range [#{lroo.StartNo},#{lroo.StopNo}] "
                     m += " starts after the minimum designated value '#{@Min}."
-                    raise ArgumentError, m
+                    raise RangeError, m
                 end
             else
                 unless lroo.StartNo == previous_lroo.StopNo
                     m = "Range [#{previous_lroo.StartNo},#{previous_lroo.StopNo}]"
                     m += " is not adjacent to the next range "
                     m += "[#{lroo.StartNo},#{lroo.StopNo}]."
-                    raise ArgumentError, m
+                    raise RangeError, m
                 end
             end
             i += 1
@@ -216,7 +216,7 @@ class HistogramOfX
         unless @Max <= lroo.StopNo
             m = "Range [#{lroo.StartNo},#{lroo.StopNo}] "
             m += " ends before the maximum value '#{@Max}."
-            raise ArgumentError, m
+            raise RangeError, m
         end
 
     end
@@ -249,7 +249,7 @@ class SumsOfPowers
         def genPearsonsSecondSkewnessCoefficient(aMean,medianFloat,stdDev)
             # See 2023/11/05 "Pearson's second skewness coefficient" in:
             #   https://en.wikipedia.org/wiki/Skewness
-            sc  = ( mu - medianFloat ) / sd
+            sc  = ( aMean - medianFloat ) / stdDev
             return sc
         end
 
@@ -260,7 +260,7 @@ class SumsOfPowers
         # Note I checked this one at:
         #   https://math.stackexchange.com/questions/2569510/proof-for-sum-of-squares-formula-statistics-related
         #
-        if @IsInputDiffFromMean
+        if @DiffFromMeanInputsUsed
             raise ArgumentError, "May ONLY be used with Sum of Xs Data."
         end
         nreciprocal = ( 1.0 / @N.to_f )
@@ -275,7 +275,7 @@ class SumsOfPowers
         # when going to sample means, leads to a simple Pascal Triangle pattern:
         # My algegra: Sum( xi - mu )**3 ==
         #   Sum(xi**3) - 3*Sum(xi**2)*amean + 3*Sum(xi)*(amean**2) - mu**3
-        if @IsInputDiffFromMean
+        if @DiffFromMeanInputsUsed
             raise ArgumentError, "May ONLY be used with Sum of Xs Data."
         end
         first   = @SumPowerOf3
@@ -291,7 +291,7 @@ class SumsOfPowers
         # when going to sample means, leads to a simple Pascal Triangle pattern:
         # My algegra: Sum( xi - mu )**4 ==
         #   Sum(xi**4) - 4*Sum(xi**3)*amean + 6*Sum(xi**2)(amean**2) - 4**Sum(xi)*(amean**3) + mu**4
-        if @IsInputDiffFromMean
+        if @DiffFromMeanInputsUsed
             raise ArgumentError, "May ONLY be used with Sum of Xs Data."
         end
         first   = @SumPowerOf4
@@ -303,41 +303,49 @@ class SumsOfPowers
         return result
     end
 
-    def initialize(sumXs,nA,populationDistribution=false,isDiffsFromMeanCalculation=true)
-
-        @IsInputDiffFromMean    = isDiffsFromMeanCalculation
+    def initialize(populationDistribution=false)
+        @ArithmeticMean         = 0
+        @N                      = 0
+        @DiffFromMeanInputsUsed    = false
         @Population             = populationDistribution
 
-        @N                      = nA
-        @SumOfXs                = sumXs
-
-        @ArithmeticMean         = ( sumXs.to_f / nA.to_f )
-
+        @SumOfXs                = 0
         @SumPowerOf2            = 0
         @SumPowerOf3            = 0
         @SumPowerOf4            = 0
     end
 
     def addToSums(sFloat)
-        @SumPowerOf2 += sFloat * sFloat
-        @SumPowerOf3 += sFloat * sFloat * sFloat
-        @SumPowerOf4 += sFloat * sFloat * sFloat * sFloat
+        unless @DiffFromMeanInputsUsed then
+            @N += 1
+            @SumOfXs        += sFloat   
+
+            @ArithmeticMean = ( @SumOfXs.to_f / @N.to_f )
+        end
+        @SumPowerOf2        += sFloat * sFloat
+        @SumPowerOf3        += sFloat * sFloat * sFloat
+        @SumPowerOf4        += sFloat * sFloat * sFloat * sFloat
     end
 
     def genExcessKurtosis_2_JR_R
+        #trace genExcessKurtosis_2_JR_R:  18.0, 708.0, 39.333333333333336, 60.0, 11.111111111111112, 0.5399999999999996
         #  2018-01-04 by Jonathan Regenstein https://rviews.rstudio.com/2018/01/04/introduction-to-kurtosis/
-        unless @IsInputDiffFromMean
+        unless @DiffFromMeanInputsUsed
             raise ArgumentError, "May NOT be used with Sum of Xs Data."
         end
         nf          = @N.to_f
         numerator   = @SumPowerOf4 / nf
         denominator = ( @SumPowerOf2 / nf ) ** 2 
         ek          = ( numerator / denominator ) - 3
+        #puts "trace genExcessKurtosis_2_JR_R:  #{nf}, #{@SumPowerOf4}, #{numerator}, #{@SumPowerOf2}, #{denominator}, #{ek}"
         return ek
     end
 
     def genExcessKurtosis_3_365datascience
         #  https://365datascience.com/calculators/kurtosis-calculator/
+        unless @DiffFromMeanInputsUsed
+            raise ArgumentError, "May NOT be used with Sum of Xs Data."
+        end
         nf                  = @N.to_f
         stddev              = genStandardDeviation
         s4                  = stddev**4
@@ -363,7 +371,7 @@ class SumsOfPowers
     def genKurtosis_Biased_DiffFromMeanCalculation
         # See 2023/11/05 "Standard biased estimator" in:
         #   https://en.wikipedia.org/wiki/Kurtosis
-        unless @IsInputDiffFromMean
+        unless @DiffFromMeanInputsUsed
             raise ArgumentError, "May NOT be used with Sum of Xs Data."
         end
         nreciprocal     = ( 1.0 / @N.to_f )
@@ -377,6 +385,13 @@ class SumsOfPowers
     def genKurtosis_Unbiased_DiffFromMeanCalculation
         # See 2023/11/05 "Standard unbiased estimator" in:
         #   https://en.wikipedia.org/wiki/Kurtosis
+        unless @N > 3
+            raise ArgumentError, "This formula wll not be executed for N <= 3."
+        end
+        unless @DiffFromMeanInputsUsed
+            raise ArgumentError, "May NOT be used with Sum of Xs Data."
+        end
+        #STDERR.puts "\ntrace 1 genKurtosis_Unbiased_DiffFromMeanCalculation:  #{@ArithmeticMean},#{@N},#{@DiffFromMeanInputsUsed},#{@Population},#{@SumOfXs},#{@SumPowerOf2},#{@SumPowerOf3},#{@SumPowerOf4}"
         nf = @N.to_f
 
         leftnumerator       = ( nf + 1.0 ) * nf * ( nf - 1.0 )
@@ -389,7 +404,14 @@ class SumsOfPowers
         rightdenominator    = ( nf - 2.0 ) * ( nf - 3.0 )
         right               = rightnumerator / rightdenominator
         sue_G2              = left * middle - right
-        #STDERR.puts "sue_G2              = left * middle * right: #{sue_G2}              = #{left} * #{middle} * #{right}"
+        #STDERR.puts "\nsue_G2              = left * middle * right: #{sue_G2}              = #{left} * #{middle} * #{right}"
+=begin
+trace 1 genKurtosis_Unbiased_DiffFromMeanCalculation:  3.3333333333333335,3,true,false,10,34,118,418
+
+sue_G2              = left * middle * right: NaN              = Infinity * 0 * Infinity
+trace Generating kurtosis:  NaN
+=end
+
         return sue_G2
     end
 
@@ -398,7 +420,7 @@ class SumsOfPowers
         #   https://en.wikipedia.org/wiki/Skewness
         nreciprocal     = ( 1.0 / @N.to_f )
         numerator       = nil
-        if @IsInputDiffFromMean then
+        if @DiffFromMeanInputsUsed then
             numerator   = nreciprocal * @SumPowerOf3
         else
             thirdmoment = _thirdMomentSubjectXs
@@ -416,7 +438,7 @@ class SumsOfPowers
         inside_den      = nil
         nreciprocal     = ( 1.0 / @N.to_f )
         numerator       = nil
-        if @IsInputDiffFromMean then
+        if @DiffFromMeanInputsUsed then
             inside_den  = nreciprocal * @SumPowerOf2
             numerator   = nreciprocal * @SumPowerOf3
         else
@@ -453,8 +475,10 @@ class SumsOfPowers
     end
 
     def genStandardDeviation
+        sc = self.class
+        #STDERR.puts "trace 0 #{sc}.genStandardDeviation:  #{@ArithmeticMean},#{@N},#{@DiffFromMeanInputsUsed},#{@Population},#{@SumOfXs},#{@SumPowerOf2},#{@SumPowerOf3},#{@SumPowerOf4}"
         v = nil
-        if @IsInputDiffFromMean then
+        if @DiffFromMeanInputsUsed then
             v = genVarianceUsingSubjectAsDiffs
         else
             v = genVarianceUsingSubjectAsSumXs
@@ -478,6 +502,7 @@ class SumsOfPowers
         nf              = @N.to_f
         v = @SumPowerOf2 / ( nf - 1.0 ) unless @Population
         v = @SumPowerOf2 / nf               if @Population
+        #STDERR.puts "trace 8 #{self.class}.genVarianceUsingSubjectAsDiffs:  #{nf}, #{v}, #{@Population}, #{@SumPowerOf2}"
         return v
     end
 
@@ -489,13 +514,22 @@ class SumsOfPowers
         else
             v = ( @SumPowerOf2 - nf * ameansquared ) / ( nf - 1.0 )
         end
+        #STDERR.puts "trace 8 #{self.class}.genVarianceUsingSubjectAsSumXs: #{nf}, #{v}, #{@Population}, #{@SumPowerOf2}, #{ameansquared}"
         return v
+    end
+
+    def setToDiffsFromMeanState(sumXs,nA)
+        @DiffFromMeanInputsUsed = true
+        @N                      = nA
+        @SumOfXs                = sumXs
+
+        @ArithmeticMean         = ( sumXs.to_f / nA.to_f )
     end
 
     attr_accessor :Population
 
     attr_reader :ArithmeticMean
-    attr_reader :IsInputDiffFromMean
+    attr_reader :DiffFromMeanInputsUsed
     attr_reader :N
     attr_reader :SumOfXs
     attr_reader :SumPowerOf2
@@ -578,10 +612,12 @@ class VectorOfContinuous < VectorOfX
     end
 
     def _addUpXsToSumsOfPowers(populationCalculation=false,sumOfDiffs=true)
-        n       = getCount
-        sum     = genSum
-
-        sopo    = SumsOfPowers.new(sum,n,populationCalculation,sumOfDiffs)
+        sopo    = SumsOfPowers.new(populationCalculation)
+        if sumOfDiffs then
+            n       = getCount
+            sum     = genSum
+            sopo.setToDiffsFromMeanState(sum,n)
+        end
         if sumOfDiffs then
             amean   = genArithmeticMean
             @VectorOfX.each do |lx|
@@ -608,7 +644,7 @@ class VectorOfContinuous < VectorOfX
         @Population       = false
         @SOPo                   = nil
         @SortedVectorOfX        = nil
-        @UseSumOfDiffs          = true
+        @UseDiffFromMeanCalculations          = true
         @ValidateStringNumbers  = false
         @VectorOfX              = vectorX
     end
@@ -705,6 +741,9 @@ trace 8 calculateQuartile:  1, 2, 2 * 0.5 + 3 * 0.5 == 2.5
     end
 
     def genExcessKurtosis(formulaId=3)
+        unless @UseDiffFromMeanCalculations
+            raise ArgumentError, "May NOT be used with Sum of Xs Data."
+        end
         @SOPo = _addUpXsToSumsOfPowers(@Population) unless @SOPo
         unrounded = nil
         case formulaId
@@ -795,8 +834,9 @@ trace 8 calculateQuartile:  1, 2, 2 * 0.5 + 3 * 0.5 == 2.5
     end
 
     def genStandardDeviation
-        @SOPo = _addUpXsToSumsOfPowers(@Population,@UseSumOfDiffs)
+        @SOPo = _addUpXsToSumsOfPowers(@Population,@UseDiffFromMeanCalculations)
         unroundedstddev = @SOPo.genStandardDeviation
+#NOTE:  Something wrong here.  Taking a break.
         if unroundedstddev == 0.0 then
             raise RangeError, "Zero Result indicates squareroot error:  #{unroundedstddev}"
         end
@@ -894,7 +934,7 @@ trace 8 calculateQuartile:  1, 2, 2 * 0.5 + 3 * 0.5 == 2.5
     attr_accessor   :InputDecimalPrecision
     attr_accessor   :OutputDecimalPrecision
     attr_accessor   :Population
-    attr_accessor   :UseSumOfDiffs
+    attr_accessor   :UseDiffFromMeanCalculations
     attr_accessor   :ValidateStringNumbers
 
     attr_reader     :SOPo

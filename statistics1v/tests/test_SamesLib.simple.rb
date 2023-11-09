@@ -21,16 +21,6 @@ require 'test/unit'
 
 include Test::Unit::Assertions
 
-def returnIfThere(fSpec)
-    return fSpec if File.exists?(fSpec)
-    raise ArgumentError, "Test data file #{fSpec} not found." 
-end
-
-SamesDs=File.expand_path("../..", __dir__)
-TestDataDs="#{SamesDs}/testdata"
-
-FirstTestFileFs=returnIfThere("#{TestDataDs}/doexampledata.sorted.reversed.truncated1024.csv")
-
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Tests for Global Support Routines
 
@@ -162,6 +152,245 @@ describe "validateStringNumberRange(strA)" do
         assert_raise RangeError do
             validateStringNumberRange("999999999999999999999999999999999999999999999.9999999999999")
         end
+    end
+
+end
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Tests for HistogramOfX class
+
+describe HistogramOfX do
+
+    it "Simple Construction." do
+        localo = HistogramOfX.new(1,5)
+        assert_instance_of HistogramOfX, localo
+        localo.setOccurrenceRange(1,3)
+        localo.setOccurrenceRange(3,6)
+        localo.addToCounts(1)
+        localo.addToCounts(1)
+        localo.addToCounts(2)
+        localo.addToCounts(3)
+        localo.addToCounts(3)
+        localo.addToCounts(3)
+        result = localo.genOrderedListOfCountVectors
+        assert_equal result[0][0], 1
+        assert_equal result[0][1], 3
+        assert_equal result[0][2], 3
+        assert_equal result[1][0], 3
+        assert_equal result[1][1], 6
+        assert_equal result[1][2], 3
+    end
+
+    it "Construction by Segment Size." do
+        localo = HistogramOfX.newFromUniformSegmentSize(1,5,3)
+        localo.addToCounts(1)
+        localo.addToCounts(1)
+        localo.addToCounts(2)
+        localo.addToCounts(3)
+        localo.addToCounts(3)
+        localo.addToCounts(3)
+        result = localo.genOrderedListOfCountVectors
+        assert_equal result[0][0], 1
+        assert_equal result[0][1], 4
+        assert_equal result[0][2], 6
+        assert_equal result[1][0], 4
+        assert_equal result[1][1], 7
+        assert_equal result[1][2], 0
+    end
+
+    it "Construction by Number of Segments." do
+        localo = HistogramOfX.newFromDesiredSegmentCount(1,5,2)
+        localo.addToCounts(1)
+        localo.addToCounts(1)
+        localo.addToCounts(2)
+        localo.addToCounts(3)
+        localo.addToCounts(3)
+        localo.addToCounts(3)
+        result = localo.genOrderedListOfCountVectors
+        assert_equal result[0][0], 1
+        assert_equal result[0][1], 3.5
+        assert_equal result[0][2], 6
+        assert_equal result[1][0], 3.5
+        assert_equal result[1][1], 6
+        assert_equal result[1][2], 0
+    end
+
+    it "Internal class RangeOccurrence." do
+        localo = HistogramOfX::RangeOccurrence.new(1,2)
+        assert_instance_of HistogramOfX::RangeOccurrence, localo
+        assert_equal 0, localo.Count
+        assert_equal 1, localo.StartNo
+        assert_equal 2, localo.StopNo
+        localo.addToCount
+        assert_equal 1, localo.Count
+        assert localo.hasOverlap?(1,2)
+        assert_false localo.hasOverlap?(2,3)
+        assert localo.isInRange?(1)
+        assert localo.isInRange?(1.5)
+        assert_false localo.isInRange?(2)
+    end
+
+    it "Internal validation against overlapping ranges." do
+        localo = HistogramOfX.new(-128,128)
+        localo.setOccurrenceRange(-128,-64)
+        localo.setOccurrenceRange(-64,0)
+        localo.setOccurrenceRange(0,64)
+        localo.setOccurrenceRange(64,129)
+        assert_raise ArgumentError do
+            localo.setOccurrenceRange(25,99)
+        end
+    end
+
+    it "Adding to counts." do
+        localo = HistogramOfX.new(-5,0)
+        localo.setOccurrenceRange(0,5)
+        localo.addToCounts(1)
+        localo.addToCounts(2)
+        localo.addToCounts(-3)
+        assert_raise ArgumentError do
+            localo.addToCounts(8)
+        end
+    end
+
+    it "Generating an ordered list of vectors of counts." do
+        localo = HistogramOfX.new(-128,128)
+        localo.setOccurrenceRange(-128,-64)
+        localo.setOccurrenceRange(-64,0)
+        localo.setOccurrenceRange(0,64)
+        localo.setOccurrenceRange(64,129)
+        localo.addToCounts(-99)
+        localo.addToCounts(12)
+        localo.addToCounts(53)
+        localo.addToCounts(64)
+        localo.addToCounts(3)
+        localo.addToCounts(2)
+        localo.addToCounts(22)
+        localo.addToCounts(-22)
+        result = localo.genOrderedListOfCountVectors
+        assert_equal result[1][0], -64
+        assert_equal result[1][1], 0
+        assert_equal result[1][2], 1
+        assert_equal result[3][0], 64
+        assert_equal result[3][1], 129
+        assert_equal result[3][2], 1
+    end
+
+    it "Validation that the Range is Complete." do
+        localo = HistogramOfX.new(-128,128)
+        localo.setOccurrenceRange(-128,-64)
+        localo.setOccurrenceRange(-64,0)
+        localo.setOccurrenceRange(0,64)
+        localo.setOccurrenceRange(64,129)
+        localo.validateRangesComplete
+        localo.setOccurrenceRange(244,256)
+        assert_raise RangeError do
+            localo.validateRangesComplete
+        end
+    end
+       
+end
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Tests for SumsOfPowers class
+
+describe SumsOfPowers do
+
+    it "Has just one native constructor." do
+        localo = SumsOfPowers.new(false)
+        assert_instance_of SumsOfPowers, localo
+    end
+
+    it "Generation of Pearson's First Skewness Coefficient with class method." do
+        # Need data here for better knowledge.  For now just make sure a number comes out.
+        a = SumsOfPowers.genPearsonsFirstSkewnessCoefficient(25,3,1.57)
+        assert_equal 14.012738853503183, a
+    end
+       
+    it "Generation of Pearson's Second Skewness Coefficient with class method." do
+        # Need data here for better knowledge.  For now just make sure a number comes out.
+        a = SumsOfPowers.genPearsonsSecondSkewnessCoefficient(25,3,1.57)
+        assert_equal 14.012738853503183, a
+        #STDERR.puts "trace a:  #{a}"
+    end
+       
+    it "Generate second moment Subject Xs sum." do
+        localo = SumsOfPowers.new(false)
+        assert_respond_to localo, :_secondMomentSubjectXs
+        a = localo._secondMomentSubjectXs
+    end
+
+    it "Generate third moment Subject Xs sum." do
+        localo = SumsOfPowers.new(false)
+        assert_respond_to localo, :_thirdMomentSubjectXs
+        a = localo._thirdMomentSubjectXs
+    end
+
+    it "Generate fourth moment Subject Xs sum." do
+        localo = SumsOfPowers.new(false)
+        assert_respond_to localo, :_fourthMomentSubjectXs
+        a = localo._fourthMomentSubjectXs
+    end
+
+    it "Adding to the sums.." do
+        localo = SumsOfPowers.new(false)
+        localo.addToSums(3)
+        assert_equal 1, localo.N
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+    end
+
+    it "Generating kurtosis." do
+        a = [3,3,4,5]
+        localo = SumsOfPowers.new(false)
+        localo.setToDiffsFromMeanState(a.sum,a.size)
+        localo.addToSums(a[0])
+        assert_equal a.size, localo.N
+        assert_equal 4, localo.N
+        localo.addToSums(a[1])
+        localo.addToSums(a[2])
+        localo.addToSums(a[3])
+        assert_equal 4, localo.N
+        result = localo.genKurtosis
+        #STDERR.puts "trace Generating kurtosis:  #{result}"
+        assert_equal -4.5, result
+    end
+
+    it "Generating skewness." do
+        localo = SumsOfPowers.new(false)
+        localo.addToSums(3)
+        assert_equal 1, localo.N
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        localo.addToSums(6)
+        result = localo.genSkewness
+        assert_equal 56.25011459381775, result
+    end
+
+    it "Generating standard deviation." do
+        localo = SumsOfPowers.new(false)
+        localo.addToSums(3)
+        assert_equal 1, localo.N
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(4)
+        result = localo.genStandardDeviation
+        assert_equal 0.5773502691896257, result
+    end
+
+    it "Generating variance." do
+        localo = SumsOfPowers.new(false)
+        localo.addToSums(3)
+        assert_equal 1, localo.N
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.genStandardDeviation
+        result = localo.genVarianceUsingSubjectAsDiffs
+#NOTE:  Problem here, obviously
+        assert_equal 17.0, result
+        result = localo.genVarianceUsingSubjectAsSumXs
+        assert_equal 0.33333333333333215, result
     end
 
 end
@@ -348,13 +577,24 @@ describe VectorOfContinuous do
 
     it "Can calculate kurtosis." do
         a = [1,2,3,4,5,6,7,8,9]
-        localo = VectorOfContinuous.new(a)
-        ek = localo.genExcessKurtosis(2)
+        localo  = VectorOfContinuous.new(a)
+        ek      = localo.genExcessKurtosis(2)
         #STDERR.puts "trace ek:  #{ek}"
         assert_equal -1.23, ek
-        ek = localo.genExcessKurtosis
+        ek      = localo.genExcessKurtosis
         assert_equal -1.2, ek
-        k = localo.genKurtosis
+        k       = localo.genKurtosis
+        #STDERR.puts "trace k:  #{k}"
+        assert_equal 1.8476, k
+
+        localo.UseDiffFromMeanCalculations = false
+        assert_raise ArgumentError do
+            localo.genExcessKurtosis(2)
+        end
+        assert_raise ArgumentError do
+            localo.genExcessKurtosis
+        end
+        k       = localo.genKurtosis
         #STDERR.puts "trace k:  #{k}"
         assert_equal 1.8476, k
     end
@@ -441,19 +681,19 @@ describe VectorOfContinuous do
         assert_equal sk3, sk
         a = [1,2,2,3,3,3,4,4,4,4,4,4]
         localo = VectorOfContinuous.new(a)
-        STDERR.puts "trace sk:  #{sk}"
+        #STDERR.puts "trace sk:  #{sk}"
     end
 
     it "Has four standard deviation calculations." do
         a = [1,2,3]
         localo = VectorOfContinuous.new(a)
         sdsd = localo.genStandardDeviation
-        localo.UseSumOfDiffs = false
+        localo.UseDiffFromMeanCalculations = false
         sdsx = localo.genStandardDeviation
         assert_equal sdsd, sdsx
         localo.Population = true
         sdsd = localo.genStandardDeviation
-        localo.UseSumOfDiffs = false
+        localo.UseDiffFromMeanCalculations = false
         sdsx = localo.genStandardDeviation
         assert_equal sdsd, sdsx
     end
