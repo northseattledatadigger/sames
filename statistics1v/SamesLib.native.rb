@@ -21,6 +21,25 @@
 # the past I have used "Larry Wall's" term Hash, which is probably less than
 # helpful. (I ruled out "AssArr" as needlessly distracting.)
 
+# NOTE:  Starting 2023/11/08, I'm changing my usage as follows:
+#       1.  A routine that pretty much directly uses existing language
+#       methods to access or calculate some data will be prefixed get:
+#           getFactorial, getSum, getCount
+#       2.  A routine that mostly actually does a calculation, no loops,
+#       or major subroutine calls (other than buffer updates), just formulas
+#       or sequences of calculations, will be prefixed with calculate:
+#           calculateGeometricMean, calculateQuartile,
+#       3.  Anything that requires looping, or to a great extent uses other
+#       methods, entirely or along with calculations, will be prefixed with
+#       generate:
+#           generateMode, generateStandardDeviation, 
+#       4.  The term I will used when an output array or associative array is
+#           "generated", will be "collection".
+#       5.  The term I will use when the calculation is completely farmed out
+#       to other routines is then request:
+#           requestKurtosis.
+#       
+
 require "bigdecimal"
 require 'csv'
 
@@ -28,13 +47,13 @@ require 'csv'
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Global Support Routines
 
-def genFactorial(nA)
+def getFactorial(nA)
     raise ArgumentError unless nA.is_a? Integer
     nf = Math.gamma(nA + 1)
     return nf
 end
 
-def genModeFromFrequencyAA(faaA)
+def generateModefromFrequencyAA(faaA)
     x = 0
     m = 0
     faaA.keys.each do |lx|
@@ -172,7 +191,7 @@ class HistogramOfX
         raise ArgumentError, m
     end
 
-    def genOrderedListOfCountVectors
+    def generateCountCollection
         orderedlist = Array.new
         @FrequencyAA.keys.sort.each do |lstartno|
             lroo = @FrequencyAA[lstartno]
@@ -239,14 +258,14 @@ class SumsOfPowers
 
     class << self
 
-        def genPearsonsFirstSkewnessCoefficient(aMean,modeFloat,stdDev)
+        def calculatePearsonsFirstSkewnessCoefficient(aMean,modeFloat,stdDev)
             # See 2023/11/05 "Pearson's first skewness coefficient" in:
             #   https://en.wikipedia.org/wiki/Skewness
             sc  = ( aMean - modeFloat ) / stdDev
             return sc
         end
 
-        def genPearsonsSecondSkewnessCoefficient(aMean,medianFloat,stdDev)
+        def calculatePearsonsSecondSkewnessCoefficient(aMean,medianFloat,stdDev)
             # See 2023/11/05 "Pearson's second skewness coefficient" in:
             #   https://en.wikipedia.org/wiki/Skewness
             sc  = ( aMean - medianFloat ) / stdDev
@@ -255,7 +274,7 @@ class SumsOfPowers
 
     end
 
-    def _secondMomentSubjectXs
+    def _calculateSecondMomentSubjectXs
         #   Sum( xi - mu )**2 == Sum(xi**2) - (1/n)(amean**2)
         # Note I checked this one at:
         #   https://math.stackexchange.com/questions/2569510/proof-for-sum-of-squares-formula-statistics-related
@@ -270,7 +289,7 @@ class SumsOfPowers
         return ssx
     end
 
-    def _thirdMomentSubjectXs
+    def _calculateThirdMomentSubjectXs
         # My algegra, using unreduced arithmetic mean parts because that becomes complicated
         # when going to sample means, leads to a simple Pascal Triangle pattern:
         # My algegra: Sum( xi - mu )**3 ==
@@ -286,7 +305,7 @@ class SumsOfPowers
         return result
     end
 
-    def _fourthMomentSubjectXs
+    def _calculateFourthMomentSubjectXs
         # My algegra, using unreduced arithmetic mean parts because that becomes complicated
         # when going to sample means, leads to a simple Pascal Triangle pattern:
         # My algegra: Sum( xi - mu )**4 ==
@@ -327,7 +346,7 @@ class SumsOfPowers
         @SumPowerOf4        += sFloat * sFloat * sFloat * sFloat
     end
 
-    def genExcessKurtosis_2_JR_R
+    def calculateExcessKurtosis_2_JR_R
         #trace genExcessKurtosis_2_JR_R:  18.0, 708.0, 39.333333333333336, 60.0, 11.111111111111112, 0.5399999999999996
         #  2018-01-04 by Jonathan Regenstein https://rviews.rstudio.com/2018/01/04/introduction-to-kurtosis/
         unless @DiffFromMeanInputsUsed
@@ -341,7 +360,7 @@ class SumsOfPowers
         return ek
     end
 
-    def genExcessKurtosis_3_365datascience
+    def calculateExcessKurtosis_3_365datascience
         #  https://365datascience.com/calculators/kurtosis-calculator/
         unless @DiffFromMeanInputsUsed
             raise ArgumentError, "May NOT be used with Sum of Xs Data."
@@ -363,12 +382,7 @@ class SumsOfPowers
         return ek
     end
 
-    def genKurtosis
-        kurtosis = genKurtosis_Unbiased_DiffFromMeanCalculation
-        return kurtosis
-    end
-
-    def genKurtosis_Biased_DiffFromMeanCalculation
+    def calculateKurtosis_Biased_DiffFromMeanCalculation
         # See 2023/11/05 "Standard biased estimator" in:
         #   https://en.wikipedia.org/wiki/Kurtosis
         unless @DiffFromMeanInputsUsed
@@ -382,7 +396,7 @@ class SumsOfPowers
         return g2
     end
 
-    def genKurtosis_Unbiased_DiffFromMeanCalculation
+    def calculateKurtosis_Unbiased_DiffFromMeanCalculation
         # See 2023/11/05 "Standard unbiased estimator" in:
         #   https://en.wikipedia.org/wiki/Kurtosis
         unless @N > 3
@@ -415,7 +429,7 @@ trace Generating kurtosis:  NaN
         return sue_G2
     end
 
-    def genNaturalEstimatorOfPopulationSkewness_b1
+    def calculateNaturalEstimatorOfPopulationSkewness_b1
         # See 2023/11/05 "Sample Skewness" in:
         #   https://en.wikipedia.org/wiki/Skewness
         nreciprocal     = ( 1.0 / @N.to_f )
@@ -432,7 +446,7 @@ trace Generating kurtosis:  NaN
         return b1
     end
 
-    def genNaturalEstimatorOfPopulationSkewness_g1
+    def calculateNaturalEstimatorOfPopulationSkewness_g1
         # See 2023/11/05 "Sample Skewness" in:
         #   https://en.wikipedia.org/wiki/Skewness
         inside_den      = nil
@@ -453,7 +467,63 @@ trace Generating kurtosis:  NaN
         return g1
     end
 
-    def genSkewness(formulaId=3)
+    def calculateVarianceUsingSubjectAsDiffs
+        unless @DiffFromMeanInputsUsed
+            raise ArgumentError, "May NOT be used with Sum of Xs Data."
+        end
+        nf              = @N.to_f
+        v = @SumPowerOf2 / ( nf - 1.0 ) unless @Population
+        v = @SumPowerOf2 / nf               if @Population
+        #STDERR.puts "trace 8 #{self.class}.genVarianceUsingSubjectAsDiffs:  #{v}, #{nf}, #{@Population}, #{@SumPowerOf2}"
+        return v
+    end
+
+    def calculateVarianceUsingSubjectAsSumXs
+        if @DiffFromMeanInputsUsed
+            raise ArgumentError, "May ONLY be used with Sum of Xs Data."
+        end
+        ameansquared = @ArithmeticMean * @ArithmeticMean
+        nf              = @N.to_f
+        if @Population then
+            v = ( @SumPowerOf2 - nf * ameansquared ) / nf
+        else
+            v = ( @SumPowerOf2 - nf * ameansquared ) / ( nf - 1.0 )
+        end
+        #STDERR.puts "trace 8 #{self.class}.genVarianceUsingSubjectAsSumXs: #{v}, #{nf}, #{@Population}, #{@SumPowerOf2}, #{ameansquared}"
+        return v
+    end
+
+    def generateStandardDeviation
+        sc = self.class
+        #STDERR.puts "trace 0 #{sc}.genStandardDeviation:  #{@ArithmeticMean},#{@N},#{@DiffFromMeanInputsUsed},#{@Population},#{@SumOfXs},#{@SumPowerOf2},#{@SumPowerOf3},#{@SumPowerOf4}"
+        v = nil
+        if @DiffFromMeanInputsUsed then
+            v = calculateVarianceUsingSubjectAsDiffs
+        else
+            v = calculateVarianceUsingSubjectAsSumXs
+        end
+        stddev = Math.sqrt(v)
+        return stddev
+    end
+
+    def generateThirdDefinitionOfSampleSkewness_G1
+        # See 2023/11/05 "Sample Skewness" in:
+        #   https://en.wikipedia.org/wiki/Skewness
+        b1      = calculateNaturalEstimatorOfPopulationSkewness_b1
+        nf      = @N.to_f
+        k3      = ( nf**2 ) * b1
+        k2_3s2  = ( nf - 1 ) * ( nf - 2 )
+        ss_G1   = k3 / k2_3s2
+        return ss_G1
+    end
+
+    def requestKurtosis
+        # This of course needs to be expanded to use both diffs from mean ANd sum of Xs calculation.
+        kurtosis = genKurtosis_Unbiased_DiffFromMeanCalculation
+        return kurtosis
+    end
+
+    def requestSkewness(formulaId=3)
         #NOTE:  There is NO POPULATION Skewness at this time.
         if @Population then
             m = "There is no POPULATION skewness formula implemented at this time."
@@ -474,51 +544,12 @@ trace Generating kurtosis:  NaN
         return skewness
     end
 
-    def genStandardDeviation
-        sc = self.class
-        #STDERR.puts "trace 0 #{sc}.genStandardDeviation:  #{@ArithmeticMean},#{@N},#{@DiffFromMeanInputsUsed},#{@Population},#{@SumOfXs},#{@SumPowerOf2},#{@SumPowerOf3},#{@SumPowerOf4}"
-        v = nil
-        if @DiffFromMeanInputsUsed then
-            v = genVarianceUsingSubjectAsDiffs
-        else
-            v = genVarianceUsingSubjectAsSumXs
-        end
-        stddev = Math.sqrt(v)
-        return stddev
-    end
-
-    def genThirdDefinitionOfSampleSkewness_G1
-        # See 2023/11/05 "Sample Skewness" in:
-        #   https://en.wikipedia.org/wiki/Skewness
-        b1      = genNaturalEstimatorOfPopulationSkewness_b1
-        nf      = @N.to_f
-        k3      = ( nf**2 ) * b1
-        k2_3s2  = ( nf - 1 ) * ( nf - 2 )
-        ss_G1   = k3 / k2_3s2
-        return ss_G1
-    end
-
-    def genVarianceUsingSubjectAsDiffs
-        nf              = @N.to_f
-        v = @SumPowerOf2 / ( nf - 1.0 ) unless @Population
-        v = @SumPowerOf2 / nf               if @Population
-        #STDERR.puts "trace 8 #{self.class}.genVarianceUsingSubjectAsDiffs:  #{nf}, #{v}, #{@Population}, #{@SumPowerOf2}"
-        return v
-    end
-
-    def genVarianceUsingSubjectAsSumXs
-        ameansquared = @ArithmeticMean * @ArithmeticMean
-        nf              = @N.to_f
-        if @Population then
-            v = ( @SumPowerOf2 - ameansquared ) / nf
-        else
-            v = ( @SumPowerOf2 - nf * ameansquared ) / ( nf - 1.0 )
-        end
-        #STDERR.puts "trace 8 #{self.class}.genVarianceUsingSubjectAsSumXs: #{nf}, #{v}, #{@Population}, #{@SumPowerOf2}, #{ameansquared}"
-        return v
-    end
-
     def setToDiffsFromMeanState(sumXs,nA)
+        if @N > 0 then
+            m = "#{@N} values have already been added to the sums."
+            m += " You must reinit the object before setting to the Diffs From Mean state."
+            raise ArgumentError, m
+        end
         @DiffFromMeanInputsUsed = true
         @N                      = nA
         @SumOfXs                = sumXs
@@ -544,8 +575,10 @@ end
 
 class VectorOfX
 
-    def _assureSortedVectorOfX
-        @SortedVectorOfX = @VectorOfX.sort  unless @SortedVectorOfX
+    def _assureSortedVectorOfX(forceSort=false)
+        return unless @SortedVectorOfX
+        return unless forceSort or ( @SortedVectorOfX.size != @VectorOfX.size )
+        @SortedVectorOfX = @VectorOfX.sort
     end
 
     def initialize(aA=nil)
@@ -649,21 +682,22 @@ class VectorOfContinuous < VectorOfX
         @VectorOfX              = vectorX
     end
 
-=begin
-trace 6 calculateQuartile(1):  29.0, 7.25, 0.25, 7.0
-trace 8 calculateQuartile:  7, 8, 3 * 0.75 + 4 * 0.25 == 3.25
-trace 6 calculateQuartile(2):  9.0, 2.5, 0.5, 4.0
-trace 8 calculateQuartile:  4, 5, 5 * 0.5 + 6 * 0.5 == 5.5
-trace 6 calculateQuartile(2):  9.0, 2.5, 0.5, 4.0
-trace 8 calculateQuartile:  4, 5, 5 * 0.5 + 6 * 0.5 == 5.5
-trace 6 calculateQuartile(2):  9.0, 2.5, 0.5, 4.0
-trace 8 calculateQuartile:  4, 5, 5 * 0.5 + 6 * 0.5 == 5.5
-trace 6 calculateQuartile(2):  12.0, 3.25, 0.25, 5.5
-trace 8 calculateQuartile:  5, 6, 6 * 0.75 + 7 * 0.25 == 6.25
-trace 6 calculateQuartile(1):  5.0, 1.5, 0.5, 0.5, 1.0
-trace 8 calculateQuartile:  1, 2, 2 * 0.5 + 3 * 0.5 == 2.5
-1,2,3,4,5
-=end
+    def calculateArithmeticMean
+        nf          = @VectorOfX.size.to_f
+        sumxs       = @VectorOfX.sum.to_f
+        unrounded   = sumxs / nf
+        rounded     = unrounded.round(@OutputDecimalPrecision)
+        return rounded
+    end
+
+    def calculateGeometricMean
+        exponent    = ( 1.0 / @VectorOfX.size.to_f )
+        productxs   = @VectorOfX.reduce(1, :*)
+        unrounded   = productxs**exponent
+        rounded     = unrounded.round(@OutputDecimalPrecision)
+        return rounded
+    end
+
     def calculateQuartile(qNo)
         _assureSortedVectorOfX
         n = getCount
@@ -687,48 +721,29 @@ trace 8 calculateQuartile:  1, 2, 2 * 0.5 + 3 * 0.5 == 2.5
         return qvalue
     end
 
-    def genArithmeticMean
-        n           = @VectorOfX.size.to_f
-        sumxs       = @VectorOfX.sum.to_f
-        unrounded   = ( sumxs / n )
-        rounded     = unrounded.round(@OutputDecimalPrecision)
-        return rounded
-    end
-
-    def genCoefficientOfVariation
-        @SOPo = _addUpXsToSumsOfPowers(@Population,@SumOfDiffs) unless @SOPo
+    def generateCoefficientOfVariation
+        @SOPo       = _addUpXsToSumsOfPowers(@Population,@SumOfDiffs) unless @SOPo
         amean       = @SOPo.ArithmeticMean
         stddev      = @SOPo.genStandardDeviation
         unrounded   = stddev / amean
         rounded     = unrounded.round(@OutputDecimalPrecision)
         #STDERR.puts "trace 6 genCoefficientOfVariation #{amean}, #{stddev}, #{@Population}, #{@SumOfDiffs}, #{unrounded}, #{rounded}"
         return rounded
-        
     end
 
-    def genGeometricMean
-        exponent    = ( 1.0 / @VectorOfX.size.to_f )
-        productxs   = @VectorOfX.reduce(1, :*)
-        unrounded   = productxs**exponent
-        rounded     = unrounded.round(@OutputDecimalPrecision)
-        return rounded
-    end
-
-    def genHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber=nil)
+    def generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber=nil)
         max             = genMax
         startno         = _decideHistogramStartNumber(startNumber)
         histo = HistogramOfX.newFromDesiredSegmentCount(startno,max,desiredSegmentCount)
         histo.validateRangesComplete
         @VectorOfX.each do |lx|
             histo.addToCounts(lx)
-            a = histo.genOrderedListOfCountVectors
-            #STDERR.puts "trace genHistogramAAbyNumberOfSegments:  #{a}"
         end
-        resultvectors   = histo.genOrderedListOfCountVectors
+        resultvectors   = histo.generateCountCollection
         return resultvectors
     end
 
-    def genHistogramAAbySegmentSize(segmentSize,startNumber=nil)
+    def generateHistogramAAbySegmentSize(segmentSize,startNumber=nil)
         max             = genMax
         startno         = _decideHistogramStartNumber(startNumber)
         histo = HistogramOfX.newFromUniformSegmentSize(startno,max,segmentSize)
@@ -736,42 +751,11 @@ trace 8 calculateQuartile:  1, 2, 2 * 0.5 + 3 * 0.5 == 2.5
         @VectorOfX.each do |lx|
             histo.addToCounts(lx)
         end
-        resultvectors   = histo.genOrderedListOfCountVectors
+        resultvectors   = histo.generateCountCollection
         return resultvectors
     end
 
-    def genExcessKurtosis(formulaId=3)
-        unless @UseDiffFromMeanCalculations
-            raise ArgumentError, "May NOT be used with Sum of Xs Data."
-        end
-        @SOPo = _addUpXsToSumsOfPowers(@Population) unless @SOPo
-        unrounded = nil
-        case formulaId
-        when 2
-            unrounded = @SOPo.genExcessKurtosis_2_JR_R
-        when 3
-            unrounded = @SOPo.genExcessKurtosis_3_365datascience
-        else
-            m = "There is no excess kurtosis formula #{formulaId} implemented at this time."
-            raise ArgumentError, m
-        end
-        rounded = unrounded.round(@OutputDecimalPrecision)
-        return rounded
-    end
-
-    def genKurtosis
-        @SOPo = _addUpXsToSumsOfPowers(@Population) unless @SOPo
-        unrounded = @SOPo.genKurtosis
-        rounded = unrounded.round(@OutputDecimalPrecision)
-        return rounded
-    end
-
-    def genMax
-        _assureSortedVectorOfX
-        return @SortedVectorOfX[-1]
-    end
-
-    def genMeanAbsoluteError
+    def generateMeanAbsoluteError
         amean                   = genArithmeticMean
         nf                      = @VectorOfX.size.to_f
         sumofabsolutediffs      = 0
@@ -788,27 +772,76 @@ trace 8 calculateQuartile:  1, 2, 2 * 0.5 + 3 * 0.5 == 2.5
         return rounded
     end
 
-    def genMedian(sVoX=nil)
-        q2 = calculateQuartile(2)
-        return q2
-    end
-
-    def genMin(sVoX=nil)
-        _assureSortedVectorOfX
-        return @SortedVectorOfX[0]
-    end
-
-    def genMode
+    def generateMode
         lfaa            = Hash.new # Init local frequency associative array.
         @VectorOfX.each do |lx|
             lfaa[lx]    = 1   unless lfaa.has_key?(lx)
             lfaa[lx]    += 1      if lfaa.has_key?(lx)
         end
-        x               = genModeFromFrequencyAA(lfaa)
+        x               = generateModefromFrequencyAA(lfaa)
         return x
     end
 
-    def genQuartiles(sVoX=nil)
+    def getSum
+        sumxs = @VectorOfX.sum
+        return sumxs
+    end
+
+    def isEvenN?
+        n = @VectorOfX.size
+        return true if n % 2 == 0
+        return false
+    end
+
+    def pushX(xFloat)
+        raise ArgumentError, "#{xFloat} not usable number." unless isUsableNumber?(xFloat)
+        validateStringNumberRange(xFloat) if @ValidateStringNumbers
+        lfn = xFloat.to_f.round(@InputDecimalPrecision)
+        @VectorOfX.push(lfn)
+    end
+
+    def requestExcessKurtosis(formulaId=3)
+        unless @UseDiffFromMeanCalculations
+            raise ArgumentError, "May NOT be used with Sum of Xs Data."
+        end
+        @SOPo = _addUpXsToSumsOfPowers(@Population) unless @SOPo
+        unrounded = nil
+        case formulaId
+        when 2
+            unrounded = @SOPo.calculateExcessKurtosis_2_JR_R
+        when 3
+            unrounded = @SOPo.calculateExcessKurtosis_3_365datascience
+        else
+            m = "There is no excess kurtosis formula #{formulaId} implemented at this time."
+            raise ArgumentError, m
+        end
+        rounded = unrounded.round(@OutputDecimalPrecision)
+        return rounded
+    end
+
+    def requestKurtosis
+        @SOPo = _addUpXsToSumsOfPowers(@Population) unless @SOPo
+        unrounded = @SOPo.requestKurtosis
+        rounded = unrounded.round(@OutputDecimalPrecision)
+        return rounded
+    end
+
+    def requestMax
+        _assureSortedVectorOfX
+        return @SortedVectorOfX[-1]
+    end
+
+    def requestMedian(sVoX=nil)
+        q2 = calculateQuartile(2)
+        return q2
+    end
+
+    def requestMin(sVoX=nil)
+        _assureSortedVectorOfX
+        return @SortedVectorOfX[0]
+    end
+
+    def requestQuartileCollection(sVoX=nil)
         qos0 = calculateQuartile(0)
         qos1 = calculateQuartile(1)
         qos2 = calculateQuartile(2)
@@ -817,26 +850,20 @@ trace 8 calculateQuartile:  1, 2, 2 * 0.5 + 3 * 0.5 == 2.5
         return [qos0,qos1,qos2,qos3,qos4]
     end
 
-    def genRange(sVoX=nil)
+    def requestRange(sVoX=nil)
         _assureSortedVectorOfX
         return @SortedVectorOfX[0], @SortedVectorOfX[-1]
     end
 
-    def genSkewness(formulaId=3)
+    def requestSkewness(formulaId=3)
         @SOPo = _addUpXsToSumsOfPowers(@Population) unless @SOPo
-        unrounded = @SOPo.genSkewness(formulaId)
+        unrounded = @SOPo.requestSkewness(formulaId)
         rounded = unrounded.round(@OutputDecimalPrecision)
     end
 
-    def genSegmentFrequencyCritical(segmentRange,subRangeStep)
-        # Intended to determine peaks and troughs.
-        raise ArgumentError, "Not yet implemented."
-    end
-
-    def genStandardDeviation
+    def requestStandardDeviation
         @SOPo = _addUpXsToSumsOfPowers(@Population,@UseDiffFromMeanCalculations)
-        unroundedstddev = @SOPo.genStandardDeviation
-#NOTE:  Something wrong here.  Taking a break.
+        unroundedstddev = @SOPo.generateStandardDeviation
         if unroundedstddev == 0.0 then
             raise RangeError, "Zero Result indicates squareroot error:  #{unroundedstddev}"
         end
@@ -844,26 +871,7 @@ trace 8 calculateQuartile:  1, 2, 2 * 0.5 + 3 * 0.5 == 2.5
         return stddev
     end
 
-    def genSum
-        sumxs = @VectorOfX.sum
-        return sumxs
-    end
-
-    def genVarianceSumOfDifferencesFromMean(populationCalculation=false)
-        @SOPo = _addUpXsToSumsOfPowers(populationCalculation)
-        v = @SOPo.genVarianceUsingSubjectAsDiffs
-        # Note rounding is not done here, as it would be double rounded with stddev.
-        return v
-    end
-
-    def genVarianceXsSquaredMethod(populationCalculation=false)
-        @SOPo = _addUpXsToSumsOfPowers(populationCalculation,false)
-        v = @SOPo.genVarianceUsingSubjectAsSumXs
-        # Note rounding is not done here, as it would be double rounded with stddev.
-        return v
-    end
-
-    def getSummaryStatistics
+    def requestSummaryCollection
         @SOPo                   = _addUpXsToSumsOfPowers(true,true)
         amean                   = @SOPo.ArithmeticMean
         popcov                  = genCoefficientOfVariation
@@ -914,30 +922,27 @@ trace 8 calculateQuartile:  1, 2, 2 * 0.5 + 3 * 0.5 == 2.5
 
     end
 
-    def isEvenN?
-        n = @VectorOfX.size
-        return true if n % 2 == 0
-        return false
+    def requestVarianceSumOfDifferencesFromMean(populationCalculation=false)
+        @SOPo = _addUpXsToSumsOfPowers(populationCalculation)
+        v = @SOPo.genVarianceUsingSubjectAsDiffs
+        # Note rounding is not done here, as it would be double rounded with stddev.
+        return v
     end
 
-    def nilSOPo
-        @SOPo = nil
-    end
-
-    def pushX(xFloat)
-        raise ArgumentError, "#{xFloat} not usable number." unless isUsableNumber?(xFloat)
-        validateStringNumberRange(xFloat) if @ValidateStringNumbers
-        lfn = xFloat.to_f.round(@InputDecimalPrecision)
-        @VectorOfX.push(lfn)
+    def requestVarianceXsSquaredMethod(populationCalculation=false)
+        @SOPo = _addUpXsToSumsOfPowers(populationCalculation,false)
+        v = @SOPo.genVarianceUsingSubjectAsSumXs
+        # Note rounding is not done here, as it would be double rounded with stddev.
+        return v
     end
 
     attr_accessor   :InputDecimalPrecision
     attr_accessor   :OutputDecimalPrecision
     attr_accessor   :Population
+    attr_accessor   :SOPo
     attr_accessor   :UseDiffFromMeanCalculations
     attr_accessor   :ValidateStringNumbers
 
-    attr_reader     :SOPo
 
 end
 
@@ -946,11 +951,6 @@ end
 # VectorOfDiscrete - catchall for arbitrary X that could be a string.
 
 class VectorOfDiscrete < VectorOfX
-
-    def genMode
-        x = genModeFromFrequencyAA(@FrequenciesAA)
-        return x
-    end
 
     def initialize(vectorX=Array.new)
         @FrequenciesAA = Hash.new
@@ -962,11 +962,11 @@ class VectorOfDiscrete < VectorOfX
         end
     end
 
-    def genBinomialProbability(subjectValue,nTrials,nSuccesses)
+    def calculateBinomialProbability(subjectValue,nTrials,nSuccesses)
         vn      = getCount
-        kf      = genFactorial(nSuccesses)
-        nf      = genFactorial(nTrials)
-        nlkf    = genFactorial(nTrials - nSuccesses)
+        kf      = getFactorial(nSuccesses)
+        nf      = getFactorial(nTrials)
+        nlkf    = getFactorial(nTrials - nSuccesses)
         vp1     = @FrequenciesAA[lx].to_f / vn.to_f
         olvp1   = 1 - vp1
         rp      = nf / ( nf * nlkf ) * vp1 * olvp1
@@ -977,6 +977,11 @@ class VectorOfDiscrete < VectorOfX
         @FrequenciesAA[xItem] += 1       if @FrequenciesAA.has_key?(xItem)
         @FrequenciesAA[xItem] = 1    unless @FrequenciesAA.has_key?(xItem)
         @VectorOfX.push(xItem)
+    end
+
+    def requestMode
+        x = generateModefromFrequencyAA(@FrequenciesAA)
+        return x
     end
 
     attr_accessor   :OutputDecimalPrecision

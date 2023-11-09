@@ -24,13 +24,13 @@ include Test::Unit::Assertions
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Tests for Global Support Routines
 
-describe 'genFactorial' do
+describe 'calculateFactorial' do
 
     it "Calculates factorial using Ruby's gamma function as per find in stackoverflow." do
-        n = genFactorial(4)
+        n = calculateFactorial(4)
         assert n = 24
         assert_raise ArgumentError do
-            genFactorial(25.55)
+            calculateFactorial(25.55)
         end
     end
 
@@ -381,16 +381,21 @@ describe SumsOfPowers do
 
     it "Generating variance." do
         localo = SumsOfPowers.new(false)
+        localo.setToDiffsFromMeanState(15,4)
         localo.addToSums(3)
-        assert_equal 1, localo.N
         localo.addToSums(3)
         localo.addToSums(4)
-        localo.genStandardDeviation
+        localo.addToSums(5)
         result = localo.genVarianceUsingSubjectAsDiffs
-#NOTE:  Problem here, obviously
-        assert_equal 17.0, result
+        assert_equal 19.666666666666668, result
+        localo = SumsOfPowers.new(false)
+        localo.addToSums(3)
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
         result = localo.genVarianceUsingSubjectAsSumXs
-        assert_equal 0.33333333333333215, result
+        assert_equal 0.9166666666666666, result
+        #assert_equal 19.666666666666668, result
     end
 
 end
@@ -715,7 +720,8 @@ describe VectorOfContinuous do
         v = localo.genVarianceSumOfDifferencesFromMean(true)
         assert_equal 210211.0232211591, v
         v = localo.genVarianceXsSquaredMethod(true)
-        assert_equal 281851.50962308043, v
+        #assert_equal 281851.50962308043, v
+        assert_equal 210211.02322115703, v
     end
 
 end
