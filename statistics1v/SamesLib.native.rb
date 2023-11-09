@@ -42,6 +42,7 @@
 
 require "bigdecimal"
 require 'csv'
+require 'json'
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -596,8 +597,24 @@ class VectorOfX
         return @VectorOfX.size
     end
 
+    def getX(indexA)
+        raise ArgumentError, "Index Argument Missing:  Required."       unless indexA.is_a? Integer
+        raise ArgumentError, "Index Argument Not found in VectorOfX."   unless @VectorOfX[indexA]
+        return @VectorOfX[indexA]
+    end
+
     def pushX(xFloat)
         raise ArgumentError, "Pure Virtual"
+    end
+
+    def transformToCSVLine
+        b = @VectorOfX.to_csv
+        return b
+    end
+
+    def transformToJSON
+        b = @VectorOfX.to_json
+        return b
     end
 
     attr_reader :SortedVectorOfX

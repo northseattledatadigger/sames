@@ -1,3 +1,15 @@
+    1.  Review test code in simple.
+    2.  Review methods as they now exist.
+    3.  Put together a draft of extended tests 
+    4.  As extended tests are implemented, review methods and simple tests to adjust for adequacy.
+    5.  As passes progress, begin to re-plan and even start coding ruby.main app, and perhaps lrun.bash too.  All depends on patterns I can come up with.
+
+
+
+
+
+
+OLD:
     1.      Make sure all non-reporting tests run correctly.
     2.      Add tests to simply check for sane size and perhaps existence of critical characters.
     3.      Program app to read arbitrary csv file:

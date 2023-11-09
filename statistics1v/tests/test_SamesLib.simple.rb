@@ -447,12 +447,32 @@ describe VectorOfX do
         assert localo.getCount == 5
     end
 
+    it "Has a working getX method." do
+        a = [1.5,99,5876.1234,"String",String]
+        localo = VectorOfX.new(a)
+        assert localo.getX(2) == 5876.1234
+    end
+
     it "pushX method is pure virtual." do
         localo = VectorOfX.new
         assert_respond_to localo, :pushX
         assert_raise ArgumentError do
             localo.pushX("anything")
         end
+    end
+
+    it "Has tranformation method to output a line of CSV for the VectorOfX data." do
+        a = [1.5,99,5876.1234,"String"]
+        localo = VectorOfX.new(a)
+        result = localo.transformToCSVLine
+        assert "1.5,99,5876.1234,\"String\"", result
+    end
+
+    it "Has tranformation method to output a string of JSON for the VectorOfX data." do
+        a = [1.5,99,5876.1234,"String",String]
+        localo = VectorOfX.new(a)
+        s = localo.transformToJSON
+        assert s =~ /5876.1234/
     end
 
     it "Has read handles for internal data arrays." do
