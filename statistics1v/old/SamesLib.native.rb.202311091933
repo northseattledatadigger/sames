@@ -643,7 +643,6 @@ class VectorOfContinuous < VectorOfX
     ArithmeticMeanId            = 'ArithmeticMean'
     COVPopulationId             = 'PopulationCoefficientOfVariation'
     COVSampleId                 = 'SampleCoefficientOfVariation'
-    CoefficientOfVariation      = 'CoefficientOfVariation'
     GeometricMeanId             = 'GeometricMean'
     IsEvenId                    = 'IsEven'
     KurtosisId                  = 'Kurtosis'
@@ -654,7 +653,6 @@ class VectorOfContinuous < VectorOfX
     ModeId                      = 'Mode'
     NId                         = 'N'
     SkewnessId                  = 'Skewness'
-    StandardDeviation           = 'StandardDeviation'
     StddevDiffsPopId            = 'StddevDiffsPop'
     StddevDiffsSampleId         = 'StddevDiffsSample'
     StddevSumxsPopId            = 'StddevSumxsPop'
@@ -891,45 +889,16 @@ class VectorOfContinuous < VectorOfX
     end
 
     def requestResultAACSV(xFloat)
-        scaa = requestSummaryCollection
         return <<-EOAACSV
-"#{ArithmeticMeanId}", #{scaa[ArithmeticMeanId]}
-"#{CoefficientOfVariation}", #{scaa[CoefficientOfVariation]}
-"#{GeometricMeanId}", #{scaa[GeometricMeanId]}
-"#{IsEvenId}", #{scaa[IsEvenId]}
-"#{KurtosisId}", #{scaa[KurtosisId]}
-"#{MAEId}", #{scaa[MAEId]}
-"#{MaxId}", #{scaa[MaxId]}
-"#{MedianId}", #{scaa[MedianId]}
-"#{MinId}", #{scaa[MinId]}
-"#{ModeId}", #{scaa[ModeId]}
-"#{NId}", #{scaa[NId]}
-"#{SkewnessId}", #{scaa[SkewnessId]}
-"#{StandardDeviation}", #{scaa[StandardDeviation]}
-"#{SumId}", #{scaa[SumId]}
-EOAACSV
+        EOAACSV
     end
 
-    def requestResultCSVLine(xFloat,includeHdr=false)
-        scaa    = requestSummaryCollection
-        csvline = "#{scaa[ArithmeticMeanId]},#{scaa[COVPopulationId]},#{scaa[COVSampleId]},#{scaa[GeometricMeanId]},#{scaa[IsEvenId]},#{scaa[KurtosisId]},#{scaa[MAEId]},"
-        csvline += "#{scaa[MaxId]},#{scaa[MedianId]},#{scaa[MinId]},#{scaa[ModeId]},#{scaa[NId]},#{scaa[SkewnessId]},#{scaa[StandardDeviation]},#{scaa[SumId]}"
-        if includeHdr then
-            csvhdr  = "#{ArithmeticMeanId},#{COVPopulationId},#{COVSampleId},#{GeometricMeanId},#{IsEvenId},#{KurtosisId},#{MAEId},"
-            csvhdr  += "#{MaxId},#{MedianId},#{MinId},#{ModeId},#{NId},#{SkewnessId},#{StandardDeviation},#{SumId}"
-            return <<EOCSV
-#{csvhdr}
-#{csvline}
-EOCSV
-        else
-            return csvline
-        end
+    def requestResultCSVLine(xFloat)
+        return "TBD"
     end
 
     def requestResultJSON(xFloat)
-        scaa = requestSummaryCollection
-        jsonstr = scaa.to_json
-        return jsonstr
+        return "TBD"
     end
 
     def requestSkewness(formulaId=3)
@@ -949,20 +918,32 @@ EOCSV
     end
 
     def requestSummaryCollection
-        @SOPo                   = _addUpXsToSumsOfPowers(@Population,@UseDiffFromMeanCalculations)
+        @SOPo                   = _addUpXsToSumsOfPowers(true,true)
         amean                   = @SOPo.ArithmeticMean
-        covariance              = generateCoefficientOfVariation
+        popcov                  = generateCoefficientOfVariation
         gmean                   = calculateGeometricMean
         is_even                 = isEvenN?
-        kurtosis                = "SumXsCalc Not Yet Available"
-        kurtosis                = @SOPo.requestKurtosis.round(@OutputDecimalPrecision) if @UseDiffFromMeanCalculations
+        kurtosis                = @SOPo.requestKurtosis.round(@OutputDecimalPrecision)
         mae                     = generateMeanAbsoluteError.round(@OutputDecimalPrecision)
         median                  = requestMedian
         min,max                 = requestRange
         mode                    = requestMode
         n                       = getCount
+        population_stddev_diffs = @SOPo.generateStandardDeviation.round(@OutputDecimalPrecision)
+        #STDERR.puts "trace getSummaryStatistics population_stddev_diffs #{population_stddev_diffs}"
+        @SOPo.Population        = false
+        sample_stddev_diffs     = @SOPo.generateStandardDeviation.round(@OutputDecimalPrecision)
+        #STDERR.puts "trace getSummaryStatistics sample_stddev_diffs #{sample_stddev_diffs}"
+        samplecov               = generateCoefficientOfVariation
+        nilSOPo
+        @SOPo                   = _addUpXsToSumsOfPowers(true,false)
+        @SOPo.Population        = true
+        population_stddev_sumxs = @SOPo.generateStandardDeviation.round(@OutputDecimalPrecision)
+        #STDERR.puts "trace getSummaryStatistics population_stddev_sumxs #{population_stddev_sumxs}"
+        @SOPo.Population        = false
+        sample_stddev_sumxs     = @SOPo.generateStandardDeviation.round(@OutputDecimalPrecision)
+        #STDERR.puts "trace getSummaryStatistics sample_stddev_sumxs #{sample_stddev_sumxs}"
         skewness                = @SOPo.requestSkewness.round(@OutputDecimalPrecision)
-        stddef                  = @SOPo.generateStandardDeviation.round(@OutputDecimalPrecision)
         sum                     = getSum
         return {
             ArithmeticMeanId    => amean,
@@ -978,9 +959,13 @@ EOCSV
             ModeId              => mode,
             NId                 => n,
             SkewnessId          => skewness,
-            StandardDeviation   => population_stddev_diffs,   
+            StddevDiffsPopId    => population_stddev_diffs,   
+            StddevDiffsSampleId => sample_stddev_diffs,
+            StddevSumxsPopId    => population_stddev_sumxs,
+            StddevSumxsSampleId => sample_stddev_sumxs,
             SumId               => sum
         }
+
     end
 
     def requestVarianceSumOfDifferencesFromMean(populationCalculation=false)

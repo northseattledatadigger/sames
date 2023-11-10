@@ -643,7 +643,6 @@ class VectorOfContinuous < VectorOfX
     ArithmeticMeanId            = 'ArithmeticMean'
     COVPopulationId             = 'PopulationCoefficientOfVariation'
     COVSampleId                 = 'SampleCoefficientOfVariation'
-    CoefficientOfVariation      = 'CoefficientOfVariation'
     GeometricMeanId             = 'GeometricMean'
     IsEvenId                    = 'IsEven'
     KurtosisId                  = 'Kurtosis'
@@ -893,21 +892,23 @@ class VectorOfContinuous < VectorOfX
     def requestResultAACSV(xFloat)
         scaa = requestSummaryCollection
         return <<-EOAACSV
-"#{ArithmeticMeanId}", #{scaa[ArithmeticMeanId]}
-"#{CoefficientOfVariation}", #{scaa[CoefficientOfVariation]}
-"#{GeometricMeanId}", #{scaa[GeometricMeanId]}
-"#{IsEvenId}", #{scaa[IsEvenId]}
-"#{KurtosisId}", #{scaa[KurtosisId]}
-"#{MAEId}", #{scaa[MAEId]}
-"#{MaxId}", #{scaa[MaxId]}
-"#{MedianId}", #{scaa[MedianId]}
-"#{MinId}", #{scaa[MinId]}
-"#{ModeId}", #{scaa[ModeId]}
-"#{NId}", #{scaa[NId]}
-"#{SkewnessId}", #{scaa[SkewnessId]}
-"#{StandardDeviation}", #{scaa[StandardDeviation]}
-"#{SumId}", #{scaa[SumId]}
-EOAACSV
+            "#{ArithmeticMeanId}", #{scaa[ArithmeticMeanId]}
+            "#{COVPopulationId}", #{scaa[COVPopulationId]}
+            "#{COVSampleId}", #{scaa[COVSampleId]}
+            "#{GeometricMeanId}", #{scaa[GeometricMeanId]}
+            "#{IsEvenId}", #{scaa[IsEvenId]}
+            "#{KurtosisId}", #{scaa[KurtosisId]}
+            "#{MAEId}", #{scaa[MAEId]}
+            "#{MaxId}", #{scaa[MaxId]}
+            "#{MedianId}", #{scaa[MedianId]}
+            "#{MinId}", #{scaa[MinId]}
+            "#{ModeId}", #{scaa[ModeId]}
+            "#{NId}", #{scaa[NId]}
+            "#{SkewnessId}", #{scaa[SkewnessId]}
+            "#{StandardDeviation}", #{scaa[StandardDeviation]}
+            "#{SumId}", #{scaa[SumId]}
+        }
+        EOAACSV
     end
 
     def requestResultCSVLine(xFloat,includeHdr=false)

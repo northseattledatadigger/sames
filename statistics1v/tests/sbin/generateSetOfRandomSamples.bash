@@ -343,7 +343,7 @@ for r in $(seq $RowDimension)
 do
     case "$DataOutputType" in
     FILESPEC)
-        generateRandomDataRow $ColumnDimension $GeneratorType $DelimiterChar >>$DataOutputFspec
+        generateRandomDataRow $ColumnDimension $GeneratorType $DelimiterChar >>$DataOutputFSpec
         ;;
     STDOUT)
         generateRandomDataRow $ColumnDimension $GeneratorType $DelimiterChar
