@@ -130,8 +130,6 @@ EOAACSV
 }
 
 generate_datamash_custom() {
-    #echo "trace 0 generate_datamash_custom"
-    # Note that headerless CSV input is presumed, as per the -t, qualifier.
     local _inputColumn="$1"
     local _inputFSpec="$2"
     local _outputCSVType="$3"
@@ -156,8 +154,6 @@ generate_datamash_custom() {
     n=$(wc -l $_inputFSpec | awk '{print $1}')
     is_even=$(calculateIsEvenLocally $n)
 
-    local _csvConfiguration="$1"
-
     if [[ $_outputCSVType = 'CSVLineHdr' ]]
     then
         formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum true
@@ -178,18 +174,68 @@ generate_datamash_native() {
     datamash -t, mean $c geomean $c skurt $c max $c median $c min $c mode $c sskew $c sstdev $c sum $c <$_inputFSpec
 }
 
-generate_gnuplot_custom() {
-    local _inputFSpec="$1"
+generate_gnuplot__native() {
+    local _inputColumn=$1
+    local _inputFSpec="$2"
 
+    local c=$_inputColumn
+
+    cat $_inputFSpec | gnuplot -e 'set datafile separator ","' -e "stats '-' u $c" 2>&1
 }
 
-generate_pspp_native() {
-    local _inputFSpec="$1"
- #2071  seq 10 | gnuplot -e "stats '-' u 1"
- #2072  cat nums.txt | gnuplot -e "stats '-' u 1"
+generate_gnuplot_custom() {
+    local _inputColumn="$1"
+    local _inputFSpec="$2"
+    local _outputCSVType="$3"
+
+    local c=$_inputColumn
+    local i=$_inputFSpec
+
+    local amean=$(      generate_gnuplot__native $c "$i" | grep 'Mean:' | awk '{print $2}' )
+    local coeffv="NIU"
+    local gmean="NIU"
+    local is_even
+    local kurtosis=$(   generate_gnuplot__native $c "$i" | grep 'Kurtosis:' | awk '{print $2}' )
+    local mae=$(        generate_gnuplot__native $c "$i" | grep 'Mean Err.:' | awk '{print $2}' )
+    local max=$(        generate_gnuplot__native $c "$i" | grep 'Maximum:' | awk '{print $2}' )
+    local median=$(     generate_gnuplot__native $c "$i" | grep 'Median:' | awk '{print $2}' )
+    local min=$(        generate_gnuplot__native $c "$i" | grep 'Minimum:' | awk '{print $2}' )
+    local mode="NIU"
+    local n=$(          generate_gnuplot__native $c "$i" | grep 'Records:' | awk '{print $2}' )
+    local sskew=$(      generate_gnuplot__native $c "$i" | grep 'Skewness:' | awk '{print $2}' )
+    local stddev=$(     generate_gnuplot__native $c "$i" | grep 'Std Dev Err.:' | awk '{print $2}' )
+    local sum=$(        generate_gnuplot__native $c "$i" | grep 'Sum:' | awk '{print $2}' )
+
+    is_even=$(calculateIsEvenLocally $n)
+
+    if [[ $_outputCSVType = 'CSVLineHdr' ]]
+    then
+        formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum true
+    elif [[ $_outputCSVType = 'CSVLineNoHdr' ]]
+    then
+        formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum false
+    else
+        formatResultCSVTable $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum
+    fi
+}
+
+generate_gnuplot_native() {
+    local _inputColumn=$1
+    local _inputFSpec="$2"
+
+    local c=$_inputColumn
+
+    generate_gnuplot__native $_inputColumn "$_inputFSpec" # So exactly the same simple thing, placed before for ASCII order.
 }
 
 generate_pspp_custom() {
+    local _inputFSpec="$1"
+#Best pspp docs so far:  https://www.gnu.org/software/pspp/manual/pspp.html
+#AND finally I found this to output to csv from pspp:
+#pspp example004.sps -o x -O format=csv
+}
+
+generate_pspp_native() {
     local _inputFSpec="$1"
 #Best pspp docs so far:  https://www.gnu.org/software/pspp/manual/pspp.html
 #AND finally I found this to output to csv from pspp:
