@@ -45,7 +45,7 @@ EORGT
 catUsage() {
     cat <<EOU
 USAGE:  $0 <options>
-while getopts "c:D:F:g:hr:" option
+    Where options are:
     -c  Output column Dimension.  Should be a natural number from 1 to $MAXCOLUMNS.
     The default for this is presently $DEFAULTColumns.
     -D  Designates a delimiter type:  COLON, COMMA, PIPE, SEMICOLON, SPACE,

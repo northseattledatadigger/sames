@@ -807,6 +807,10 @@ class VectorOfContinuous < VectorOfX
         return rounded
     end
 
+    def generateMeanAbsoluteDeviation
+        raise AbsoluteError, "TBD"  #NOTE
+    end
+
     def generateMode
         lfaa            = Hash.new # Init local frequency associative array.
         @VectorOfX.each do |lx|

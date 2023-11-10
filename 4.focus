@@ -1,0 +1,28 @@
+    A.  Primary focus:
+        1.  Language implementation of sames functions, the first being statistics1v:
+            i.      statistics1v
+            ii.     resultrepresentations (latex, HTML/CSS, PDF)
+            iii.    statistics2v
+            iv.     simplex
+            v.      fft
+            vi.     spot
+            vii.    explainingdata
+            viii.   spot
+            ix.     REST
+            x.      resultvisualizations (calendar reports, geometric / graphing presentations, color scoring)
+            xi.     tax
+
+    B.  Secondary focus:
+
+        2.  Learning support apps
+            i.      datamash
+            ii.     gnuplot
+            iii.    pspp
+            iv.     R
+            v.      texmaker
+            vi.     gummi
+            vii.    latexila
+            viii.   labplot
+            ix.     texstudio
+            x.      rustrover
+            xi.     julia

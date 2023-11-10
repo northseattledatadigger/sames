@@ -2,6 +2,8 @@
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # generatePointStatistics.bash
 
+# NIU will indicate: NOT IN USE for a field for which data is not provided.
+
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Constants and Includes
 
@@ -28,24 +30,73 @@ readonly SumId='Sum'
 catUsage() {
     cat <<EOU
 USAGE:  $0 <options>
-while getopts "c:D:F:g:hr:" option
+    Where options are:
+    -B  Behead the file:  Presume the first line of the file is a CSV header, and leave it off.
+    The default for this is presently $DEFAULTColumns.
     -c  Output column Dimension.  Should be a natural number from 1 to $MAXCOLUMNS.
     The default for this is presently $DEFAULTColumns.
-    -D  Designates a delimiter type:  COLON, COMMA, PIPE, SEMICOLON, SPACE,
-    and TAB are valid options.  The default is presently "$DEFAULTDelimiter".
-    -F  Output Filespec may be specified.  Otherwise output goes to STDOUT.
-    -g  Random Number Genrator Type (default is presently "$DEFAULTGeneratorType"):
-$( catRandomGeneratorTypes )
+    -d  Use the datamash app for processing.
+    -g  Use the gnuplot app for processing.
     -h  This help text.
-    -r  Output row Dimension.  Should be a natural number from 1 to $MAXROWS.
-    The default for this is presently $DEFAULTRows.
-    (You may notice I prefer to organize things in ASCII order, barring other
-    over-riding logic.  I figure it's better to always know to look in sorted
-    order rather than depending on constantly changing logic for placements.)
+    -i  Specify the input file to use.  This is required at this time.
+    -L  Set output format to CSVLineNoHdr, which is to say
+    a single output line of CSV, without a header.
+    -l  Set output format to CSVLineHdHdrr, which is to say
+    a single output line of CSV, with a header.
+    -n  Ouput using the default native format of the application chosen.
+    -p  Use the pspp (similar to spss, apparently) app.
+    -r  Use the r app.
+    -t  Set output format to CSVTable, which is a csv file with the
+    statistic name, and then value, each on it's own line, designed to be
+    parsed into an associative array.
 EOU
 }
 
-formatResultAACSV() {
+calculateIsEvenLocally() {
+    local _n=$1
+    if (( _n % 2 == 0 ))
+    then
+        echo -n true
+    else
+        echo -n false
+    fi
+}
+
+formatResultCSVLine() {
+    #echo "trace 0 formatResultCSVLine"
+    local _aMean=$1
+    local _cOv=$2
+    local _gMean=$3
+    local _isEven=$4
+    local _kurtOsis=$5
+    local _mAe=$6
+    local _mAx=$7
+    local _mEdian=$8
+    local _mIn=$9
+    local _mOde=${10}
+    local _N=${11}
+    local _skewNess=${12}
+    local _stdDev=${13}
+    local _sUm=${14}
+    local _includeHdr=${15}
+    if [[ -z "$_includeHdr" ]]
+    then
+        _includeHdr=false
+    fi
+    local csvline="$_aMean,$_cOv,$_gMean,$_isEven,$_kurtOsis,$_mAe,$_mAx,$_mEdian,$_mIn,$_mOde,$_N,$_skewNess,$_stdDev,$_sUm"
+    if $_includeHdr
+    then
+        local csvhdr
+        cat <<EOCSV
+"$ArithmeticMeanId","$CoefficientOfVariation","$GeometricMeanId","$IsEvenId","$KurtosisId","$MAEId","$MaxId","$MedianId","$MinId","$ModeId","$NId","$SkewnessId","$StandardDeviation","$SumId"
+$csvline
+EOCSV
+    else
+        echo $csvline
+    fi
+}
+
+formatResultCSVTable() {
     local _aMean=$1
     local _cOv=$2
     local _gMean=$3
@@ -60,7 +111,7 @@ formatResultAACSV() {
     local _skewNess=$12
     local _stdDev=$13
     local _sUm=$14
-    echo <<EOAACSV
+    cat <<EOAACSV
 "$ArithmeticMeanId", $_aMean
 "$CoefficientOfVariation", $_cOv
 "$GeometricMeanId", $_gMean
@@ -78,135 +129,119 @@ formatResultAACSV() {
 EOAACSV
 }
 
-formatResultCSVLine() {
-    local _aMean=$1
-    local _cOv=$2
-    local _gMean=$3
-    local _isEven=$4
-    local _kurtOsis=$5
-    local _mAe=$6
-    local _mAx=$7
-    local _mEdian=$8
-    local _mIn=$9
-    local _mOde=$10
-    local _N=$11
-    local _skewNess=$12
-    local _stdDev=$13
-    local _sUm=$14
-    local _includeHdr=$15
-    if [[ -z "$_includeHdr" ]]
+generate_datamash_custom() {
+    #echo "trace 0 generate_datamash_custom"
+    # Note that headerless CSV input is presumed, as per the -t, qualifier.
+    local _inputColumn="$1"
+    local _inputFSpec="$2"
+    local _outputCSVType="$3"
+
+    local c=$_inputColumn
+
+    local amean=$(      datamash -t, mean $c <$_inputFSpec  )
+    local coeffv="NIU"
+    local buffer=$(     datamash -t, geomean $c <$_inputFSpec  )
+    local gmean=$(      printf '%.*f\n' 2 $buffer )
+    local is_even
+    local kurtosis=$(   datamash -t, skurt $c <$_inputFSpec  )
+    local mae="NIU"
+    local max=$(        datamash -t, max $c <$_inputFSpec  )
+    local median=$(     datamash -t, median $c <$_inputFSpec  )
+    local min=$(        datamash -t, min $c <$_inputFSpec  )
+    local mode=$(       datamash -t, mode $c <$_inputFSpec  )
+    local n
+    local sskew=$(      datamash -t, sskew $c <$_inputFSpec  )
+    local stddev=$(     datamash -t, sstdev $c <$_inputFSpec  )
+    local sum=$(        datamash -t, sum $c <$_inputFSpec  )
+    n=$(wc -l $_inputFSpec | awk '{print $1}')
+    is_even=$(calculateIsEvenLocally $n)
+
+    local _csvConfiguration="$1"
+
+    if [[ $_outputCSVType = 'CSVLineHdr' ]]
     then
-        _includeHdr=false
-    fi
-    local csvline="$_aMean,$_cOv,$_gMean,$_isEven,$_kurtOsis,$_mAe,$_mAx,$_mEdian,$_mIn,$_mOde,$_N,$_skewNess,$_stdDev,$_sUm"
-    if $_includeHdr
-        local csvhdr
-        echo <<EOCSV
-"$ArithmeticMeanId","$CoefficientOfVariation","$GeometricMeanId","$IsEvenId","$KurtosisId","$MAEId","$MaxId","$MedianId","$MinId","$ModeId","$NId","$SkewnessId","$StandardDeviation","$SumId"
-$csvline
-EOCSV
+        formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum true
+    elif [[ $_outputCSVType = 'CSVLineNoHdr' ]]
     then
-        echo $csvline
+        formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum false
+    else
+        formatResultCSVTable $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum
     fi
 }
 
-generate_datamash_summary_appcsv() {
-    local _inputFSpec="$1"
-    local _outputFSpec="$2"
-    local _singleLine="$3"
-    cat <<EOCOMMENT
- 2079  seq 10 | datamash sum 1 mean 1
- 2080  seq 10 | datamash sum 1 stddev 1
- 2081  seq 10 | datamash summary
- 2085  seq 10 | datamash sum 1 geomean 1
- 2086  seq 10 | datamash harmean 1 geomean 1
- 2088  seq 10 | datamash harmmean 1 geomean 1
- 2090  seq 10 | datamash harmmean 1 geomean 1 pskew 1
- 2091  seq 10 | datamash harmmean 1 geomean 1 sskew 1
-EOCOMMENT
+generate_datamash_native() {
+    local _inputColumn=$1
+    local _inputFSpec="$2"
+
+    local c=$_inputColumn
+
+    datamash -t, mean $c geomean $c skurt $c max $c median $c min $c mode $c sskew $c sstdev $c sum $c <$_inputFSpec
 }
 
-generate_datamash_summary_unadorned() {
+generate_gnuplot_custom() {
     local _inputFSpec="$1"
-    local _outputFSpec="$2"
-    cat <<EOCOMMENT
- 2079  seq 10 | datamash sum 1 mean 1
- 2080  seq 10 | datamash sum 1 stddev 1
- 2081  seq 10 | datamash summary
- 2085  seq 10 | datamash sum 1 geomean 1
- 2086  seq 10 | datamash harmean 1 geomean 1
- 2088  seq 10 | datamash harmmean 1 geomean 1
- 2090  seq 10 | datamash harmmean 1 geomean 1 pskew 1
- 2091  seq 10 | datamash harmmean 1 geomean 1 sskew 1
-EOCOMMENT
+
 }
 
-generate_gnuplot_summary_appcsv() {
+generate_pspp_native() {
     local _inputFSpec="$1"
-    local _outputFSpec="$2"
-    local _singleLine="$3"
  #2071  seq 10 | gnuplot -e "stats '-' u 1"
  #2072  cat nums.txt | gnuplot -e "stats '-' u 1"
 }
 
-generate_pspp_summary_unadorned() {
+generate_pspp_custom() {
     local _inputFSpec="$1"
-    local _outputFSpec="$2"
- #2071  seq 10 | gnuplot -e "stats '-' u 1"
- #2072  cat nums.txt | gnuplot -e "stats '-' u 1"
-}
-
-generate_pspp_summary_appcsv() {
-    local _inputFSpec="$1"
-    local _outputFSpec="$2"
-    local _singleLine="$3"
 #Best pspp docs so far:  https://www.gnu.org/software/pspp/manual/pspp.html
 #AND finally I found this to output to csv from pspp:
 #pspp example004.sps -o x -O format=csv
 }
 
-generate_pspp_summary_unadorned() {
+generate_r_custom() {
     local _inputFSpec="$1"
-    local _outputFSpec="$2"
-#Best pspp docs so far:  https://www.gnu.org/software/pspp/manual/pspp.html
-#AND finally I found this to output to csv from pspp:
-#pspp example004.sps -o x -O format=csv
-}
-
-generate_r_summary_appcsv() {
-    local _inputFSpec="$1"
-    local _outputFSpec="$2"
-    local _singleLine="$3"
  #2044  R -q -e "x <- read.csv('nums.txt', header = F); summary(x); sd(x[ , 1])"
  #2075  seq 10 | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); summary(x)'
 }
 
-generate_r_summary_unadorned() {
+generate_r_native() {
     local _inputFSpec="$1"
-    local _outputFSpec="$2"
  #2044  R -q -e "x <- read.csv('nums.txt', header = F); summary(x); sd(x[ , 1])"
  #2075  seq 10 | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); summary(x)'
+}
+
+validateDimension() {
+    local _dimensionNo="$1"
+
+    if [[ $_dimensionNo =~ ^[0-9][0-9]*$ ]]
+    then
+        return 0
+    fi
+    return 1
 }
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Init
 
 AppToUse=datamash
+BeHead=false
 ColumnToUse=1
-DataInputFSpec=
-DataOutputFSpec=/dev/stdout
-DataOutputType=STDOUT
-OutputFormat=Unadorned
-SetToGenerate=SummaryPointStatistics
+InputFSpec=/dev/stdin
+OutputFormat=Native
 
-while getopts "a:c:dghi:lo:pqrt" option
+while getopts "Bc:dghi:nLlo:pqrt" option
 do
     case "${option}" in
-    a)
-        AppToUse=datamash
+    B)  
+        BeHead=true
         ;;
     c)
-        ColumnToUse=$OPTARG
+        if validateDimension $OPTARG
+        then
+            ColumnToUse=$OPTARG
+        else
+            >&2 echo "'$OPTARG' is NOT a valid array dimension."
+            catUsage
+            exit 2
+        fi
         ;;
     d)
         AppToUse=datamash
@@ -219,38 +254,33 @@ do
         exit 0
         ;;
     i)
-        DataInputFSpec="$OPTARG"
-        if [[ -f $DataInputFSpec ]]
+        InputFSpec="$OPTARG"
+        if [[ -f $InputFSpec ]]
         then
-            DataInputFSpec="$OPTARG"
+            InputFSpec="$OPTARG"
         else
             >&2 "Input file '$OPTARG' NOT FOUND."
             catUsage
             exit 2
-            ;;
         fi
         ;;
-    o)
-        DataOutput="$OPTARG"
-        DataOutputType=FILESPEC
+    L)
+        OutputFormat=CSVLineNoHdr
         ;;
     l)
-        OutputFormat=CSVLine
+        OutputFormat=CSVLineHdr
+        ;;
+    n)
+        OutputFormat=Native
         ;;
     p)
         AppToUse=pspp
-        ;;
-    q)
-        SetToGenerate=Quartiles
         ;;
     r)
         AppToUse=r
         ;;
     t)
         OutputFormat=CSVTable
-        ;;
-    u)
-        OutputFormat=Unadorned
         ;;
     *)
         >&2 "Invalid option $option."
@@ -260,19 +290,31 @@ do
     esac
 done
 
+if $BeHead
+then
+    OriginalInputFSpec=$InputFSpec
+    TmpInputFSpec=$(mktemp)
+    InputFSpec=$TmpInputFSpec
+    tail -n+2 $OriginalInputFSpec >$InputFSpec
+fi
+
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Main
 
-if [[ $SetToGenerate = 'Quartiles' ]]
+if [[ $OutputFormat = 'CSVLineHdr' || $OutputFormat = 'CSVLineNoHdr' || $OutputFormat = 'CSVTable' ]]
 then
     case "$AppToUse" in
     datamash)
+        generate_datamash_custom $ColumnToUse $InputFSpec $OutputFormat
         ;;
     gnuplot)
+        generate_gnuplot_custom $ColumnToUse $InputFSpec $OutputFormat
         ;;
     pspp)
+        generate_pspp_custom $ColumnToUse $InputFSpec $OutputFormat
         ;;
     r)
+        generate_r_custom $ColumnToUse $InputFSpec $OutputFormat
         ;;
     *)
         >&2 "$SetToGenerate output is not implemented for '$AppToUse'."
@@ -280,16 +322,20 @@ then
         exit 4
         ;;
     esac
-elif [[ $SetToGenerate = 'SummaryPointStatistics' ]]
+elif [[ $OutputFormat = 'Native' ]]
 then
     case "$AppToUse" in
     datamash)
+        generate_datamash_native $ColumnToUse $InputFSpec
         ;;
     gnuplot)
+        generate_gnuplot_native $ColumnToUse $InputFSpec
         ;;
     pspp)
+        generate_pspp_native $ColumnToUse $InputFSpec
         ;;
     r)
+        generate_r_native $ColumnToUse $InputFSpec
         ;;
     *)
         >&2 "$SetToGenerate output is not implemented for '$AppToUse'."
@@ -299,11 +345,14 @@ then
     esac
 else
     >&2 "Programmer Error!!"
-    >&2 "$SetToGenerate is NOT an implemented output set for this script."
+    >&2 "Output Format '$OutputFormat' is NOT an implemented for this script."
     catUsage
     exit 4
-    ;;
 fi
 
+if [[ -e $TmpInputFSpec ]]
+then
+    rm $TmpInputFSpec
+fi
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of generatePointStatistics.bash

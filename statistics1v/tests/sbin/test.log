@@ -1,8 +1,8 @@
-Handled 1000000 packets.Time elapsed: 7.575278
-Handled 1000000 packets.Time elapsed: 7.569267
-Handled 1000000 packets.Time elapsed: 7.540344
-Handled 1000000 packets.Time elapsed: 7.547680
-Handled 1000000 packets.Time elapsed: 7.692373
-Handled 1000000 packets.Time elapsed: 7.390200
-Handled 1000000 packets.Time elapsed: 7.391308
-Handled 1000000 packets.Time elapsed: 7.388075
+Handled,1000000,packets.Time,elapsed:,7.575278
+Handled,1000000,packets.Time,elapsed:,7.569267
+Handled,1000000,packets.Time,elapsed:,7.540344
+Handled,1000000,packets.Time,elapsed:,7.547680
+Handled,1000000,packets.Time,elapsed:,7.692373
+Handled,1000000,packets.Time,elapsed:,7.390200
+Handled,1000000,packets.Time,elapsed:,7.391308
+Handled,1000000,packets.Time,elapsed:,7.388075
