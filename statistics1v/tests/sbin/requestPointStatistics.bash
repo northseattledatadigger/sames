@@ -1,6 +1,6 @@
 #!/bin/bash
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# generatePointStatistics.bash
+# requestPointStatistics.bash
 
 # NIU will indicate: NOT IN USE for a field for which data is not provided.
 
@@ -27,6 +27,37 @@ readonly SumId='Sum'
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Procedures
 
+_calculateIsEvenLocally() {
+    local _n=$1
+    if (( _n % 2 == 0 ))
+    then
+        echo -n true
+    else
+        echo -n false
+    fi
+}
+
+_parseColumnToPSPPbufferFile() {
+    local _inputColumn="$1"
+    local _inputFSpec="$2"
+
+    local c=$_inputColumn
+    local fspec=$(mktemp --suffix=.sps)
+    cat <<EOSPSTOP >$fspec
+data list free / X .
+begin data
+EOSPSTOP
+    cat $_inputFSpec | awk "{print \$$c}" >>$fspec
+    cat <<EOSPSBOTTOM >>$fspec
+end data .
+
+descript all
+/stat=all
+/format=serial.
+EOSPSBOTTOM
+echo $fspec
+}
+
 catUsage() {
     cat <<EOU
 USAGE:  $0 <options>
@@ -52,18 +83,7 @@ USAGE:  $0 <options>
 EOU
 }
 
-calculateIsEvenLocally() {
-    local _n=$1
-    if (( _n % 2 == 0 ))
-    then
-        echo -n true
-    else
-        echo -n false
-    fi
-}
-
 formatResultCSVLine() {
-    #echo "trace 0 formatResultCSVLine"
     local _aMean=$1
     local _cOv=$2
     local _gMean=$3
@@ -106,11 +126,11 @@ formatResultCSVTable() {
     local _mAx=$7
     local _mEdian=$8
     local _mIn=$9
-    local _mOde=$10
-    local _N=$11
-    local _skewNess=$12
-    local _stdDev=$13
-    local _sUm=$14
+    local _mOde=${10}
+    local _N=${11}
+    local _skewNess=${12}
+    local _stdDev=${13}
+    local _sUm=${14}
     cat <<EOAACSV
 "$ArithmeticMeanId", $_aMean
 "$CoefficientOfVariation", $_cOv
@@ -152,7 +172,7 @@ generate_datamash_custom() {
     local stddev=$(     datamash -t, sstdev $c <$_inputFSpec  )
     local sum=$(        datamash -t, sum $c <$_inputFSpec  )
     n=$(wc -l $_inputFSpec | awk '{print $1}')
-    is_even=$(calculateIsEvenLocally $n)
+    is_even=$(_calculateIsEvenLocally $n)
 
     if [[ $_outputCSVType = 'CSVLineHdr' ]]
     then
@@ -206,7 +226,7 @@ generate_gnuplot_custom() {
     local stddev=$(     generate_gnuplot__native $c "$i" | grep 'Std Dev Err.:' | awk '{print $2}' )
     local sum=$(        generate_gnuplot__native $c "$i" | grep 'Sum:' | awk '{print $2}' )
 
-    is_even=$(calculateIsEvenLocally $n)
+    is_even=$(_calculateIsEvenLocally $n)
 
     if [[ $_outputCSVType = 'CSVLineHdr' ]]
     then
@@ -229,17 +249,49 @@ generate_gnuplot_native() {
 }
 
 generate_pspp_custom() {
-    local _inputFSpec="$1"
-#Best pspp docs so far:  https://www.gnu.org/software/pspp/manual/pspp.html
-#AND finally I found this to output to csv from pspp:
-#pspp example004.sps -o x -O format=csv
+    #Best pspp docs so far:  https://www.gnu.org/software/pspp/manual/pspp.html
+    local _inputColumn=$1
+    local _inputFSpec="$2"
+    local ifspec=$(_parseColumnToPSPPbufferFile $_inputColumn "$_inputFSpec")
+    local result=$(pspp $ifspec -O format=csv | grep '^X,')
+    rm -f $ifspec
+#,N,Mean,S.E. Mean,Std Dev,Variance,Kurtosis,S.E. Kurt,Skewness,S.E. Skew,Range,Minimum,Maximum,Sum
+#X,10,5.50,.96,3.03,9.17,-1.20,1.33,.00,.69,9.00,1.00,10.00,55.00
+    local amean=$(      echo -n $result | cut -d, -f3)
+    local coeffv="NIU"
+    local gmean="NIU"
+    local is_even
+    local kurtosis=$(   echo -n $result | cut -d, -f7)
+    local mae="NIU"
+    local max=$(        echo -n $result | cut -d, -f13)
+    local median="NIU"
+    local min=$(        echo -n $result | cut -d, -f12)
+    local mode="NIU"
+    local n=$(          echo -n $result | cut -d, -f2)
+    local sskew=$(      echo -n $result | cut -d, -f9)
+    local stddev=$(     echo -n $result | cut -d, -f5)
+    local sum=$(        echo -n $result | cut -d, -f14)
+
+    is_even=$(_calculateIsEvenLocally $n)
+
+    if [[ $_outputCSVType = 'CSVLineHdr' ]]
+    then
+        formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum true
+    elif [[ $_outputCSVType = 'CSVLineNoHdr' ]]
+    then
+        formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum false
+    else
+        formatResultCSVTable $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum
+    fi
 }
 
 generate_pspp_native() {
-    local _inputFSpec="$1"
-#Best pspp docs so far:  https://www.gnu.org/software/pspp/manual/pspp.html
-#AND finally I found this to output to csv from pspp:
-#pspp example004.sps -o x -O format=csv
+    #Best pspp docs so far:  https://www.gnu.org/software/pspp/manual/pspp.html
+    local _inputColumn=$1
+    local _inputFSpec="$2"
+    local ifspec=$(_parseColumnToPSPPbufferFile $_inputColumn "$_inputFSpec")
+    pspp $ifspec -O format=csv
+    rm -f $ifspec
 }
 
 generate_r_custom() {
@@ -401,4 +453,4 @@ then
     rm $TmpInputFSpec
 fi
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# End of generatePointStatistics.bash
+# End of requestPointStatistics.bash

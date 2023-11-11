@@ -10,7 +10,7 @@ end data.
 
 descript all
 /stat=all
-/format=serial.
+*/format=serial.
 /SAVE TRANSLATE OUTFILE='example001.csv'
     /TYPE=CSV
     /MAP

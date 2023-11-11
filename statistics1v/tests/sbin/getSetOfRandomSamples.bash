@@ -1,6 +1,6 @@
 #!/bin/bash
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# generateSetOfRandomSamples.bash
+# getSetOfRandomSamples.bash
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Constants and Includes
@@ -62,7 +62,7 @@ $( catRandomGeneratorTypes )
 EOU
 }
 
-generateRandomDataItem() {
+getRandomDataItem() {
     local _generatorType=$1
 
     case "$_generatorType" in
@@ -123,7 +123,7 @@ generateRandomDataItem() {
     esac
 }
 
-generateRandomDataRow() {
+getRandomDataRow() {
     local _columnDimension=$1
     local _generatorType=$2
     local _delimiterChar=$3
@@ -153,7 +153,7 @@ generateRandomDataRow() {
                 ;;
             esac
         fi
-        generateRandomDataItem $_generatorType | tr -d '\n'
+        getRandomDataItem $_generatorType | tr -d '\n'
     done
     echo
 }
@@ -343,10 +343,10 @@ for r in $(seq $RowDimension)
 do
     case "$DataOutputType" in
     FILESPEC)
-        generateRandomDataRow $ColumnDimension $GeneratorType $DelimiterChar >>$DataOutputFSpec
+        getRandomDataRow $ColumnDimension $GeneratorType $DelimiterChar >>$DataOutputFSpec
         ;;
     STDOUT)
-        generateRandomDataRow $ColumnDimension $GeneratorType $DelimiterChar
+        getRandomDataRow $ColumnDimension $GeneratorType $DelimiterChar
         ;;
     *)
         >&2 "Invalid Output Type option $DataOutputType."
@@ -357,4 +357,4 @@ do
 done
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# End of generateSetOfRandomSamples.bash
+# End of getSetOfRandomSamples.bash
