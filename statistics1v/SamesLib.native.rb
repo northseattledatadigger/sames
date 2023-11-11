@@ -640,14 +640,21 @@ end
 
 class VectorOfContinuous < VectorOfX
 
+    AMeanAADId                  = 'AMeanAAD' # Average Absolute Deviation
+    GMeanAADId                  = 'GMeanAAD' # Geometric Mean Average Absolute Deviation
+    HMeanAADId                  = 'HMeanAAD' # Harmonic Mean Average Absolute Deviation
+    MedianAADId                 = 'MedianAAD'# Median Absolute Deviation
+    ModeAADId                   = 'AMeanAAD' # Mode Absolute Deviation
+    # Note, I have Max and Min available for AAD, but presume these will not be used formally.
     ArithmeticMeanId            = 'ArithmeticMean'
     COVPopulationId             = 'PopulationCoefficientOfVariation'
     COVSampleId                 = 'SampleCoefficientOfVariation'
-    CoefficientOfVariation      = 'CoefficientOfVariation'
+    CoefficientOfVariationId    = 'CoefficientOfVariation'
     GeometricMeanId             = 'GeometricMean'
+    HarmonicMeanId              = 'HarmonicMean'
     IsEvenId                    = 'IsEven'
     KurtosisId                  = 'Kurtosis'
-    MAEId                       = 'MAE' # Mean Absolute Error
+    MADId                       = 'MAD' # Mean Absolute Difference
     MaxId                       = 'Max'
     MedianId                    = 'Median'
     MinId                       = 'Min'
@@ -701,7 +708,7 @@ class VectorOfContinuous < VectorOfX
     end
 
     def _decideHistogramStartNumber(startNumber=nil)
-        startno = requestMin    unless startNumber
+        startno = getMin        unless startNumber
         startno = startNumber.to_f  if startNumber
         return startno
     end
@@ -733,6 +740,13 @@ class VectorOfContinuous < VectorOfX
         return rounded
     end
 
+    def calculateHarmonicMean
+        sumrecips   = @VectorOfX.inject { |sum, x| sum + 1.0 / x.to_f } 
+        unrounded   = 1.0 / sumrecips
+        rounded     = unrounded.round(@OutputDecimalPrecision)
+        return rounded
+    end
+
     def calculateQuartile(qNo)
         _assureSortedVectorOfX
         n = getCount
@@ -756,6 +770,42 @@ class VectorOfContinuous < VectorOfX
         return qvalue
     end
 
+    def generateAverageAbsoluteDeviation(centralPointType=ArithmeticMean)
+        cpf = nil
+        case centralPointType
+        when ArithmeticMeanId
+            cpf = calculateArithmeticMean
+        when GeometricMeanId
+            cpf = calculateGeometricMean
+        when HarmonicMeanId
+            cpf = calculateHarmonicMean
+        when MaxId
+            cpf = getMax
+        when MedianId
+            cpf = requestMedian
+        when MinId
+            cpf = generateMode
+        when ModeId
+            cpf = getMax
+        else
+            m = "This Average Absolute Mean formula has not implemented a statistic for central point '#{centralPointType}' at this time."
+            raise ArgumentError, m
+        end
+        nf                      = @VectorOfX.size.to_f
+        sumofabsolutediffs      = 0
+        @VectorOfX.each do |lx|
+            previous            = sumofabsolutediffs
+            sumofabsolutediffs  += ( lx - cpf ).abs
+            if previous > sumofabsolutediffs then
+                # These need review.  
+                raise RangeError, "previous #{previous} > sumofdiffssquared #{sumofabsolutediffs}"
+            end
+        end
+        unrounded                     = sumofabsolutediffs / nf
+        rounded = unrounded.round(@OutputDecimalPrecision)
+        return rounded
+    end
+
     def generateCoefficientOfVariation
         @SOPo       = _addUpXsToSumsOfPowers(@Population,@SumOfDiffs) unless @SOPo
         amean       = @SOPo.ArithmeticMean
@@ -767,7 +817,7 @@ class VectorOfContinuous < VectorOfX
     end
 
     def generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber=nil)
-        max             = requestMax
+        max             = getMax
         startno         = _decideHistogramStartNumber(startNumber)
         histo = HistogramOfX.newFromDesiredSegmentCount(startno,max,desiredSegmentCount)
         histo.validateRangesComplete
@@ -779,7 +829,7 @@ class VectorOfContinuous < VectorOfX
     end
 
     def generateHistogramAAbySegmentSize(segmentSize,startNumber=nil)
-        max             = requestMax
+        max             = getMax
         startno         = _decideHistogramStartNumber(startNumber)
         histo = HistogramOfX.newFromUniformSegmentSize(startno,max,segmentSize)
         histo.validateRangesComplete
@@ -790,25 +840,19 @@ class VectorOfContinuous < VectorOfX
         return resultvectors
     end
 
-    def generateMeanAbsoluteError
-        amean                   = calculateArithmeticMean
+    def generateMeanAbsoluteDifference
+        # https://en.wikipedia.org/wiki/Mean_absolute_difference
         nf                      = @VectorOfX.size.to_f
         sumofabsolutediffs      = 0
-        @VectorOfX.each do |lx|
-            previous            = sumofabsolutediffs
-            sumofabsolutediffs  += ( lx - amean ).abs
-            if previous > sumofabsolutediffs then
-                # These need review.  
-                raise RangeError, "previous #{previous} > sumofdiffssquared #{sumofabsolutediffs}"
+        @VectorOfX.each do |lxi|
+            @VectorOfX.each do |lxj|
+                sumofabsolutediffs  += ( lxi - lxj ).abs
             end
         end
-        unrounded                     = sumofabsolutediffs / nf
+        denominator                   = nf * ( nf - 1.0 )
+        unrounded                     = sumofabsolutediffs / denominator
         rounded = unrounded.round(@OutputDecimalPrecision)
         return rounded
-    end
-
-    def generateMeanAbsoluteDeviation
-        raise AbsoluteError, "TBD"  #NOTE
     end
 
     def generateMode
@@ -819,6 +863,16 @@ class VectorOfContinuous < VectorOfX
         end
         x               = generateModefromFrequencyAA(lfaa)
         return x
+    end
+
+    def getMax
+        _assureSortedVectorOfX
+        return @SortedVectorOfX[-1]
+    end
+
+    def getMin(sVoX=nil)
+        _assureSortedVectorOfX
+        return @SortedVectorOfX[0]
     end
 
     def getSum
@@ -865,19 +919,9 @@ class VectorOfContinuous < VectorOfX
         return rounded
     end
 
-    def requestMax
-        _assureSortedVectorOfX
-        return @SortedVectorOfX[-1]
-    end
-
     def requestMedian(sVoX=nil)
         q2 = calculateQuartile(2)
         return q2
-    end
-
-    def requestMin(sVoX=nil)
-        _assureSortedVectorOfX
-        return @SortedVectorOfX[0]
     end
 
     def requestQuartileCollection(sVoX=nil)
@@ -898,13 +942,16 @@ class VectorOfContinuous < VectorOfX
         scaa = requestSummaryCollection
         return <<-EOAACSV
 "#{ArithmeticMeanId}", #{scaa[ArithmeticMeanId]}
-"#{CoefficientOfVariation}", #{scaa[CoefficientOfVariation]}
+"#{ArMeanAADId}", #{scaa[ArMeanAADId]}
+"#{CoefficientOfVariationId}", #{scaa[CoefficientOfVariationId]}
 "#{GeometricMeanId}", #{scaa[GeometricMeanId]}
+"#{HarmonicMeanId}", #{scaa[HarmonicMeanId]}
 "#{IsEvenId}", #{scaa[IsEvenId]}
 "#{KurtosisId}", #{scaa[KurtosisId]}
-"#{MAEId}", #{scaa[MAEId]}
+"#{MADId}", #{scaa[MADId]}
 "#{MaxId}", #{scaa[MaxId]}
 "#{MedianId}", #{scaa[MedianId]}
+"#{MedianAADId}", #{scaa[MedianAADId]}
 "#{MinId}", #{scaa[MinId]}
 "#{ModeId}", #{scaa[ModeId]}
 "#{NId}", #{scaa[NId]}
@@ -916,11 +963,13 @@ EOAACSV
 
     def requestResultCSVLine(xFloat,includeHdr=false)
         scaa    = requestSummaryCollection
-        csvline = "#{scaa[ArithmeticMeanId]},#{scaa[COVPopulationId]},#{scaa[COVSampleId]},#{scaa[GeometricMeanId]},#{scaa[IsEvenId]},#{scaa[KurtosisId]},#{scaa[MAEId]},"
-        csvline += "#{scaa[MaxId]},#{scaa[MedianId]},#{scaa[MinId]},#{scaa[ModeId]},#{scaa[NId]},#{scaa[SkewnessId]},#{scaa[StandardDeviation]},#{scaa[SumId]}"
+        csvline =   "#{scaa[ArithmeticMeanId]},#{scaa[ArMeanAADId]},#{scaa[CoefficientOfVariationId]},#{scaa[GeometricMeanId]},#{scaa[HarmonicMeanId]},"
+        csvline +=  "#{scaa[IsEvenId]},#{scaa[KurtosisId]},#{scaa[MADId]},#{scaa[MaxId]},#{scaa[MedianId]},#{scaa[MedianAADId]},#{scaa[MinId]},#{scaa[ModeId]},"
+        csvline +=  "#{scaa[NId]},#{scaa[SkewnessId]},#{scaa[StandardDeviation]},#{scaa[SumId]}"
         if includeHdr then
-            csvhdr  = "#{ArithmeticMeanId},#{COVPopulationId},#{COVSampleId},#{GeometricMeanId},#{IsEvenId},#{KurtosisId},#{MAEId},"
-            csvhdr  += "#{MaxId},#{MedianId},#{MinId},#{ModeId},#{NId},#{SkewnessId},#{StandardDeviation},#{SumId}"
+            csvhdr  =   "#{ArithmeticMeanId},#{ArMeanAADId},#{CoefficientOfVariationId},#{GeometricMeanId},#{HarmonicMeanId},"
+            csvhdr  +=  "#{IsEvenId},#{KurtosisId},#{MADId},#{MaxId},#{MedianId},#{MedianAADId},#{MinId},#{ModeId},"
+            csvhdr  +=  "#{NId},#{SkewnessId},#{StandardDeviation},#{SumId}"
             return <<EOCSV
 #{csvhdr}
 #{csvline}
@@ -953,15 +1002,20 @@ EOCSV
     end
 
     def requestSummaryCollection
-        @SOPo                   = _addUpXsToSumsOfPowers(@Population,@UseDiffFromMeanCalculations)
-        amean                   = @SOPo.ArithmeticMean
-        covariance              = generateCoefficientOfVariation
+        #NOTE:  Some of these are ONLY for sample.  For now, this is best used ONLY for Samples.
+        #@SOPo                   = _addUpXsToSumsOfPowers(@Population,@UseDiffFromMeanCalculations)
+        @SOPo                   = _addUpXsToSumsOfPowers(false,@UseDiffFromMeanCalculations)
+        amean                   = calculateArithmeticMean
+        ameanaad                = generateAverageAbsoluteDeviation
+        coefficientofvariation  = generateCoefficientOfVariation
         gmean                   = calculateGeometricMean
+        hmean                   = calculateHarmonicMean
         is_even                 = isEvenN?
         kurtosis                = "SumXsCalc Not Yet Available"
         kurtosis                = @SOPo.requestKurtosis.round(@OutputDecimalPrecision) if @UseDiffFromMeanCalculations
-        mae                     = generateMeanAbsoluteError.round(@OutputDecimalPrecision)
+        mad                     = generateMeanAbsoluteDifference
         median                  = requestMedian
+        medianaad               = generateAverageAbsoluteDeviation(MedianId)
         min,max                 = requestRange
         mode                    = requestMode
         n                       = getCount
@@ -969,21 +1023,23 @@ EOCSV
         stddef                  = @SOPo.generateStandardDeviation.round(@OutputDecimalPrecision)
         sum                     = getSum
         return {
-            ArithmeticMeanId    => amean,
-            COVPopulationId     => popcov,
-            COVSampleId         => samplecov,
-            GeometricMeanId     => gmean,
-            IsEvenId            => is_even,
-            KurtosisId          => kurtosis,
-            MAEId               => mae,
-            MaxId               => max,
-            MedianId            => median,
-            MinId               => min,
-            ModeId              => mode,
-            NId                 => n,
-            SkewnessId          => skewness,
-            StandardDeviation   => population_stddev_diffs,   
-            SumId               => sum
+            ArithmeticMeanId            => amean,
+            ArMeanAADId                 => ameanaad,
+            CoefficientOfVariationId    => coefficientofvariation,
+            GeometricMeanId             => gmean,
+            HarmonicMeanId              => hmean,
+            IsEvenId                    => is_even,
+            KurtosisId                  => kurtosis,
+            MADId                       => mad,
+            MaxId                       => max,
+            MedianId                    => median,
+            MedianAADId                 => medianaad,
+            MinId                       => min,
+            ModeId                      => mode,
+            NId                         => n,
+            SkewnessId                  => skewness,
+            StandardDeviation           => stddev,   
+            SumId                       => sum
         }
     end
 
