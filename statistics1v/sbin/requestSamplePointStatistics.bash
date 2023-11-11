@@ -1,6 +1,12 @@
 #!/bin/bash
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# requestPointStatistics.bash
+# requestSamplePointStatistics.bash
+# NOTE:  As of 2023/11/11, this is a working script, but limited, and not fully
+# cross checked.  I'll use it this way for my automation test purposes, and then
+# revisit it later for enhancements.  Perhaps if I find any big bugs in the
+# mean-time, I'll make the commit comment clear about it, or even tag the check-
+# in.
+#
 
 # NIU will indicate: NOT IN USE for a field for which data is not provided.
 
@@ -37,17 +43,25 @@ _calculateIsEvenLocally() {
     fi
 }
 
-_parseColumnToPSPPbufferFile() {
+_parseColumn() {
     local _inputColumn="$1"
     local _inputFSpec="$2"
 
     local c=$_inputColumn
+
+    cat $_inputFSpec | awk "{print \$$c}"
+}
+
+_parseColumnToPSPPbufferFile() {
+    local _inputColumn="$1"
+    local _inputFSpec="$2"
+
     local fspec=$(mktemp --suffix=.sps)
     cat <<EOSPSTOP >$fspec
 data list free / X .
 begin data
 EOSPSTOP
-    cat $_inputFSpec | awk "{print \$$c}" >>$fspec
+    _parseColumn $_inputColumn $_inputFSpec >>$fspec
     cat <<EOSPSBOTTOM >>$fspec
 end data .
 
@@ -149,6 +163,15 @@ formatResultCSVTable() {
 EOAACSV
 }
 
+formatResultQuartiles() {
+    local _mIn=$1
+    local _q1=$2
+    local _mEdian=$3
+    local _q3=$4
+    local _mAx=$7
+    echo "$_mIn,$_q1,$_mEdian,$_q3,$_mAx"
+}
+
 generate_datamash_custom() {
     local _inputColumn="$1"
     local _inputFSpec="$2"
@@ -156,33 +179,40 @@ generate_datamash_custom() {
 
     local c=$_inputColumn
 
-    local amean=$(      datamash -t, mean $c <$_inputFSpec  )
+    local amean=$(      datamash -t, mean $c    <$_inputFSpec  )
     local coeffv="NIU"
     local buffer=$(     datamash -t, geomean $c <$_inputFSpec  )
     local gmean=$(      printf '%.*f\n' 2 $buffer )
     local is_even
-    local kurtosis=$(   datamash -t, skurt $c <$_inputFSpec  )
+    local kurtosis=$(   datamash -t, skurt $c   <$_inputFSpec  )
     local mae="NIU"
-    local max=$(        datamash -t, max $c <$_inputFSpec  )
-    local median=$(     datamash -t, median $c <$_inputFSpec  )
-    local min=$(        datamash -t, min $c <$_inputFSpec  )
-    local mode=$(       datamash -t, mode $c <$_inputFSpec  )
+    local max=$(        datamash -t, max $c     <$_inputFSpec  )
+    local median=$(     datamash -t, median $c  <$_inputFSpec  )
+    local min=$(        datamash -t, min $c     <$_inputFSpec  )
+    local mode=$(       datamash -t, mode $c    <$_inputFSpec  )
     local n
-    local sskew=$(      datamash -t, sskew $c <$_inputFSpec  )
-    local stddev=$(     datamash -t, sstdev $c <$_inputFSpec  )
-    local sum=$(        datamash -t, sum $c <$_inputFSpec  )
+    local q1=$(         datamash -t, q1 $c      <$_inputFSpec  )
+    local q3=$(         datamash -t, q3 $c      <$_inputFSpec  )
+    local sskew=$(      datamash -t, sskew $c   <$_inputFSpec  )
+    local stddev=$(     datamash -t, sstdev $c  <$_inputFSpec  )
+    local sum=$(        datamash -t, sum $c     <$_inputFSpec  )
     n=$(wc -l $_inputFSpec | awk '{print $1}')
     is_even=$(_calculateIsEvenLocally $n)
 
-    if [[ $_outputCSVType = 'CSVLineHdr' ]]
-    then
-        formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum true
-    elif [[ $_outputCSVType = 'CSVLineNoHdr' ]]
-    then
-        formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum false
-    else
-        formatResultCSVTable $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum
-    fi
+    case $_outputCSVType in
+        CSVLineHdr)
+            formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum true
+            ;;
+        CSVLineNoHdr)
+            formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum false
+            ;;
+        CSVTable)
+            formatResultCSVTable $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum
+            ;;
+        Quartiles)
+            formatResultQuartiles $min $q1 $median $q3 $max
+            ;;
+    esac
 }
 
 generate_datamash_native() {
@@ -215,28 +245,35 @@ generate_gnuplot_custom() {
     local coeffv="NIU"
     local gmean="NIU"
     local is_even
-    local kurtosis=$(   generate_gnuplot__native $c "$i" | grep 'Kurtosis:' | awk '{print $2}' )
-    local mae=$(        generate_gnuplot__native $c "$i" | grep 'Mean Err.:' | awk '{print $2}' )
-    local max=$(        generate_gnuplot__native $c "$i" | grep 'Maximum:' | awk '{print $2}' )
-    local median=$(     generate_gnuplot__native $c "$i" | grep 'Median:' | awk '{print $2}' )
-    local min=$(        generate_gnuplot__native $c "$i" | grep 'Minimum:' | awk '{print $2}' )
+    local kurtosis=$(   generate_gnuplot__native $c "$i" | grep 'Kurtosis:'         | awk '{print $2}' )
+    local mae=$(        generate_gnuplot__native $c "$i" | grep 'Mean Err.:'        | awk '{print $3}' )
+    local max=$(        generate_gnuplot__native $c "$i" | grep 'Maximum:'          | awk '{print $2}' )
+    local median=$(     generate_gnuplot__native $c "$i" | grep 'Median:'           | awk '{print $2}' )
+    local min=$(        generate_gnuplot__native $c "$i" | grep 'Minimum:'          | awk '{print $2}' )
     local mode="NIU"
-    local n=$(          generate_gnuplot__native $c "$i" | grep 'Records:' | awk '{print $2}' )
-    local sskew=$(      generate_gnuplot__native $c "$i" | grep 'Skewness:' | awk '{print $2}' )
-    local stddev=$(     generate_gnuplot__native $c "$i" | grep 'Std Dev Err.:' | awk '{print $2}' )
-    local sum=$(        generate_gnuplot__native $c "$i" | grep 'Sum:' | awk '{print $2}' )
+    local n=$(          generate_gnuplot__native $c "$i" | grep 'Records:'          | awk '{print $2}' )
+    local q1=$(         generate_gnuplot__native $c "$i" | grep 'Quartile:'         | awk '{print $2}' | head -1 )
+    local q3=$(         generate_gnuplot__native $c "$i" | grep 'Quartile:'         | awk '{print $2}' | tail -1 )
+    local sskew=$(      generate_gnuplot__native $c "$i" | grep 'Skewness:'         | awk '{print $2}' )
+    local stddev=$(     generate_gnuplot__native $c "$i" | grep 'Sample StdDev:'    | awk '{print $3}' )
+    local sum=$(        generate_gnuplot__native $c "$i" | grep 'Sum:'              | awk '{print $2}' )
 
     is_even=$(_calculateIsEvenLocally $n)
 
-    if [[ $_outputCSVType = 'CSVLineHdr' ]]
-    then
-        formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum true
-    elif [[ $_outputCSVType = 'CSVLineNoHdr' ]]
-    then
-        formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum false
-    else
-        formatResultCSVTable $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum
-    fi
+    case $_outputCSVType in
+        CSVLineHdr)
+            formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum true
+            ;;
+        CSVLineNoHdr)
+            formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum false
+            ;;
+        CSVTable)
+            formatResultCSVTable $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum
+            ;;
+        Quartiles)
+            formatResultQuartiles $min $q1 $median $q3 $max
+            ;;
+    esac
 }
 
 generate_gnuplot_native() {
@@ -252,11 +289,12 @@ generate_pspp_custom() {
     #Best pspp docs so far:  https://www.gnu.org/software/pspp/manual/pspp.html
     local _inputColumn=$1
     local _inputFSpec="$2"
+    local _outputCSVType="$3"
+
     local ifspec=$(_parseColumnToPSPPbufferFile $_inputColumn "$_inputFSpec")
     local result=$(pspp $ifspec -O format=csv | grep '^X,')
     rm -f $ifspec
-#,N,Mean,S.E. Mean,Std Dev,Variance,Kurtosis,S.E. Kurt,Skewness,S.E. Skew,Range,Minimum,Maximum,Sum
-#X,10,5.50,.96,3.03,9.17,-1.20,1.33,.00,.69,9.00,1.00,10.00,55.00
+
     local amean=$(      echo -n $result | cut -d, -f3)
     local coeffv="NIU"
     local gmean="NIU"
@@ -268,21 +306,28 @@ generate_pspp_custom() {
     local min=$(        echo -n $result | cut -d, -f12)
     local mode="NIU"
     local n=$(          echo -n $result | cut -d, -f2)
+    local q1="NIU"
+    local q3="NIU"
     local sskew=$(      echo -n $result | cut -d, -f9)
     local stddev=$(     echo -n $result | cut -d, -f5)
     local sum=$(        echo -n $result | cut -d, -f14)
 
     is_even=$(_calculateIsEvenLocally $n)
 
-    if [[ $_outputCSVType = 'CSVLineHdr' ]]
-    then
-        formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum true
-    elif [[ $_outputCSVType = 'CSVLineNoHdr' ]]
-    then
-        formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum false
-    else
-        formatResultCSVTable $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum
-    fi
+    case $_outputCSVType in
+        CSVLineHdr)
+            formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum true
+            ;;
+        CSVLineNoHdr)
+            formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum false
+            ;;
+        CSVTable)
+            formatResultCSVTable $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum
+            ;;
+        Quartiles)
+            formatResultQuartiles $min $q1 $median $q3 $max
+            ;;
+    esac
 }
 
 generate_pspp_native() {
@@ -295,15 +340,59 @@ generate_pspp_native() {
 }
 
 generate_r_custom() {
-    local _inputFSpec="$1"
  #2044  R -q -e "x <- read.csv('nums.txt', header = F); summary(x); sd(x[ , 1])"
  #2075  seq 10 | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); summary(x)'
+    local _inputColumn=$1
+    local _inputFSpec="$2"
+    local _outputCSVType="$3"
+
+    local amean=$(      _parseColumn $_inputColumn $_inputFSpec | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); mean(x)' | awk '{print $2}')
+    local coeffv="NIU"
+    local gmean="NIU"
+    local is_even
+    local kurtosis="NIU"
+    local mae="NIU"
+    local max=$(        _parseColumn $_inputColumn $_inputFSpec | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); summary(x)' | tail -1 | awk '{print $6}')
+    local median=$(     _parseColumn $_inputColumn $_inputFSpec | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); summary(x)' | tail -1 | awk '{print $4}')
+    local min=$(        _parseColumn $_inputColumn $_inputFSpec | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); summary(x)' | tail -1 | awk '{print $1}')
+    local mode="NIU"
+    local n
+    local q1=$(         _parseColumn $_inputColumn $_inputFSpec | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); summary(x)' | tail -1 | awk '{print $2}')
+    local q3=$(         _parseColumn $_inputColumn $_inputFSpec | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); summary(x)' | tail -1 | awk '{print $5}')
+    local sskew="NIU"
+    local stddev=$(     _parseColumn $_inputColumn $_inputFSpec | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); sd(x)' | awk '{print $2}')
+    local sum=$(        _parseColumn $_inputColumn $_inputFSpec | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); sum(x)' | awk '{print $2}')
+
+    n=$(wc -l $_inputFSpec | awk '{print $1}')
+    is_even=$(_calculateIsEvenLocally $n)
+
+    case $_outputCSVType in
+        CSVLineHdr)
+            formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum true
+            ;;
+        CSVLineNoHdr)
+            formatResultCSVLine $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum false
+            ;;
+        CSVTable)
+            formatResultCSVTable $amean $coeffv $gmean $is_even $kurtosis $mae $max $median $min $mode $n $sskew $stddev $sum
+            ;;
+        Quartiles)
+            formatResultQuartiles $min $q1 $median $q3 $max
+            ;;
+    esac
 }
 
 generate_r_native() {
-    local _inputFSpec="$1"
- #2044  R -q -e "x <- read.csv('nums.txt', header = F); summary(x); sd(x[ , 1])"
- #2075  seq 10 | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); summary(x)'
+    # Also example R -q -e "x <- read.csv('$_inputFSpec', header = F); summary(x); sd(x[ , 1])"
+    local _inputColumn=$1
+    local _inputFSpec="$2"
+
+    echo "Summary:  "
+    _parseColumn $_inputColumn $_inputFSpec | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); summary(x)'
+    echo -n "Std dev:  "
+    _parseColumn $_inputColumn $_inputFSpec | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); sd(x)'
+    echo -n "Sum:  "
+    _parseColumn $_inputColumn $_inputFSpec | R --slave -e 'x <- scan(file="stdin",quiet=TRUE); sum(x)'
 }
 
 validateDimension() {
@@ -374,6 +463,9 @@ do
     p)
         AppToUse=pspp
         ;;
+    q)
+        OutputFormat=Quartiles
+        ;;
     r)
         AppToUse=r
         ;;
@@ -399,7 +491,7 @@ fi
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Main
 
-if [[ $OutputFormat = 'CSVLineHdr' || $OutputFormat = 'CSVLineNoHdr' || $OutputFormat = 'CSVTable' ]]
+if [[ $OutputFormat = 'CSVLineHdr' || $OutputFormat = 'CSVLineNoHdr' || $OutputFormat = 'CSVTable' || $OutputFormat = 'Quartiles' ]]
 then
     case "$AppToUse" in
     datamash)
@@ -453,4 +545,4 @@ then
     rm $TmpInputFSpec
 fi
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# End of requestPointStatistics.bash
+# End of requestSamplePointStatistics.bash

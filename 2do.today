@@ -1,8 +1,20 @@
-    0.  Reorg lrustxc.bash
-    1.  Get all four languages working over here.
-    2.  Begin making usage of names regular, probably allying most with the rust amateur code.
-    3.  Get some tests started with the rust code.
-    4.  Finish adding in all the features, adding and testing tests along the way.
-    5.  Add in central scripts, probably ONLY in each project, but as much the same as possible, avoiding needless boilerplate.
-    6.  Add to docs, improving explanation, and clarifying usage to recommend ONLY runs within each project folder.
-    7.  review this plan.
+    1.  Put together draft of SamesLib.native.rb extended tests:  test_SamesLib.extended.rb, utilizing the new scripts:
+        a.  Covering Main Point statistics with:
+            i.      N breadth, Sums breadth
+            ii.     variance, kurtosis, and skewness items of interest.
+            iii.    all different kinds of numbers:  floats, signed, octal, unsigned, perhaps also hex
+        b.  Covering quartiles
+        c.  Covering histogram
+        d.  Covering frequencies
+        e.  Covering oddments
+    2.  Look at migration of coefficient of variation.
+    3.  Look at use of harmonic mean.
+    4.  Finish building rest of ruby.main:
+        a.  Skel.
+        b.  bats tdd and flesh out.
+        c.  Add to sbin test generator tool while progressing for interacive checks and bats acceptance tests.
+    5.  Begin to look at SamesLib.amateur.py.
+    6.  Begin to look at SamesLib.amateur.js.
+    7.  Begin to look at SamesLib.amateur.rs.
+    8.  Look back at results project.
+    9.  Re-plan.

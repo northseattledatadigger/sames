@@ -7,7 +7,7 @@
 
 readonly DEFAULTColumns=1
 readonly DEFAULTDelimiter=SPACE
-readonly DEFAULTGeneratorType=RANDOM
+readonly DEFAULTGeneratorType=URODd4
 readonly DEFAULTRows=16
 readonly MAXCOLUMNS=128
 readonly MAXROWS=100000 # One Hundred Thousand.
