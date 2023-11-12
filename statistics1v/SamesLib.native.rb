@@ -55,6 +55,7 @@ def getFactorial(nA)
 end
 
 def generateModefromFrequencyAA(faaA)
+    raise ArgumentError unless faaA.is_a? Hash
     x = 0
     m = 0
     faaA.keys.each do |lx|
@@ -73,6 +74,7 @@ def isANumStr?(strA)
 end
 
 def isNumericVector?(vA)
+    raise ArgumentError unless vA.is_a? Array
     return true if vA.all? { |lve| lve.is_a? Numeric }
     return false
 end
@@ -84,6 +86,7 @@ def isUsableNumber?(cA)
 end
 
 def isUsableNumberVector?(vA)
+    raise ArgumentError unless vA.is_a? Array
     return true if vA.all? { |lve| isUsableNumber?(lve) }
     return false
 end
@@ -108,6 +111,8 @@ class HistogramOfX
     class RangeOccurrence 
 
         def initialize(startNo,stopNo)
+            raise ArgumentError unless startNo.is_a? Numeric
+            raise ArgumentError unless stopNo.is_a? Numeric
             @Count      = 0
             @StartNo    = startNo
             @StopNo     = stopNo
@@ -118,12 +123,15 @@ class HistogramOfX
         end
 
         def hasOverlap?(startNo,stopNo)
+            raise ArgumentError unless startNo.is_a? Numeric
+            raise ArgumentError unless stopNo.is_a? Numeric
             return true if @StartNo <= startNo and startNo < @StopNo
             return true if @StartNo < stopNo and stopNo <= @StopNo
             return false
         end
 
         def isInRange?(xFloat)
+            raise ArgumentError unless xFloat.is_a? Numeric
             return false unless xFloat >= @StartNo
             return false unless xFloat < @StopNo
             return true
@@ -138,7 +146,10 @@ class HistogramOfX
     class << self
 
         def newFromDesiredSegmentCount(startNo,maxNo,desiredSegmentCount,extraMargin=0)
-            #STDERR.puts "trace 0 newFromDesiredSegmentCount(#{startNo},#{maxNo},#{desiredSegmentCount},#{extraMargin})"
+            raise ArgumentError unless startNo.is_a? Numeric
+            raise ArgumentError unless maxNo.is_a? Numeric
+            raise ArgumentError unless desiredSegmentCount.is_a? Integer
+            raise ArgumentError unless extraMargin.is_a? Numeric
             # xc 20231106:  Don't worry about cost of passing the AA around until efficiency passes later.
             totalbreadth    = ( maxNo - startNo + 1 + extraMargin ).to_f
             dscf            = desiredSegmentCount.to_f
@@ -149,7 +160,9 @@ class HistogramOfX
         end
 
         def newFromUniformSegmentSize(startNo,maxNo,segmentSize)
-            #STDERR.puts "trace 0 newFromUniformSegmentSize(#{startNo},#{maxNo},#{segmentSize})"
+            raise ArgumentError unless startNo.is_a? Numeric
+            raise ArgumentError unless maxNo.is_a? Numeric
+            raise ArgumentError unless segmentSize.is_a? Numeric
             # xc 20231106:  Don't worry about cost of passing the AA around until efficiency passes later.
             localo          = HistogramOfX.new(startNo,maxNo)
             bottomno        = startNo
@@ -165,6 +178,8 @@ class HistogramOfX
     end
 
     def _validateNoOverlap(startNo,stopNo)
+        raise ArgumentError unless startNo.is_a? Numeric
+        raise ArgumentError unless stopNo.is_a? Numeric
         @FrequencyAA.values.each do |lroo|
             if lroo.hasOverlap?(startNo,stopNo)
                 m = "Range [#{startNo},#{stopNo}] overlaps with another range:  [#{lroo.StartNo},#{lroo.StopNo}]."
@@ -174,12 +189,15 @@ class HistogramOfX
     end
 
     def initialize(lowestValue,highestValue=nil)
+        raise ArgumentError unless lowestValue.is_a? Numeric
+        raise ArgumentError unless highestValue.is_a? Numeric
         @FrequencyAA    = Hash.new
         @Max            = highestValue
         @Min            = lowestValue
     end
 
     def addToCounts(xFloat)
+        raise ArgumentError unless xFloat.is_a? Numeric
         @FrequencyAA.keys.sort.each do |lstartno|
             lroo = @FrequencyAA[lstartno]
             if xFloat < lroo.StopNo then
@@ -202,6 +220,8 @@ class HistogramOfX
     end
 
     def setOccurrenceRange(startNo,stopNo)
+        raise ArgumentError unless startNo.is_a? Numeric
+        raise ArgumentError unless stopNo.is_a? Numeric
         raise ArgumentError unless startNo < stopNo
         _validateNoOverlap(startNo,stopNo)
         @FrequencyAA[startNo]   = RangeOccurrence.new(startNo,stopNo)
@@ -260,6 +280,9 @@ class SumsOfPowers
     class << self
 
         def calculatePearsonsFirstSkewnessCoefficient(aMean,modeFloat,stdDev)
+            raise ArgumentError unless aMean.is_a? Numeric
+            raise ArgumentError unless modeFloat.is_a? Numeric
+            raise ArgumentError unless stdDev.is_a? Numeric
             # See 2023/11/05 "Pearson's first skewness coefficient" in:
             #   https://en.wikipedia.org/wiki/Skewness
             sc  = ( aMean - modeFloat ) / stdDev
@@ -267,6 +290,9 @@ class SumsOfPowers
         end
 
         def calculatePearsonsSecondSkewnessCoefficient(aMean,medianFloat,stdDev)
+            raise ArgumentError unless aMean.is_a? Numeric
+            raise ArgumentError unless medianFloat.is_a? Numeric
+            raise ArgumentError unless stdDev.is_a? Numeric
             # See 2023/11/05 "Pearson's second skewness coefficient" in:
             #   https://en.wikipedia.org/wiki/Skewness
             sc  = ( aMean - medianFloat ) / stdDev
@@ -546,6 +572,8 @@ trace Generating kurtosis:  NaN
     end
 
     def setToDiffsFromMeanState(sumXs,nA)
+        raise ArgumentError unless sumXs.is_a? Numeric
+        raise ArgumentError unless nA.is_a? Integer
         if @N > 0 then
             m = "#{@N} values have already been added to the sums."
             m += " You must reinit the object before setting to the Diffs From Mean state."
@@ -587,6 +615,9 @@ class VectorOfX
     end
 
     def initialize(aA=nil)
+        if aA then
+            raise ArgumentError unless aA.is_a? Array
+        end
         # The following is ONLY for testing:
         @SortedVectorOfX    = nil
         @VectorOfX          = Array.new  unless aA
@@ -640,24 +671,24 @@ end
 
 class VectorOfContinuous < VectorOfX
 
-    AMeanAADId                  = 'AMeanAAD' # Average Absolute Deviation
-    GMeanAADId                  = 'GMeanAAD' # Geometric Mean Average Absolute Deviation
-    HMeanAADId                  = 'HMeanAAD' # Harmonic Mean Average Absolute Deviation
-    MedianAADId                 = 'MedianAAD'# Median Absolute Deviation
-    ModeAADId                   = 'AMeanAAD' # Mode Absolute Deviation
-    # Note, I have Max and Min available for AAD, but presume these will not be used formally.
     ArithmeticMeanId            = 'ArithmeticMean'
+    ArMeanAADId                 = 'AMeanAAD' # Average Absolute Deviation
+    # Note, I have Max and Min available for AAD, but presume these will not be used formally.
     COVPopulationId             = 'PopulationCoefficientOfVariation'
     COVSampleId                 = 'SampleCoefficientOfVariation'
     CoefficientOfVariationId    = 'CoefficientOfVariation'
     GeometricMeanId             = 'GeometricMean'
+    GMeanAADId                  = 'GMeanAAD' # Geometric Mean Average Absolute Deviation
     HarmonicMeanId              = 'HarmonicMean'
+    HMeanAADId                  = 'HMeanAAD' # Harmonic Mean Average Absolute Deviation
     IsEvenId                    = 'IsEven'
     KurtosisId                  = 'Kurtosis'
     MADId                       = 'MAD' # Mean Absolute Difference
     MaxId                       = 'Max'
+    MedianAADId                 = 'MedianAAD'# Median Absolute Deviation
     MedianId                    = 'Median'
     MinId                       = 'Min'
+    ModeAADId                   = 'ModeAAD' # Mode Absolute Deviation
     ModeId                      = 'Mode'
     NId                         = 'N'
     SkewnessId                  = 'Skewness'
@@ -671,6 +702,7 @@ class VectorOfContinuous < VectorOfX
     class << self
 
         def newAfterInvalidatedDropped(arrayA,relayErrors=false)
+            raise ArgumentError unless arrayA.is_a? Array
             localo = self.new
             v = Array.new
             i = 0
@@ -714,14 +746,15 @@ class VectorOfContinuous < VectorOfX
     end
 
     def initialize(vectorX=Array.new)
-        @InputDecimalPrecision  = 4
-        @OutputDecimalPrecision = 4
-        @Population       = false
-        @SOPo                   = nil
-        @SortedVectorOfX        = nil
-        @UseDiffFromMeanCalculations          = true
-        @ValidateStringNumbers  = false
-        @VectorOfX              = vectorX
+        raise ArgumentError unless vectorX.is_a? Array
+        @InputDecimalPrecision          = 4
+        @OutputDecimalPrecision         = 4
+        @Population                     = false
+        @SOPo                           = nil
+        @SortedVectorOfX                = nil
+        @UseDiffFromMeanCalculations    = true
+        @ValidateStringNumbers          = false
+        @VectorOfX                      = vectorX
     end
 
     def calculateArithmeticMean
@@ -741,36 +774,37 @@ class VectorOfContinuous < VectorOfX
     end
 
     def calculateHarmonicMean
+        nf          = @VectorOfX.size.to_f
         sumrecips   = @VectorOfX.inject { |sum, x| sum + 1.0 / x.to_f } 
-        unrounded   = 1.0 / sumrecips
+        unrounded   = nf / sumrecips
         rounded     = unrounded.round(@OutputDecimalPrecision)
         return rounded
     end
 
     def calculateQuartile(qNo)
+        raise ArgumentError unless qNo.is_a? Integer
+        raise ArgumentError unless 0 <= qNo
+        raise ArgumentError unless qNo < 5
         _assureSortedVectorOfX
-        n = getCount
-        nf = n.to_f
+        n                       = getCount
+        nf                      = n.to_f
         qindexfloat             = qNo * ( nf - 1.0 ) / 4.0
         thisquartilefraction    = qindexfloat % 1
         qvalue = nil
-        #STDERR.puts "trace 6 calculateQuartile(#{qNo}):  #{nf}, #{thisquartilefraction}, #{qindexfloat}"
-       if thisquartilefraction % 1 == 0 then
-            qi      = qindexfloat.to_i
-            qvalue  = @SortedVectorOfX[qi]
-            #STDERR.puts "trace 7 calculateQuartile:  #{qi}, #{qvalue}"
+        if thisquartilefraction % 1 == 0 then
+            qi                  = qindexfloat.to_i
+            qvalue              = @SortedVectorOfX[qi]
         else
-            portion0    = 1.0 - thisquartilefraction
-            portion1    = 1.0 - portion0
-            qi0         = qindexfloat.to_i
-            qi1         = qi0 + 1
-            qvalue      = @SortedVectorOfX[qi0] * portion0 + @SortedVectorOfX[qi1] * portion1
-            #STDERR.puts "trace 8 calculateQuartile:  #{qi0}, #{qi1}, #{@SortedVectorOfX[qi0]} * #{portion0} + #{@SortedVectorOfX[qi1]} * #{portion1} == #{qvalue}"
-       end
+            portion0            = 1.0 - thisquartilefraction
+            portion1            = 1.0 - portion0
+            qi0                 = qindexfloat.to_i
+            qi1                 = qi0 + 1
+            qvalue              = @SortedVectorOfX[qi0] * portion0 + @SortedVectorOfX[qi1] * portion1
+        end
         return qvalue
     end
 
-    def generateAverageAbsoluteDeviation(centralPointType=ArithmeticMean)
+    def generateAverageAbsoluteDeviation(centralPointType=ArithmeticMeanId)
         cpf = nil
         case centralPointType
         when ArithmeticMeanId
@@ -801,8 +835,8 @@ class VectorOfContinuous < VectorOfX
                 raise RangeError, "previous #{previous} > sumofdiffssquared #{sumofabsolutediffs}"
             end
         end
-        unrounded                     = sumofabsolutediffs / nf
-        rounded = unrounded.round(@OutputDecimalPrecision)
+        unrounded               = sumofabsolutediffs / nf
+        rounded                 = unrounded.round(@OutputDecimalPrecision)
         return rounded
     end
 
@@ -812,11 +846,14 @@ class VectorOfContinuous < VectorOfX
         stddev      = @SOPo.generateStandardDeviation
         unrounded   = stddev / amean
         rounded     = unrounded.round(@OutputDecimalPrecision)
-        #STDERR.puts "trace 6 genCoefficientOfVariation #{amean}, #{stddev}, #{@Population}, #{@SumOfDiffs}, #{unrounded}, #{rounded}"
         return rounded
     end
 
     def generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber=nil)
+        raise ArgumentError unless desiredSegmentCount.is_a? Integer
+        if startNumber then
+            raise ArgumentError unless startNumber.is_a? Numeric
+        end
         max             = getMax
         startno         = _decideHistogramStartNumber(startNumber)
         histo = HistogramOfX.newFromDesiredSegmentCount(startno,max,desiredSegmentCount)
@@ -829,6 +866,10 @@ class VectorOfContinuous < VectorOfX
     end
 
     def generateHistogramAAbySegmentSize(segmentSize,startNumber=nil)
+        raise ArgumentError unless segmentSize.is_a? Numeric
+        if startNumber then
+            raise ArgumentError unless startNumber.is_a? Numeric
+        end
         max             = getMax
         startno         = _decideHistogramStartNumber(startNumber)
         histo = HistogramOfX.newFromUniformSegmentSize(startno,max,segmentSize)
@@ -842,16 +883,16 @@ class VectorOfContinuous < VectorOfX
 
     def generateMeanAbsoluteDifference
         # https://en.wikipedia.org/wiki/Mean_absolute_difference
-        nf                      = @VectorOfX.size.to_f
-        sumofabsolutediffs      = 0
+        nf                          = @VectorOfX.size.to_f
+        sumofabsolutediffs          = 0
         @VectorOfX.each do |lxi|
             @VectorOfX.each do |lxj|
                 sumofabsolutediffs  += ( lxi - lxj ).abs
             end
         end
-        denominator                   = nf * ( nf - 1.0 )
-        unrounded                     = sumofabsolutediffs / denominator
-        rounded = unrounded.round(@OutputDecimalPrecision)
+        denominator                 = nf * ( nf - 1.0 )
+        unrounded                   = sumofabsolutediffs / denominator
+        rounded                     = unrounded.round(@OutputDecimalPrecision)
         return rounded
     end
 
@@ -897,34 +938,34 @@ class VectorOfContinuous < VectorOfX
         unless @UseDiffFromMeanCalculations
             raise ArgumentError, "May NOT be used with Sum of Xs Data."
         end
-        @SOPo = _addUpXsToSumsOfPowers(@Population) unless @SOPo
-        unrounded = nil
+        @SOPo           = _addUpXsToSumsOfPowers(@Population) unless @SOPo
+        unrounded       = nil
         case formulaId
         when 2
-            unrounded = @SOPo.calculateExcessKurtosis_2_JR_R
+            unrounded   = @SOPo.calculateExcessKurtosis_2_JR_R
         when 3
-            unrounded = @SOPo.generateExcessKurtosis_3_365datascience
+            unrounded   = @SOPo.generateExcessKurtosis_3_365datascience
         else
-            m = "There is no excess kurtosis formula #{formulaId} implemented at this time."
+            m="There is no excess kurtosis formula #{formulaId} implemented at this time."
             raise ArgumentError, m
         end
-        rounded = unrounded.round(@OutputDecimalPrecision)
+        rounded         = unrounded.round(@OutputDecimalPrecision)
         return rounded
     end
 
     def requestKurtosis
-        @SOPo = _addUpXsToSumsOfPowers(@Population) unless @SOPo
-        unrounded = @SOPo.requestKurtosis
-        rounded = unrounded.round(@OutputDecimalPrecision)
+        @SOPo       = _addUpXsToSumsOfPowers(@Population) unless @SOPo
+        unrounded   = @SOPo.requestKurtosis
+        rounded     = unrounded.round(@OutputDecimalPrecision)
         return rounded
     end
 
-    def requestMedian(sVoX=nil)
+    def requestMedian
         q2 = calculateQuartile(2)
         return q2
     end
 
-    def requestQuartileCollection(sVoX=nil)
+    def requestQuartileCollection
         qos0 = calculateQuartile(0)
         qos1 = calculateQuartile(1)
         qos2 = calculateQuartile(2)
@@ -933,12 +974,12 @@ class VectorOfContinuous < VectorOfX
         return [qos0,qos1,qos2,qos3,qos4]
     end
 
-    def requestRange(sVoX=nil)
+    def requestRange
         _assureSortedVectorOfX
         return @SortedVectorOfX[0], @SortedVectorOfX[-1]
     end
 
-    def requestResultAACSV(xFloat)
+    def requestResultAACSV
         scaa = requestSummaryCollection
         return <<-EOAACSV
 "#{ArithmeticMeanId}", #{scaa[ArithmeticMeanId]}
@@ -961,14 +1002,22 @@ class VectorOfContinuous < VectorOfX
 EOAACSV
     end
 
-    def requestResultCSVLine(xFloat,includeHdr=false)
-        scaa    = requestSummaryCollection
-        csvline =   "#{scaa[ArithmeticMeanId]},#{scaa[ArMeanAADId]},#{scaa[CoefficientOfVariationId]},#{scaa[GeometricMeanId]},#{scaa[HarmonicMeanId]},"
-        csvline +=  "#{scaa[IsEvenId]},#{scaa[KurtosisId]},#{scaa[MADId]},#{scaa[MaxId]},#{scaa[MedianId]},#{scaa[MedianAADId]},#{scaa[MinId]},#{scaa[ModeId]},"
-        csvline +=  "#{scaa[NId]},#{scaa[SkewnessId]},#{scaa[StandardDeviation]},#{scaa[SumId]}"
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+    def requestResultCSVLine(includeHdr=false)
+        scaa        = requestSummaryCollection
+        csvline     =   "#{scaa[ArithmeticMeanId]},#{scaa[ArMeanAADId]},"
+        csvline     +=  "#{scaa[CoefficientOfVariationId]},"
+        csvline     +=  "#{scaa[GeometricMeanId]},#{scaa[HarmonicMeanId]},"
+        csvline     +=  "#{scaa[IsEvenId]},#{scaa[KurtosisId]},#{scaa[MADId]},"
+        csvline     +=  "#{scaa[MaxId]},#{scaa[MedianId]},#{scaa[MedianAADId]},"
+        csvline     +=  "#{scaa[MinId]},#{scaa[ModeId]},#{scaa[NId]},"
+        csvline     +=  "#{scaa[SkewnessId]},#{scaa[StandardDeviation]},"
+        csvline     +=  "#{scaa[SumId]}"
         if includeHdr then
-            csvhdr  =   "#{ArithmeticMeanId},#{ArMeanAADId},#{CoefficientOfVariationId},#{GeometricMeanId},#{HarmonicMeanId},"
-            csvhdr  +=  "#{IsEvenId},#{KurtosisId},#{MADId},#{MaxId},#{MedianId},#{MedianAADId},#{MinId},#{ModeId},"
+            csvhdr  =   "#{ArithmeticMeanId},#{ArMeanAADId},"
+            csvhdr  +=  "#{CoefficientOfVariationId},#{GeometricMeanId},"
+            csvhdr  +=  "#{HarmonicMeanId},#{IsEvenId},#{KurtosisId},#{MADId},"
+            csvhdr  +=  "#{MaxId},#{MedianId},#{MedianAADId},#{MinId},#{ModeId},"
             csvhdr  +=  "#{NId},#{SkewnessId},#{StandardDeviation},#{SumId}"
             return <<EOCSV
 #{csvhdr}
@@ -979,7 +1028,7 @@ EOCSV
         end
     end
 
-    def requestResultJSON(xFloat)
+    def requestResultJSON
         scaa = requestSummaryCollection
         jsonstr = scaa.to_json
         return jsonstr
@@ -1017,10 +1066,10 @@ EOCSV
         median                  = requestMedian
         medianaad               = generateAverageAbsoluteDeviation(MedianId)
         min,max                 = requestRange
-        mode                    = requestMode
+        mode                    = generateMode
         n                       = getCount
         skewness                = @SOPo.requestSkewness.round(@OutputDecimalPrecision)
-        stddef                  = @SOPo.generateStandardDeviation.round(@OutputDecimalPrecision)
+        stddev                  = @SOPo.generateStandardDeviation.round(@OutputDecimalPrecision)
         sum                     = getSum
         return {
             ArithmeticMeanId            => amean,
@@ -1083,6 +1132,9 @@ class VectorOfDiscrete < VectorOfX
     end
 
     def calculateBinomialProbability(subjectValue,nTrials,nSuccesses)
+        raise ArgumentError unless subjectValue
+        raise ArgumentError unless nTrials.is_a? Integer
+        raise ArgumentError unless nSuccesses.is_a? Integer
         vn      = getCount
         kf      = getFactorial(nSuccesses)
         nf      = getFactorial(nTrials)
@@ -1094,6 +1146,7 @@ class VectorOfDiscrete < VectorOfX
     end
 
     def pushX(xItem)
+        raise ArgumentError unless xItem
         @FrequenciesAA[xItem] += 1       if @FrequenciesAA.has_key?(xItem)
         @FrequenciesAA[xItem] = 1    unless @FrequenciesAA.has_key?(xItem)
         @VectorOfX.push(xItem)
@@ -1166,6 +1219,8 @@ class VectorTable
     end
 
     def pushTableRow(arrayA)
+        raise ArgumentError unless arrayA.is_a? Array
+        raise ArgumentError unless arrayA.size == @TableOfVectors.size
         i = 0
         @TableOfVectors.each do |lvoe|
             if lvoe.is_a? VectorOfX then

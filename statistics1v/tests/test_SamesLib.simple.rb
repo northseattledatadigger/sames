@@ -24,7 +24,22 @@ include Test::Unit::Assertions
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Tests for Global Support Routines
 
-describe 'calculateFactorial' do
+describe 'getFactorial' do
+
+    it "Raises an ArgumentError if the argument passed is not an Integer." do
+        assert_raise ArgumentError do
+            generateModefromFrequencyAA(nil)
+        end
+        assert_raise ArgumentError do
+            generateModefromFrequencyAA(333.33)
+        end
+        assert_raise ArgumentError do
+            generateModefromFrequencyAA("a string")
+        end
+        assert_raise ArgumentError do
+            generateModefromFrequencyAA(Array.new)
+        end
+    end
 
     it "Calculates factorial using Ruby's gamma function as per find in stackoverflow." do
         n = getFactorial(4)
@@ -32,6 +47,31 @@ describe 'calculateFactorial' do
         assert_raise ArgumentError do
             getFactorial(25.55)
         end
+    end
+
+end
+
+describe 'generateModefromFrequencyAA(faaA)' do
+
+    it "Raises an ArgumentError unless the argument passed is a Hash." do
+        assert_raise ArgumentError do
+            generateModefromFrequencyAA(nil)
+        end
+        assert_raise ArgumentError do
+            generateModefromFrequencyAA(333)
+        end
+        assert_raise ArgumentError do
+            generateModefromFrequencyAA("a string")
+        end
+        assert_raise ArgumentError do
+            generateModefromFrequencyAA(Array.new)
+        end
+    end
+
+    it "returns takes a frequency Associative Array, and returns a mode point statistic." do
+        h = {'1234' => 528, 528 => 3, "A longer string" => 0, "x" => 55555 }
+        result = generateModefromFrequencyAA(h)
+        assert_equal "x", result
     end
 
 end
@@ -81,6 +121,21 @@ describe 'isNumericVector?' do
         assert isNumericVector?([2,33.33,0004,0x5,12341234123412341234]) == true
         assert isNumericVector?(['x',2,3,4,5]) == false
         assert isNumericVector?([' 1 1 ',2,3,4,5]) == false
+    end
+
+    it "Raises an ArgumentError unless the argument passed is an Array." do
+        assert_raise ArgumentError do
+            isNumericVector?(nil)
+        end
+        assert_raise ArgumentError do
+            isNumericVector?(333)
+        end
+        assert_raise ArgumentError do
+            isNumericVector?("a string")
+        end
+        assert_raise ArgumentError do
+            isNumericVector?(Hash.new)
+        end
     end
 
 end
@@ -136,6 +191,21 @@ describe "isUsableNumberVector?" do
         assert isUsableNumberVector?([2,33.33,0004,0x5,12341234123412341234]) == true
         assert isUsableNumberVector?(['x',2,3,4,5]) == false
         assert isUsableNumberVector?([' 1 1 ',2,3,4,5]) == false
+    end
+
+    it "Raises an ArgumentError unless the argument passed is an Array." do
+        assert_raise ArgumentError do
+            isNumericVector?(nil)
+        end
+        assert_raise ArgumentError do
+            isNumericVector?(333)
+        end
+        assert_raise ArgumentError do
+            isNumericVector?("a string")
+        end
+        assert_raise ArgumentError do
+            isNumericVector?(Hash.new)
+        end
     end
 
 end
@@ -410,6 +480,14 @@ end
 describe VectorOfX do
 
     it "has a _assureSortedVectorOfX method for internal updates to the SortedVectorOfX vector." do
+        a = [3,2,1]
+        localo = VectorOfX.new(a)
+        assert_respond_to localo, :_assureSortedVectorOfX
+        localo._assureSortedVectorOfX
+        assert localo.SortedVectorOfX.size == 3
+        assert localo.SortedVectorOfX[0] == 1
+        assert localo.SortedVectorOfX[1] == 2
+        assert localo.SortedVectorOfX[2] == 3
     end
 
     it "Constructs with no argument, or ruby array." do
@@ -422,21 +500,6 @@ describe VectorOfX do
         end
         localo = VectorOfX.new(a)
         assert localo.is_a? VectorOfX
-    end
-
-    it "has a getCount method to get value of n." do
-    end
-
-    it "Provides internal focused method to generate sorted data into @SortedVectorOfX variable." do
-        a = [3,2,1]
-        localo = VectorOfX.new(a)
-        assert localo.is_a? VectorOfX
-        assert_respond_to localo, :_assureSortedVectorOfX
-        localo._assureSortedVectorOfX
-        assert localo.SortedVectorOfX.size == 3
-        assert localo.SortedVectorOfX[0] == 1
-        assert localo.SortedVectorOfX[1] == 2
-        assert localo.SortedVectorOfX[2] == 3
     end
 
     it "Has a working getCount method." do
@@ -459,6 +522,21 @@ describe VectorOfX do
         assert_raise ArgumentError do
             localo.pushX("anything")
         end
+    end
+
+    it "requestResultAACSV(xFloat) method is pure virtual." do
+        localo = VectorOfX.new
+        assert_respond_to localo, :requestResultAACSV
+    end
+
+    it "requestResultAACSV(xFloat) method is pure virtual." do
+        localo = VectorOfX.new
+        assert_respond_to localo, :requestResultCSVLine
+    end
+
+    it "requestResultAACSV(xFloat) method is pure virtual." do
+        localo = VectorOfX.new
+        assert_respond_to localo, :requestResultJSON
     end
 
     it "Has tranformation method to output a line of CSV for the VectorOfX data." do
@@ -513,8 +591,8 @@ describe VectorOfContinuous do
             localo = VectorOfContinuous.newAfterInvalidatedDropped(a,false)
         end
         assert_equal 4, localo.getCount
-        assert_equal 1.5, localo.requestMin
-        assert_equal 5876.1234, localo.requestMax
+        assert_equal 1.5, localo.getMin
+        assert_equal 5876.1234, localo.getMax
     end
 
     it "Has internal focused method to construct a new SumsOfPowers object for moment statistics." do
@@ -536,34 +614,21 @@ describe VectorOfContinuous do
         assert startno == 0
     end
 
-    it "Has a calculateQuartile method which returns the value for a designated quartile." do
-        a  = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0]
-        sa = a.sort
-        #puts "trace a:  #{a}, #{sa}, #{a.size}"
-        localo = VectorOfContinuous.new(a)
-        qv = localo.calculateQuartile(1)
-        assert_equal qv, 3
-    end
-
-    it "Calculates mean in two places." do
+    it "Calculates arithmetic mean in two places." do
         a = [1,2,3]
         localo  = VectorOfContinuous.new(a)
         vocoam  = localo.calculateArithmeticMean
-        sopoam  = localo._addUpXsToSumsOfPowers.ArithmeticMean
+        sopo    = localo._addUpXsToSumsOfPowers
+        assert sopo.is_a? SumsOfPowers
+        sopoam  = sopo.ArithmeticMean
         assert_equal vocoam, sopoam
     end
 
-    it "Generates a coefficient of variation." do
-        a = [1,2,3,4,5,6,7,8.9]
-        localo      = VectorOfContinuous.new(a)
-        amean       = localo.calculateArithmeticMean
-        stddev      = localo.requestStandardDeviation
-        herecov     = ( stddev / amean ).round(localo.OutputDecimalPrecision)
-        cov         = localo.generateCoefficientOfVariation
-        assert_equal cov, herecov
-    end
-
-    it "Generates a geometric mean." do
+    it "Calculates geometric mean." do
+        a = [1,2,3,4,5]
+        localo  = VectorOfContinuous.new(a)
+        gmean  = localo.calculateGeometricMean
+        assert_equal 2.6052, gmean
         a           = [2,2,2,2]
         localo      = VectorOfContinuous.new(a)
         amean       = localo.calculateArithmeticMean
@@ -576,83 +641,35 @@ describe VectorOfContinuous do
         assert amean > gmean
     end
 
-    it "Has two methods to Generate a matrix of histogram data." do
-        a = [1,2,3,4,5,6,7,8,9]
-        localo = VectorOfContinuous.new(a)
-        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,1)
-        assert_equal 3, hdaa.size
-        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,0)
-        assert_equal 3, hdaa.size
-        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,-1)
-        assert_equal 3, hdaa.size
-        hdaa = localo.generateHistogramAAbyNumberOfSegments(4,1)
-        assert_equal 4, hdaa.size
-        hdaa = localo.generateHistogramAAbyNumberOfSegments(5,0)
-        assert_equal 5, hdaa.size
-        hdaa = localo.generateHistogramAAbySegmentSize(2,1)
-        diff0 = hdaa[0][1] - hdaa[0][0]
-        #STDERR.puts "trace diff0 = hdaa[0][1] - hdaa[0][0]:  #{diff0} == #{hdaa[0][1]} - #{hdaa[0][0]}"
-        assert_equal diff0, 2.0
-        diff1 = hdaa[1][1] - hdaa[1][0]
-        assert_equal diff1, 2
-        hdaa = localo.generateHistogramAAbySegmentSize(3,0)
-        diff2 = hdaa[2][1] - hdaa[2][0]
-        assert_equal diff2, 3
-    end
-
-    it "Can calculate kurtosis." do
-        a = [1,2,3,4,5,6,7,8,9]
+    it "Calculates harmonic mean." do
+        a = [1,2,3,4,5]
         localo  = VectorOfContinuous.new(a)
-        ek      = localo.requestExcessKurtosis(2)
-        #STDERR.puts "trace ek:  #{ek}"
-        assert_equal -1.23, ek
-        ek      = localo.requestExcessKurtosis
-        assert_equal -1.2, ek
-        k       = localo.requestKurtosis
-        #STDERR.puts "trace k:  #{k}"
-        assert_equal 1.8476, k
-
-        localo.UseDiffFromMeanCalculations = false
-        # NOTE:  These need to be implemented so the tests will change. TBD
-        assert_raise ArgumentError do
-            localo.requestExcessKurtosis(2)
-        end
-        assert_raise ArgumentError do
-            localo.requestExcessKurtosis
-        end
-        k       = localo.requestKurtosis
-        #STDERR.puts "trace k:  #{k}"
-        assert_equal 1.8476, k
-    end
-
-    it "Can get the minimum, median, maximum, and mode." do
-        a       = [1,2,3,4,5,6,7,8,9]
-        localo  = VectorOfContinuous.new(a)
-        assert_equal localo.getCount, 9
-        assert_equal 1, localo.requestMin
-        assert_equal 5, localo.requestMedian
-        assert_equal 9, localo.requestMax
-        assert_equal 1, localo.generateMode # Question here:  should I return a sentinal when it is uniform?  NOTE
-        a       = [1,2,3,4,5,6,7,8,9,8,7,8]
-        localo  = VectorOfContinuous.new(a)
-        min,max = localo.requestRange
-        assert_equal localo.getCount, 12
-        assert_equal 1, min
-        #puts "trace BEGIN median mmmm test"
-        assert_equal 6.5, localo.requestMedian
-        #puts "trace END median mmmm"
-        assert_equal 9, max
-        assert_equal 8, localo.generateMode # Question here:  should I return a sentinal when it is uniform?  NOTE
-    end
-
-    it "Has calculation for mean absolute error." do
-        a       = [1,2,3,4,5,6,7,8,9]
-        localo  = VectorOfContinuous.new(a)
-        mae     = localo.generateMeanAbsoluteError
-        assert_equal 2.2222, mae
+        hmean  = localo.calculateHarmonicMean
+        assert_equal 2.1898, hmean
+        a           = [2,2,2,2]
+        localo      = VectorOfContinuous.new(a)
+        amean       = localo.calculateArithmeticMean
+        gmean       = localo.calculateGeometricMean
+        hmean       = localo.calculateHarmonicMean
+        assert hmean < amean
+        assert hmean < gmean
+        a           = [1,2,3,4,5,6,7,8,9]
+        localo      = VectorOfContinuous.new(a)
+        amean       = localo.calculateArithmeticMean
+        gmean       = localo.calculateGeometricMean
+        hmean       = localo.calculateHarmonicMean
+        assert hmean < amean
+        assert hmean < gmean
     end
 
     it "Has a calculateQuartile method which returns the value for a designated quartile." do
+        a  = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0]
+        sa = a.sort
+        #puts "trace a:  #{a}, #{sa}, #{a.size}"
+        localo = VectorOfContinuous.new(a)
+        qv = localo.calculateQuartile(1)
+        assert_equal qv, 3
+
         a       = [1,2,3,4,5]
         localo  = VectorOfContinuous.new(a)
         qv      = localo.calculateQuartile(0)
@@ -683,7 +700,164 @@ describe VectorOfContinuous do
         assert_equal qv, 9.0
     end
 
-    it "Can calculate skewness." do
+    it "Generates a Average Absolute Deviation for Arithmetic, Geometric, Harmonic Means, Median, Min, Max, Mode." do
+        a           = [1,2,3,4,5,6,7,8.9]
+        localo      = VectorOfContinuous.new(a)
+        amaad1      = localo.generateAverageAbsoluteDeviation
+        assert_equal 2.1125, amaad1
+        amaad2      = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::ArithmeticMeanId)
+        assert_equal amaad1, amaad2
+        gmaad       = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::GeometricMeanId)
+        assert_equal 2.1588, gmaad
+        hmaad       = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::HarmonicMeanId)
+        assert_equal 2.3839, hmaad
+        medianaad   = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::MedianId)
+        assert_equal 2.1125, medianaad
+        minaad      = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::MinId)
+        assert_equal 3.6125, minaad
+        maxaad      = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::MaxId)
+        assert_equal 4.2875, maxaad
+        modeaad     = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::ModeId)
+        assert_equal 4.2875, modeaad
+        a           = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0]
+        localo      = VectorOfContinuous.new(a)
+        aad         = localo.generateAverageAbsoluteDeviation
+        assert_equal 2.6112, aad
+        aad         = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::MedianId)
+        assert_equal 2.5172, aad
+    end
+
+    it "Generates a coefficient of variation." do
+        a = [1,2,3,4,5,6,7,8.9]
+        localo      = VectorOfContinuous.new(a)
+        amean       = localo.calculateArithmeticMean
+        stddev      = localo.requestStandardDeviation
+        herecov     = ( stddev / amean ).round(localo.OutputDecimalPrecision)
+        cov         = localo.generateCoefficientOfVariation
+        assert_equal cov, herecov
+    end
+
+    it "Has two methods to Generate a matrix of histogram data." do
+        a = [1,2,3,4,5,6,7,8,9]
+        localo = VectorOfContinuous.new(a)
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,1)
+        assert_equal 3, hdaa.size
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,0)
+        assert_equal 3, hdaa.size
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,-1)
+        assert_equal 3, hdaa.size
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(4,1)
+        assert_equal 4, hdaa.size
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(5,0)
+        assert_equal 5, hdaa.size
+        hdaa = localo.generateHistogramAAbySegmentSize(2,1)
+        diff0 = hdaa[0][1] - hdaa[0][0]
+        #STDERR.puts "trace diff0 = hdaa[0][1] - hdaa[0][0]:  #{diff0} == #{hdaa[0][1]} - #{hdaa[0][0]}"
+        assert_equal diff0, 2.0
+        diff1 = hdaa[1][1] - hdaa[1][0]
+        assert_equal diff1, 2
+        hdaa = localo.generateHistogramAAbySegmentSize(3,0)
+        diff2 = hdaa[2][1] - hdaa[2][0]
+        assert_equal diff2, 3
+    end
+
+    it "Generates a Mean Absolute Difference." do
+        a = [1,2,3,4,5,6,7,8.9]
+        localo      = VectorOfContinuous.new(a)
+        mad         = localo.generateMeanAbsoluteDifference
+        assert_equal 3.225, mad
+    end
+
+    it "Can get the minimum, median, maximum, and mode." do
+        a       = [1,2,3,4,5,6,7,8,9]
+        localo  = VectorOfContinuous.new(a)
+        assert_equal localo.getCount, 9
+        assert_equal 1, localo.getMin
+        assert_equal 5, localo.requestMedian
+        assert_equal 9, localo.getMax
+        assert_equal 1, localo.generateMode # Question here:  should I return a sentinal when it is uniform?  NOTE
+        a       = [1,2,3,4,5,6,7,8,9,8,7,8]
+        localo  = VectorOfContinuous.new(a)
+        min,max = localo.requestRange
+        assert_equal localo.getCount, 12
+        assert_equal 1, min
+        #puts "trace BEGIN median mmmm test"
+        assert_equal 6.5, localo.requestMedian
+        #puts "trace END median mmmm"
+        assert_equal 9, max
+        assert_equal 8, localo.generateMode # Question here:  should I return a sentinal when it is uniform?  NOTE
+    end
+
+    it "Has a method to test if the Vector Of X has an even N." do
+        a = [1,2,3,4,5,6,7,8.9]
+        localo      = VectorOfContinuous.new(a)
+        assert localo.isEvenN?
+        a = [1,2,3,4,5,6,7,8.9,11]
+        localo      = VectorOfContinuous.new(a)
+        assert ( not localo.isEvenN? )
+    end
+
+    it "Has an method to return (get, because it is direct call to language method) the sum." do
+        a       = [1,2,2,3,3,3]
+        localo  = VectorOfContinuous.new(a)
+        assert_equal localo.getCount, 6
+        assert_equal 14, localo.getSum
+    end
+
+    it "Can request calculation of kurtosis." do
+        a = [1,2,3,4,5,6,7,8,9]
+        localo  = VectorOfContinuous.new(a)
+        ek      = localo.requestExcessKurtosis(2)
+        #STDERR.puts "trace ek:  #{ek}"
+        assert_equal -1.23, ek
+        ek      = localo.requestExcessKurtosis
+        assert_equal -1.2, ek
+        k       = localo.requestKurtosis
+        #STDERR.puts "trace k:  #{k}"
+        assert_equal 1.8476, k
+
+        localo.UseDiffFromMeanCalculations = false
+        # NOTE:  These need to be implemented so the tests will change. TBD
+        assert_raise ArgumentError do
+            localo.requestExcessKurtosis(2)
+        end
+        assert_raise ArgumentError do
+            localo.requestExcessKurtosis
+        end
+        k       = localo.requestKurtosis
+        #STDERR.puts "trace k:  #{k}"
+        assert_equal 1.8476, k
+    end
+
+    it "Can request a complete collection of all 5 quartiles in an array." do
+        a       = [1,2,3,4,5]
+        localo  = VectorOfContinuous.new(a)
+        qa      = localo.requestQuartileCollection
+        assert_equal 1, qa[0]
+        assert_equal 2, qa[1]
+        assert_equal 3, qa[2]
+        assert_equal 4, qa[3]
+        assert_equal 5, qa[4]
+        a           = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0,1,2,2,3,3,3,99.336,5.9,0x259,1133.7,1234]
+        localo  = VectorOfContinuous.new(a)
+        qa      = localo.requestQuartileCollection
+        assert_equal 0, qa[0]
+        assert_equal 3.0, qa[1]
+        assert_equal 6.0, qa[2]
+        assert_equal 8.25, qa[3]
+        assert_equal 1234, qa[4]
+    end
+
+    it "Has some formatted result methods." do
+        a       = [1,2,3,4,5,6,7,8,9]
+        localo  = VectorOfContinuous.new(a)
+        assert_respond_to localo, :requestResultAACSV
+        assert localo.requestResultAACSV.is_a?      String
+        assert localo.requestResultCSVLine.is_a?    String
+        assert localo.requestResultJSON.is_a?       String
+    end
+
+    it "Can request a calculation of skewness." do
         a       = [1,2,3,4,5,6,7,8,9]
         localo  = VectorOfContinuous.new(a)
         sk      = localo.requestSkewness
@@ -718,13 +892,6 @@ describe VectorOfContinuous do
         localo.UseDiffFromMeanCalculations = false
         sdsx    = localo.requestStandardDeviation
         assert_equal sdsd, sdsx
-    end
-
-    it "Has an method to return the sum." do
-        a       = [1,2,2,3,3,3]
-        localo  = VectorOfContinuous.new(a)
-        assert_equal localo.getCount, 6
-        assert_equal 14, localo.getSum
     end
 
     it "Has two variance generation methods." do
