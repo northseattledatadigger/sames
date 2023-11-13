@@ -446,12 +446,6 @@ class SumsOfPowers
         right               = rightnumerator / rightdenominator
         sue_G2              = left * middle - right
         #STDERR.puts "\nsue_G2              = left * middle * right: #{sue_G2}              = #{left} * #{middle} * #{right}"
-=begin
-trace 1 genKurtosis_Unbiased_DiffFromMeanCalculation:  3.3333333333333335,3,true,false,10,34,118,418
-
-sue_G2              = left * middle * right: NaN              = Infinity * 0 * Infinity
-trace Generating kurtosis:  NaN
-=end
 
         return sue_G2
     end
@@ -604,6 +598,12 @@ end
 
 class VectorOfX
 
+    BlankFieldOnBadData     = 0
+    DefaultFillOnBadData    = 1
+    FailOnBadData           = 2
+    SkipRowOnBadData        = 3
+    ZeroFieldOnBadData      = 4
+
     def _assureSortedVectorOfX(forceSort=false)
         if forceSort then
             @SortedVectorOfX = @VectorOfX.sort
@@ -628,10 +628,12 @@ class VectorOfX
         return @VectorOfX.size
     end
 
-    def getX(indexA)
+    def getX(indexA,sortedVector=false)
         raise ArgumentError, "Index Argument Missing:  Required."       unless indexA.is_a? Integer
         raise ArgumentError, "Index Argument Not found in VectorOfX."   unless @VectorOfX[indexA]
-        return @VectorOfX[indexA]
+        return @VectorOfX[indexA]   unless sortedVector
+        return @SortedVectorOfX[indexA] if sortedVector and @SortedVectorOfX.has_key?(indexA)
+        return nil
     end
 
     def pushX(xFloat)
@@ -927,8 +929,23 @@ class VectorOfContinuous < VectorOfX
         return false
     end
 
-    def pushX(xFloat)
-        raise ArgumentError, "#{xFloat} not usable number." unless isUsableNumber?(xFloat)
+    def pushX(xFloat,onBadData=VectorOfX::FailOnBadData)
+        unless isUsableNumber?(xFloat)
+            case onBadData
+            when VectorOfX::BlankFieldOnBadData
+                raise ArgumentError, "May Not Blank Fields"
+            when VectorOfX::DefaultFillOnBadData
+                xFloat=0.0
+            when VectorOfX::FailOnBadData
+                raise ArgumentError, "#{xFloat} not usable number."
+            when VectorOfX::SkipRowOnBadData
+                return
+            when VectorOfX::ZeroFieldOnBadData
+                xFloat=0.0
+            else
+                raise ArgumentError, "Unimplemented onBadData value:  #{onBadData}."
+            end
+        end
         validateStringNumberRange(xFloat) if @ValidateStringNumbers
         lfn = xFloat.to_f.round(@InputDecimalPrecision)
         @VectorOfX.push(lfn)
@@ -1122,34 +1139,73 @@ end
 class VectorOfDiscrete < VectorOfX
 
     def initialize(vectorX=Array.new)
-        @FrequenciesAA = Hash.new
+        @FrequenciesAA          = Hash.new
         @OutputDecimalPrecision = 4
-        @VectorOfX = vectorX
+        @VectorOfX              = vectorX
         @VectorOfX.each do |lx|
-            @FrequenciesAA[lx] += 1       if @FrequenciesAA.has_key?(lx)
-            @FrequenciesAA[lx] = 1    unless @FrequenciesAA.has_key?(lx)
+            @FrequenciesAA[lx]  += 1    if @FrequenciesAA.has_key?(lx)
+            @FrequenciesAA[lx]  = 1 unless @FrequenciesAA.has_key?(lx)
         end
     end
 
     def calculateBinomialProbability(subjectValue,nTrials,nSuccesses)
+        #STDERR.puts "\ntrace 0 calculateBinomialProbability(#{subjectValue},#{nTrials},#{nSuccesses})"
         raise ArgumentError unless subjectValue
         raise ArgumentError unless nTrials.is_a? Integer
         raise ArgumentError unless nSuccesses.is_a? Integer
-        vn      = getCount
-        kf      = getFactorial(nSuccesses)
-        nf      = getFactorial(nTrials)
-        nlkf    = getFactorial(nTrials - nSuccesses)
-        vp1     = @FrequenciesAA[lx].to_f / vn.to_f
-        olvp1   = 1 - vp1
-        rp      = nf / ( nf * nlkf ) * vp1 * olvp1
-        return rp
+        n_failures          = nTrials - nSuccesses
+
+        samplecount         = getCount
+        samplecountf        = samplecount.to_f
+
+        freqcountf          = @FrequenciesAA[subjectValue].to_f
+
+        psuccess1trial      = freqcountf / samplecountf # Probability of success in 1 trial.
+
+        pfailure1trial      = 1.0 - psuccess1trial
+        #STDERR.puts "\ntrace 5 calculateBinomialProbability #{samplecountf},#{freqcountf},#{psuccess1trial},#{pfailure1trial}"
+
+        pfailurefactor      = pfailure1trial**n_failures
+        psuccessfactor      = psuccess1trial**nSuccesses
+        #STDERR.puts "\ntrace 6 calculateBinomialProbability #{pfailurefactor},#{psuccessfactor}"
+
+        successpermutations = getFactorial(nSuccesses)
+        failurepermutations = getFactorial(nTrials - nSuccesses)
+        trials_permutations = getFactorial(nTrials)
+        #STDERR.puts "\ntrace 7 calculateBinomialProbability #{successpermutations},#{failurepermutations},#{trials_permutations}"
+        numerator           = trials_permutations * psuccessfactor * pfailurefactor
+        denominator         = successpermutations * failurepermutations
+        binomialprobability = numerator / denominator
+        #STDERR.puts "\ntrace 8 calculateBinomialProbability #{numerator},#{denominator},#{binomialprobability}"
+        return binomialprobability
     end
 
-    def pushX(xItem)
-        raise ArgumentError unless xItem
+    def getFrequency(subjectValue)
+        raise ArgumentError unless subjectValue
+        return @FrequenciesAA[subjectValue]
+    end
+
+    def pushX(xItem,onBadData=VectorOfX::FailOnBadData)
+        unless xItem and "#{xItem}".size > 0
+            case onBadData
+            when VectorOfX::BlankFieldOnBadData
+                xItem=" "
+            when VectorOfX::DefaultFillOnBadData
+                xFloat=" "
+            when VectorOfX::FailOnBadData
+                raise ArgumentError, "#{xItem} not usable value."
+            when VectorOfX::SkipRowOnBadData
+                return
+            when VectorOfX::ZeroFieldOnBadData
+                xItem=0.0
+            else
+                raise ArgumentError, "Unimplemented onBadData value:  #{onBadData}."
+            end
+        end
         @FrequenciesAA[xItem] += 1       if @FrequenciesAA.has_key?(xItem)
         @FrequenciesAA[xItem] = 1    unless @FrequenciesAA.has_key?(xItem)
         @VectorOfX.push(xItem)
+        return true
     end
 
     def requestMode
@@ -1177,7 +1233,7 @@ class VectorTable
             return false
         end
 
-        def newFromCSV(fSpec,vcSpec,skipFirstLine=true)
+        def newFromCSV(vcSpec,fSpec,onBadData=VectorOfX::DefaultFillOnBadData,skipFirstLine=true)
             localo = self.new(vcSpec)
             File.open(fSpec) do |fp|
                 i = 0
@@ -1185,7 +1241,7 @@ class VectorTable
                     sll = ll.strip
                     unless ( i == 0 and skipFirstLine )
                         columns = sll.parse_csv
-                        localo.pushTableRow(columns)
+                        localo.pushTableRow(columns,onBadData)
                     end
                     i += 1
                 end
@@ -1196,13 +1252,13 @@ class VectorTable
     end
 
     def initialize(vectorOfClasses)
-        raise ArgumentError unless vectorOfClasses.is_a? Array
+        raise ArgumentError, "Argument Passed '#{vectorOfClasses.class}' NOT ARRAY" unless vectorOfClasses.is_a? Array
         @TableOfVectors     = Array.new
         @VectorOfClasses    = vectorOfClasses
         i = 0
         @VectorOfClasses.each do |lci|
             if lci then
-                raise ArgumentError unless self.class.isAllowedDataVectorClass?(lci)
+                raise ArgumentError, "Class '#{lci.class}' Not Valid" unless self.class.isAllowedDataVectorClass?(lci)
                 @TableOfVectors[i] = lci.new        if lci
             else
                 @TableOfVectors[i] = nil        
@@ -1218,13 +1274,14 @@ class VectorTable
         return @TableOfVectors[indexNo]
     end
 
-    def pushTableRow(arrayA)
+    def pushTableRow(arrayA,onBadData=VectorOfX::DefaultFillOnBadData)
         raise ArgumentError unless arrayA.is_a? Array
         raise ArgumentError unless arrayA.size == @TableOfVectors.size
+        raise ArgumentError if onBadData == VectorOfX::SkipRowOnBadData
         i = 0
         @TableOfVectors.each do |lvoe|
             if lvoe.is_a? VectorOfX then
-                lvoe.pushX(arrayA[i])
+                lvoe.pushX(arrayA[i],onBadData)
             end
             i += 1
         end

@@ -2,6 +2,10 @@
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # getSetOfRandomSamples.bash
 
+readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+source $SCRIPT_DIR/../slib/SBinLib.bashenv
+
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Constants and Includes
 
@@ -261,7 +265,7 @@ do
         then
             ColumnDimension=$OPTARG
         else
-            >&2 echo "'$OPTARG' is NOT a valid array dimension."
+            echoError 2 "'$OPTARG' is NOT a valid array dimension."
             catUsage
             exit 2
         fi
@@ -287,7 +291,7 @@ do
             DelimiterChar=$OPTARG
             ;;
         *)
-            >&2 echo "There is no Delimiter Type '$OPTARG' implemented."
+            echoError 2 "There is no Delimiter Type '$OPTARG' implemented."
             catUsage
             exit 2
             ;;
@@ -299,7 +303,7 @@ do
             DataOutputFSpec=$OPTARG
             DataOutputType=FILESPEC
         else
-            >&2 echo "This application will NOT accept '$OPTARG' as a filename."
+            echoError 2 "This application will NOT accept '$OPTARG' as a filename."
             catUsage
             exit 2
         fi
@@ -309,7 +313,7 @@ do
         then
             GeneratorType=$OPTARG
         else
-            >&2 echo "There is no Generator Type '$OPTARG' implemented."
+            echoError 2 "There is no Generator Type '$OPTARG' implemented."
             catUsage
             exit 2
         fi
@@ -323,13 +327,13 @@ do
         then
             RowDimension=$OPTARG
         else
-            >&2 echo "'$OPTARG' is NOT a valid array dimension."
+            echoError 2 "'$OPTARG' is NOT a valid array dimension."
             catUsage
             exit 2
         fi
         ;;
     *)
-        >&2 "Invalid option $option."
+        echoError 2 "Invalid option $option."
         catUsage
         exit 2
         ;;
@@ -349,7 +353,7 @@ do
         getRandomDataRow $ColumnDimension $GeneratorType $DelimiterChar
         ;;
     *)
-        >&2 "Invalid Output Type option $DataOutputType."
+        echoError 3 "Invalid Output Type option $DataOutputType."
         catUsage
         exit 3
         ;;
