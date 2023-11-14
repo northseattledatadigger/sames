@@ -84,6 +84,9 @@ sl_ValidateLanguageImplementation() {
     go)
         return 1
         ;;
+    javascript)
+        return 1
+        ;;
     perl)
         return 1
         ;;
@@ -108,6 +111,9 @@ sl_ValidateSubtype() {
         return 0
         ;;
     ndarray)
+        return 0
+        ;;
+    naive)
         return 0
         ;;
     native)

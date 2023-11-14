@@ -1,0 +1,40 @@
+CommandLineQualifiers = GetoptLong.new(
+    [ '--amateur', '-a', GetoptLong::NO_ARGUMENT ],
+    [ '--csvfs', '-c', GetoptLong::REQUIRED_ARGUMENT ],
+    [ '--extra', '-e', GetoptLong::REQUIRED_ARGUMENT ],         # Arbitrary numbered extra version of libraries.
+    [ '--format', '-f', GetoptLong::REQUIRED_ARGUMENT ],
+    [ '--formatId', '-F', GetoptLong::REQUIRED_ARGUMENT ],
+    [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
+    [ '--inputprecision', '-i', GetoptLong::REQUIRED_ARGUMENT ],
+    [ '--native', '-n', GetoptLong::NO_ARGUMENT ],
+    [ '--outputprecision', '-o', GetoptLong::REQUIRED_ARGUMENT ],
+    [ '--population', '-S', GetoptLong::NO_ARGUMENT ],          # S:  Not a Sample, but a population.
+    [ '--request', '-r', GetoptLong::REQUIRED_ARGUMENT ],       # Argument Calculation to execute.
+    [ '--sumxsstdev', '-s', GetoptLong::NO_ARGUMENT ],          # Argument Use of SumXs
+    [ '--validate', '-V', GetoptLong::OPTIONAL_ARGUMENT ]       # Fail on certain inputs, like very large numbers.
+    [ '--variance', '-v', GetoptLong::OPTIONAL_ARGUMENT ]       # Compound Argument indicating
+)
+
+name = nil
+repetitions = 1
+CommandLineQualifiers.each do |qualifier, qargument|
+    case qualifier
+    when '--help'
+        putsUsage
+    when '--repeat'
+        repetitions = qargument.to_i
+    when '--name'
+        if qargument == ''
+            name = 'John'
+        else
+            name = qargument
+        end
+    end
+end
+
+if ARGV.length != 0
+    putsUsage
+    exit 1
+end
+
+

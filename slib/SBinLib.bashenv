@@ -1,6 +1,9 @@
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # SBinLib.bashenv
 
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Low Level Procedures
+
 echoDebug() {
     local _displayValue="$1"
     local _msgStr="$2"
@@ -52,6 +55,42 @@ trS() {
     local _msgStr="$1"
     local msg="tr:$_msgStr"
     >&2 echo $msg
+}
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Higher Level Procedures
+
+assureInternetDataFileCopy() {
+    local _dSpec="$1"
+    local _Filename="$2"
+    local _URL="$3"
+
+    mkdir -p $_dSpec
+    local fspec=$_dSpec/$_Filename
+
+    if [[ -f $fspec ]]
+    then
+        return 0
+    else
+        wget $_URL -O$fspec
+    fi
+    if [[ -f $fspec ]]
+    then
+        return 0
+    fi
+    echoError 8 "Could not find File $_Filename, nor procure it from $_URL."
+    return 8
+}
+
+returnIfThere() {
+    local _fSpec="$1"
+    if [[ -f $fSpec ]]
+    then
+        echo -n "$_fSpec"
+        return 0
+    fi
+    echoError 8 "Data file $fSpec not found." 
+    return 8
 }
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890

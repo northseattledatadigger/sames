@@ -23,12 +23,10 @@ include Test::Unit::Assertions
 
 HereDs=File.expand_path(".", __dir__)
 SamesDs=File.expand_path("../..", __dir__)
-TestDataDs="#{HereDs}/tdtmp"
 
-def returnIfThere(fSpec)
-    return fSpec if File.exists?(fSpec)
-    raise ArgumentError, "Test data file #{fSpec} not found." 
-end
+TestDataDs="#{SamesDs}/testdata"
+
+require "#{SamesDs}/slib/SBinLib.rb"
 
 FirstTestFileFs=returnIfThere("#{TestDataDs}/sidewalkstreetratioupload.csv")
 

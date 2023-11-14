@@ -1,83 +1,203 @@
 #!/usr/bin/ruby
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# ruby.main
+# ruby.main - Objectives:
+=begin
+    1.  Provide ability to read and calculate columns from data inputfiles, most
+    importantly, csv files, but perhaps also JSON files and CSV data from stdin.
+    The file, or "stdin", would then be the first argument.
+    2.  Provide default of native library, but option to use other parallel
+    The parallel use would need to be a separate file handle, but would need to
+    use virtually all the same code.  The technique will therefore be used,
+    which should work across language environments, will be an exported
+    environment variable assigned inside a shell alias version of the command,
+    as with the following:
+        $ alias ruby.main.versionx='export LibraryVersion=versionx;ruby.main'
+    This will keep the modification from intruding needlessly into the code,
+    though of course it still means compiles language versions will need to
+    compile a different one for each library version, and in that case the
+    binary would just be something like:
+        rust.main.versionx
+    3.  Provide the ability to call a single top-level object method on the
+    results of the loaded data from the file specified.
+    4.  Provide the ability to call a defined sequence of object methods on
+    the results of the loaded data from the file specified.  This will be
+    done with code in the sources for these bin programs, and it is presumed
+    each such script will implement the same pattern.
+    5.  It should not become more complicated than that.  These need to stay
+    as simple demonstrations of function, and not applications for production
+    use themselves.  To reiterate intentions stated elsewhere, the sames suite
+    is intended to be:  1) and exercise for the author, 2) a learning tool to
+    demonstrate to others how the same functin can be implemented across
+    environments, and 3) an open source (GNU copyright) place to be able to
+    pull demonstrated repeatability of function for use in other projects,
+    when that might be helpful.
+    6.  Also to repeat what I should have stated elsewhere:  Compliance with
+    the GNU copyright is politely requested, but at the same time, I should
+    not abuse or harass ANY non-corporate, non-wealthy user for copying any of
+    these workings in a pinch for need or desperation or other exigency.
+    Anyone doing such harassement so will not be supported by me actively.
+    7.  Will provide a URL list csv caled:
+        $SamesDs/statistics1v/extras/DataFileURLs.csv
+    which will provide the URLs of known data files for use here that will
+    then not need to be kept in GitHub but rather can be downloaded by users
+    dynamically while using these scripts, each of which will then provide that
+    function.
+    8.  Note that ruby versions of all these will be the first, and
+    prototyping versions of each of these sub-projects with all the vagaries
+    that go along with that.  Still they should comply in quality with the
+    rest of the suite.
+=end
 
 require 'getoptlong'
 
 DataFormatFileExtension = "scdf" # For "Sames CSV Data Format"
 
-readonly HERE=$PWD
-readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-readonly SAMESHOME="$( cd $SCRIPT_DIR/../.. &> /dev/null && pwd )"
-readonly SAMESPROJECTHOME="$( cd $SCRIPT_DIR/.. &> /dev/null && pwd )"
+$LibraryVersion='native'
+if ENV.has_key?('LibraryVersion') and ENV['LibraryVersion'].size > 0 then
+    $LibraryVersion = ENV['LibraryVersion']
+end
 
-source $SAMESPROJECTHOME/ProjectSpecs.bashenv
+SamesDs=File.expand_path("../..", __dir__)
+SamesProjectDs=File.expand_path("..", __dir__)
+
+SamesProjectLibraryInUse="#{SamesProjectDs}/SamesLib.#{$LibraryVersion}.rb"
+
+require "#{SamesDs}/slib/SBinLib.rb"
+require SamesProjectLibraryInUse
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Constant Identifiers
+
+SamesTmpTestData="#{SamesDs}/tmptestdata"
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Lower Level Procedures
 
+def _scanDataClasses(clArg)
+    return fs, vcarray
+end
+
+def _downloadMissingFileUsingURLConfigurationFile(fSpec)
+end
+
+def _parseSamesLibVectorOfContinuousCommand(vocO,aList)
+    
+    case aList[0]
+    when 'ArithmeticMean'
+        vocO.calculateArithmeticMean
+    when 'CSVLineOfX'
+        vocO.transformToCSVLine
+    when 'CSVLineSummary'
+        vocO.requestResultCSVLine
+    when 'CSVTableSummary'
+        vocO.requestResultAACSV
+    when 'GeometricMean'
+        vocO.calculateGeometricMean
+    when 'getX'
+        vocO.getX(aList[1])
+    when 'HarmonicMean'
+        vocO.calculateHarmonicMean
+    when 'JSONOfX'
+        vocO.transformToJSON
+    when 'JSONSummary'
+        vocO.requestResultJSON
+    when 'N'
+        vocO.getCount
+    else
+        m = "There is no skewness formula #{formulaId} implemented at this time."
+        raise ArgumentError, m
+    end
+=begin
+    calculateQuartile(qNo)
+    generateAverageAbsoluteDeviation(centralPointType=ArithmeticMeanId)
+    generateCoefficientOfVariation
+    generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber=nil)
+    generateHistogramAAbySegmentSize(segmentSize,startNumber=nil)
+    generateMeanAbsoluteDifference
+    generateMode
+    getMax
+    getMin(sVoX=nil)
+    getSum
+    isEvenN?
+    pushX(xFloat,onBadData=VectorOfX::FailOnBadData)
+    requestExcessKurtosis(formulaId=3)
+    requestKurtosis
+    requestMedian
+    requestQuartileCollection
+    requestRange
+    requestResultAACSV
+    requestResultCSVLine(includeHdr=false)
+    requestResultJSON
+    requestSkewness(formulaId=3)
+    requestStandardDeviation
+    requestSummaryCollection
+    requestVarianceSumOfDifferencesFromMean(populationCalculation=false)
+    requestVarianceXsSquaredMethod(populationCalculation=false)
+=end
+end
+
+def _parseSamesLibVectorOfDiscreteCommand(vodO)
+=begin
+    requestResultAACSV(xFloat)
+    requestResultCSVLine(xFloat)
+    requestResultJSON(xFloat)
+    transformToCSVLine
+    transformToJSON
+    getCount
+    getX(indexA,sortedVector=false)
+    calculateBinomialProbability(subjectValue,nTrials,nSuccesses)
+    getFrequency(subjectValue)
+    pushX(xItem,onBadData=VectorOfX::FailOnBadData)
+    requestMode
+    requestSummaryCollection
+=end
+end
+
+def _readSamesLibStdIn
+end
+
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Top Level Procedures
 
-
-
-#2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# Lower Level Procedures
-
-#2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# Top Level Procedures
-
-putsUsage
+def putsUsage
     puts <<-EOUsage
 USAGE:  #{$0} [Optional Qualifiers]
     -h or --help:  This documentation.
     EOUsage
 end
 
-#2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# Init
-
-CommandLineQualifiers = GetoptLong.new(
-    [ '--amateur', '-a', GetoptLong::NO_ARGUMENT ],
-    [ '--csvfs', '-c', GetoptLong::REQUIRED_ARGUMENT ],
-    [ '--extra', '-e', GetoptLong::REQUIRED_ARGUMENT ],         # Arbitrary numbered extra version of libraries.
-    [ '--format', '-f', GetoptLong::REQUIRED_ARGUMENT ],
-    [ '--formatId', '-F', GetoptLong::REQUIRED_ARGUMENT ],
-    [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
-    [ '--inputprecision', '-i', GetoptLong::REQUIRED_ARGUMENT ],
-    [ '--native', '-n', GetoptLong::NO_ARGUMENT ],
-    [ '--outputprecision', '-o', GetoptLong::REQUIRED_ARGUMENT ],
-    [ '--population', '-S', GetoptLong::NO_ARGUMENT ],          # S:  Not a Sample, but a population.
-    [ '--request', '-r', GetoptLong::REQUIRED_ARGUMENT ],       # Argument Calculation to execute.
-    [ '--sumxsstdev', '-s', GetoptLong::NO_ARGUMENT ],          # Argument Use of SumXs
-    [ '--validate', '-V', GetoptLong::OPTIONAL_ARGUMENT ]       # Fail on certain inputs, like very large numbers.
-    [ '--variance', '-v', GetoptLong::OPTIONAL_ARGUMENT ]       # Compound Argument indicating
-)
-
-name = nil
-repetitions = 1
-CommandLineQualifiers.each do |qualifier, qargument|
-    case qualifier
-    when '--help'
-        putsUsage
-    when '--repeat'
-        repetitions = qargument.to_i
-    when '--name'
-        if qargument == ''
-            name = 'John'
-        else
-            name = qargument
-        end
+def loadDataFile(clArg)
+    fSpec,vcarray = _scanDataClasses(clArg)
+    _downloadMissingFileUsingURLConfigurationFile(fSpec)
+    unless File.exists?(fSpec)
+        raise ArgumentError, "File #{fSpec} was not found."
+    end
+    if fSpec =~ /.csv$/
+        localo = TableOfVectors.newFrom
+        return localo
+    else
+        m = "This file type (#{fSpec}) is not presently supported."
+        raise ArgumentError, m
     end
 end
 
-if ARGV.length != 0
-    putsUsage
-    exit 1
+def parseCommands(cmdArguments)
+end
+
+def scanColumnsSpecification(columnSetId)
 end
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Init
+
+putsUsage if ARGV.size == 0
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Main
+
+loadDataFile(ARGV[0])               if ARGV.size >= 1
+scanColumnsSpecification(ARGV[1])   if ARGV.size >= 2
+parseCommands(ARGV)                 if ARGV.size >= 3
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of ruby.main

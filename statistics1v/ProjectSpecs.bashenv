@@ -5,7 +5,7 @@
 readonly SamesProjectName=statistics1v
 export SamesProjectName
 
-source $SAMESHOME/slib/SamesLib.bashenv
+source $SAMESHOME/slib/SamesLib.native.bashenv
 
 sl_SetConstants true $SamesProjectName
 

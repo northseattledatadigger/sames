@@ -636,19 +636,19 @@ class VectorOfX
         return nil
     end
 
-    def pushX(xFloat)
+    def pushX(xFloat,onBadData)
         raise ArgumentError, "Pure Virtual"
     end
 
-    def requestResultAACSV(xFloat)
+    def requestResultAACSV
         raise ArgumentError, "Pure Virtual"
     end
 
-    def requestResultCSVLine(xFloat)
+    def requestResultCSVLine
         raise ArgumentError, "Pure Virtual"
     end
 
-    def requestResultJSON(xFloat)
+    def requestResultJSON
         raise ArgumentError, "Pure Virtual"
     end
 

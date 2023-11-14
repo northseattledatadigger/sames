@@ -21,6 +21,11 @@ require 'test/unit'
 
 include Test::Unit::Assertions
 
+HereDs=File.expand_path(".", __dir__)
+SamesDs=File.expand_path("../..", __dir__)
+
+require "#{SamesDs}/slib/SBinLib.rb"
+
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Tests for Global Support Routines
 
