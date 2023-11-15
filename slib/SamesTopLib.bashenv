@@ -10,14 +10,14 @@ fi
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Constants and Environment
 
+readonly SamesBin=$SAMESHOME/bin
 readonly SamesSBin=$SAMESHOME/sbin
-readonly SamesClassColumnsDs=$SAMESHOME/classcolumns
-readonly SamesExamples=$SAMESHOME/examples
-readonly SamesTopLib=$SAMESHOME/slib
-readonly SamesTestData=$SAMESHOME/testdata
-readonly SamesTmpData=$SAMESHOME/tmpdata
+readonly SamesExamplesDs=$SAMESHOME/examples
+readonly SamesTestDataDs=$SAMESHOME/testdata
+readonly SamesTmpDataDs=$SAMESHOME/tmpdata
+readonly SamesTopLibDs=$SAMESHOME/slib
 
-source $SamesTopLib/SBinLib.bashenv
+source $SamesTopLibDs/SBinLib.bashenv
 
 readonly StdLibName=SamesLib
 

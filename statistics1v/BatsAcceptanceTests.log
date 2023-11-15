@@ -1,0 +1,15 @@
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Wed Nov 15 01:55:30 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_arithmetic_mean-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_arithmetic_mean-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate arithmetic mean.
+BATS_TEST_NUMBER:       1
+BATS_TMPDIR:            /tmp
+##### setup end at Wed Nov 15 01:55:30 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_arithmetic_mean-2e at Wed Nov 15 01:55:30 PM PST 2023
+

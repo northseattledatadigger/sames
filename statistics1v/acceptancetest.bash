@@ -16,20 +16,34 @@ readonly SAMESPROJECTHOME=$SCRIPT_DIR
 source $SAMESPROJECTHOME/ProjectSpecs.bashenv
 
 readonly PrimaryBatsTests=$SamesProjectTestsDs/test_SamesLib.acceptance.bats
+readonly FirstTestDataSubjectFs=$SamesTestDataDs/sidewalkstreetratioupload.csv
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Default Values
+
+CleanOuputs=false
+LibraryLanguageUnderTest=ruby
+LibraryVersionUnderTest=native
+OutputFSpec=/dev/stdout
+PrimaryOutputFSpec=$SAMESPROJECTHOME/BatsAcceptanceTests.log
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Procedures
 
 catHeading() {
-    local _lang="$2"
-    local _version="$3"
+    local _lang="$1"
+    local _version="$2"
+    local _appfs="$3"
+    local _lutfs="$4"
+    local _ptest="$5"
+    local _ftdsfs="$6"
 
     cat <<EOHEADING
-Acceptance Test starting at $(date) for Language $_lang, version $_verison"
-AppUnderTest:\t\t$AppUnderTest
-AppUnderTestFs:\t\t$AppUnderTestFs
-LibraryUnderTestFs:\t$LibraryUnderTestFs
-PrimaryBatsTests File:\t$PrimaryBatsTests
+Acceptance Test starting at $(date) for Language "$_lang", version "$_version"
+AppUnderTestFs:         $_appfs
+LibraryUnderTestFs:     $_lutfs
+PrimaryBatsTests File:  $_ptest
+FirstTestDataSubjectFs: $_ftdsfs
 
 EOHEADING
 }
@@ -37,11 +51,15 @@ EOHEADING
 catUsage() {
     cat <<EOU
 USAGE:  $0 <options>
+    -C Pre-clean out previous result files according to names used.
     -h This help text, without errors nor error exit.
-    -l Specify language version under test (javascript, python3, ruby, rust)
+    -l Specify language version under test(default '$LibraryLanguageUnderTest' of
+    javascript, python3, ruby, rust)
     -O Specify no output, so just testing with pass fail result at end.
-    -o Specify output filespec.
-    -v Specify subtype version under test (amateur, naive, native, et al)
+    -o Specify output filespec (default $OutputFSpec)
+    -p Specify bats tests output log filespec (default $PrimaryOutputFSpec)
+    -v Specify subtype version under test (default '$LibraryVersionUnderTest' of 
+    amateur, naive, native, et al)
 EOU
 }
 
@@ -73,7 +91,6 @@ getLanguageExtensionForId() {
         ;;
     *)
         echoError 2 "Library Version Id '$1' is NOT recognized."
-        catUsage
         exit 2
     esac
 }
@@ -81,14 +98,12 @@ getLanguageExtensionForId() {
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Init
 
-LibraryLanguageUnderTestExtension=rb
-LibraryLanguageUnderTest=ruby
-LibraryVersionUnderTest=native
-OutputFSpec=/dev/stdout
-
-while getopts "hl:Oov:" option
+while getopts "Chl:Oop:v:" option
 do
     case "${option}" in
+    C)
+        CleanOuputs=true
+        ;;
     h)
         catUsage
         exit 0
@@ -97,7 +112,6 @@ do
         if [[ -f $OPTARG ]]
         then
             LibraryLanguageUnderTest="$OPTARG"
-            LanguageExtension=$(getLanguageExtensionForId $OPTARG)
         else
             echoError 1 "Library Language Id '$OPTARG' is NOT recognized."
             catUsage
@@ -109,6 +123,9 @@ do
         ;;
     o)
         OutputFSpec="$OPTARG"
+        ;;
+    p)
+        PrimaryOutputFSpec="$OPTARG"
         ;;
     v)
         if [[ -f $LibraryVersionUnderTest ]]
@@ -128,9 +145,17 @@ do
     esac
 done
 
-AppUnderTest=$LibraryLanguageUnderTest.main.$LibraryVersionUnderTest
-AppUnderTestFs=$SamesProjectBin/$AppUnderTest
-LibraryUnderTestFs=$SAMESPROJECTHOME/$StdLibName.$LibraryVersionUnderTest.$LanguageExtension
+readonly LanguageExtension=$(getLanguageExtensionForId $LibraryLanguageUnderTest)
+
+## Begin Required Exports
+## Note these 4 'exports' are required to provide access to these
+## identifiers IN THE BATS TEST SCRIPT:
+export AppUnderTest=$LibraryLanguageUnderTest.main.$LibraryVersionUnderTest
+export AppUnderTestFs=$SamesProjectBin/$AppUnderTest
+export LibraryUnderTestFs=$SAMESPROJECTHOME/$StdLibName.$LibraryVersionUnderTest.$LanguageExtension
+export PrimaryOutputFSpec
+export FirstTestDataSubjectFs
+## End of Required Exports
 
 if [[ ! -f $AppUnderTestFs ]]
 then
@@ -146,10 +171,22 @@ then
     exit 1
 fi
 
+if $CleanOuputs
+then
+    if [[ -f $OutputFSpec ]]
+    then
+        rm -f $OutputFSpec
+    fi
+    if [[ -f $PrimaryOutputFSpec ]]
+    then
+        rm -f $PrimaryOutputFSpec
+    fi
+fi
+
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Main
 
-echoHeading
+catHeading $LibraryLanguageUnderTest $LibraryVersionUnderTest $AppUnderTestFs $LibraryUnderTestFs $PrimaryBatsTests $FirstTestDataSubjectFs
 
 $PrimaryBatsTests >$OutputFSpec
 

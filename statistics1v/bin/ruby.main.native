@@ -137,6 +137,10 @@ ArgumentsVoD = {
 # Lower Level Procedures
 
 def _determineDataInputFile(fName)
+    unless validateImplementationForThisFileType(fName)
+        m = "No implementation in this application for file type of '#{fName}'."
+        raise ArgumentError, m
+    end
     return fName    if File.exist?(fName)
     ds      = nil
     fn      = nil
@@ -154,7 +158,8 @@ def _determineDataInputFile(fName)
         raise ArgumentError, "File name '#{fName}' not procured."
     end
     return fs if File.exist?(fs)
-    raise ArgumentError, "Downloaded File '#{fName}' still not there?  Programmer error?"
+    m = "Downloaded File '#{fName}' still not there?  Programmer error?"
+    raise ArgumentError, m
 end
 
 def _displayCommands(labelStr,cmdHash,cmdArguments)
@@ -242,11 +247,8 @@ USAGE:  #{$0} <inputfile> [columns] [cmd] [cmd] [cmd]
 end
 
 def loadDataFile(clArg)
-STDERR.puts "trace 0 clArg:  #{clArg}"
     fspec = _determineDataInputFile(clArg)
-STDERR.puts "trace 1 fspec:  #{fspec}"
     vcarray = _scanDataClasses(fspec)
-STDERR.puts "trace 2 vcarray:  #{vcarray.size}"
     if fspec =~ /.csv$/ then
         localo = VectorTable.newFromCSV(vcarray,fspec)
         return localo
