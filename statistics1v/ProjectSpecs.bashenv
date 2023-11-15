@@ -5,7 +5,13 @@
 readonly SamesProjectName=statistics1v
 export SamesProjectName
 
-source $SAMESHOME/slib/SamesLib.bashenv
+source $SAMESHOME/slib/SamesTopLib.bashenv
+
+readonly SamesProjectBin=$SAMESPROJECTHOME/bin
+readonly SamesProjectClassColumnsDs=$SAMESPROJECTHOME/classcolumns
+readonly SamesProjectExtrasDs=$SAMESPROJECTHOME/extras
+readonly SamesProjectSBin=$SAMESPROJECTHOME/sbin
+readonly SamesProjectTestsDs=$SAMESPROJECTHOME/tests
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of ProjectSpecs.bashenv
