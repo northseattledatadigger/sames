@@ -10,7 +10,7 @@ then
     >&2 echo "FATAL:  SAMESHOME not found.  It must be properly defined."
     exit 99
 fi
-source $SAMESHOME/slib/SamesLib.bashenv
+source $SAMESHOME/slib/SamesTopLib.bashenv
 
 readonly RustBuildName=$SameProjectName
 

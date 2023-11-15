@@ -1,12 +1,3 @@
-    1.  Put together draft of SamesLib.native.rb extended tests:  test_SamesLib.extended.rb, utilizing the new scripts:
-        a.  Covering Main Point statistics with:
-            i.      N breadth, Sums breadth
-            ii.     variance, kurtosis, and skewness items of interest.
-            iii.    all different kinds of numbers:  floats, signed, octal, unsigned, perhaps also hex
-        b.  Covering quartiles
-        c.  Covering histogram
-        d.  Covering frequencies
-        e.  Covering oddments
     4.  Finish building rest of ruby.main:
         a.  Skel.
         b.  bats tdd and flesh out.
@@ -20,3 +11,12 @@ Done for now:
     2.  Look at migration of coefficient of variation.
     3.  Look at use of harmonic mean.
     0   Go through and clean up test_SamesLib.simple.rb
+    1.  Put together draft of SamesLib.native.rb extended tests:  test_SamesLib.extended.rb, utilizing the new scripts:
+        a.  Covering Main Point statistics with:
+            i.      N breadth, Sums breadth
+            ii.     variance, kurtosis, and skewness items of interest.
+            iii.    all different kinds of numbers:  floats, signed, octal, unsigned, perhaps also hex
+        b.  Covering quartiles
+        c.  Covering histogram
+        d.  Covering frequencies
+        e.  Covering oddments

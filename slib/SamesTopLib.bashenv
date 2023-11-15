@@ -1,0 +1,45 @@
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# SamesTopLib.bashenv
+
+if [[ -z "$SAMESHOME" ]]
+then
+    >&2 echo "FATAL:  SAMESHOME is required, but was missing."
+    exit 99
+fi
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Constants and Environment
+
+readonly $SamesSBin=$SAMESHOME/sbin
+readonly $SamesClassColumnsDs=$SAMESHOME/classcolumns
+readonly $SamesExamples=$SAMESHOME/examples
+readonly $SamesTopLib=$SAMESHOME/slib
+readonly $SamesTestData=$SAMESHOME/testdata
+readonly $SamesTmpData=$SAMESHOME/tmpdata
+
+source $SamesTopLib/SBinLib.bashenv
+
+readonly StdLibName=SamesLib
+
+KeptFileURLs="#{SAMESHOME}/InternetFileURLs.csv"
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Procedures
+
+getKeptFileURL() {
+    local _fN="$1"
+    # Note I'm going to just use split here and Presume the files will be
+    # maintained with both filenames and URLs with NO embedded commas.
+    # There are other ways, but it's not worth my bother at this time.
+    result=$(grep "$_fN" $KeptFileURLs)
+    if [[ -n $result ]]
+    then
+        echo -n $result | cut -d, -f1
+        return 0
+    fi
+    >&2 echo "No such '$fN' file found in $KeptFileURLs."
+    return 9
+end
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# End of SamesTopLib.bashenv

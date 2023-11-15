@@ -57,103 +57,168 @@ if ENV.has_key?('LibraryVersion') and ENV['LibraryVersion'].size > 0 then
     $LibraryVersion = ENV['LibraryVersion']
 end
 
-SamesDs=File.expand_path("../..", __dir__)
+SAMESHOME=File.expand_path("../..", __dir__)
 SamesProjectDs=File.expand_path("..", __dir__)
 
 SamesProjectLibraryInUse="#{SamesProjectDs}/SamesLib.#{$LibraryVersion}.rb"
 
-require "#{SamesDs}/slib/SBinLib.rb"
+require "#{SAMESHOME}/slib/SamesTopLib.rb"
 require SamesProjectLibraryInUse
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Constant Identifiers
 
-SamesTmpTestData="#{SamesDs}/tmptestdata"
+SamesClassColumnsDs = "#{SamesProjectDs}/classcolumns"
+
+SegmentCountHistogramGeneration = 1
+SegmentSizeHistogramGeneration = 2
+SegmentSpecificationHistogramGeneration = 3
+
+VoCHash = {
+    'aad'               => 'generateAverageAbsoluteDeviation',
+    'arithmeticmean'    => 'calculateArithmeticMean',
+    'cov'               => 'generateCoefficientOfVariation',
+    'csvlineOfx'        => 'transformToCSVLine',
+    'excesskurtosis'    => 'requestExcessKurtosis',
+    'geometricmean'     => 'calculateGeometricMean',
+    'getx'              => 'getX',
+    'harmonicmean'      => 'calculateHarmonicMean',
+    'iseven?'           => 'isEvenN?',
+    'jsonofx'           => 'transformToJSON',
+    'histogram'         => '_generateHistogram',
+    'kurtosis'          => 'requestKurtosis',
+    'mad'               => 'generateMeanAbsoluteDifference',
+    'max'               => 'getMax',
+    'mean'              => 'calculateArithmeticMean',
+    'median'            => 'requestMedian',
+    'min'               => 'getMin',
+    'mode'              => 'generateMode',
+    'n'                 => 'getCount',
+    'quartile'          => 'calculateQuartile',
+    'quartileset'       => 'requestQuartileCollection',
+    'range'             => 'requestRange',
+    'sum'               => 'getSum',
+    'resultsummary'     => '_requestResultSummary',
+    'skewness'          => 'requestSkewness',
+    'stddev'            => 'requestStandardDeviation',
+    'variance'          => '_requestVariance',
+}
+
+ArgumentsVoC = {
+    'aad'               => '<centerPoint>',
+    'getx'              => '<indexOfX>',
+    'histogram'         => '<HistogramType>',
+    'quartile'          => '<indexOfQuartile>',
+    'resultsummary'     => '<summaryOption>',
+    'variance'          => '<varianceOption>',
+}
+
+VoDHash = {
+    'binomialprobability'   => 'calculateBinomialProbability',
+    'csvlineOfx'            => 'transformToCSVLine',
+    'csvlistOfx'            => 'transformToCSVList',
+    'jsonofx'               => 'transformToJSON',
+    'frequencyTable'        => 'generateFrequencyTable',
+    'getFrequency'          => 'getFrequency',
+    'getx'                  => 'getX',
+    'mode'                  => 'requestMode',
+    'n'                     => 'getCount',
+    'resultsummary'         => '_requestResultSummary'
+}
+
+ArgumentsVoD = {
+    'binomialprobability'   => '<subjectValue> <nTrials> <nSuccesses>',
+    'getFrequency'          => '',
+    'getx'                  => '<indexOfX>',
+    'resultsummary'         => '<summaryOption>'
+}
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Lower Level Procedures
 
-def _scanDataClasses(clArg)
-    return fs, vcarray
+def _determineDataInputFile(fName)
+    return fName    if File.exist?(fName)
+    ds      = nil
+    fn      = nil
+    if fName =~ /^(.*)\/(.*)$/ then
+        ds  = $1
+        fn  = $2
+    else
+        ds  = SamesTmpData
+        fn  = fName
+    end
+    fs = "#{ds}/#{fn}"
+    return fs       if File.exist?(fs)
+    fileurl = getKeptFileURL(fn)
+    if assureInternetDataFileCopy(ds,fn,fileURL)
+        raise ArgumentError, "File name '#{fName}' not procured."
+    end
+    return fs if File.exist?(fs)
+    raise ArgumentError, "Downloaded File '#{fName}' still not there?  Programmer error?"
 end
 
-def _downloadMissingFileUsingURLConfigurationFile(fSpec)
+def _displayCommands(labelStr,cmdHash,cmdArguments)
+    puts "\t#{labelStr} Commands:"
+    cmdHash.keys.sort.each do |lkey|
+        puts "\t\t#{lkey}(#{cmdArguments[lkey]})"   if cmdArguments.has_key?(lkey)
+        puts "\t\t#{lkey}"                      unless cmdArguments.has_key?(lkey)
+    end
+end
+
+def _generateHistogram(genType=SegmentCountHistogramGeneration,segmentSpecNo,startNumber)
+    generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber=nil)
+    generateHistogramAAbySegmentSize(segmentSize,startNumber=nil)
 end
 
 def _parseSamesLibVectorOfContinuousCommand(vocO,aList)
-    
-    case aList[0]
-    when 'ArithmeticMean'
-        vocO.calculateArithmeticMean
-    when 'CSVLineOfX'
-        vocO.transformToCSVLine
-    when 'CSVLineSummary'
-        vocO.requestResultCSVLine
-    when 'CSVTableSummary'
-        vocO.requestResultAACSV
-    when 'GeometricMean'
-        vocO.calculateGeometricMean
-    when 'getX'
-        vocO.getX(aList[1])
-    when 'HarmonicMean'
-        vocO.calculateHarmonicMean
-    when 'JSONOfX'
-        vocO.transformToJSON
-    when 'JSONSummary'
-        vocO.requestResultJSON
-    when 'N'
-        vocO.getCount
-    else
-        m = "There is no skewness formula #{formulaId} implemented at this time."
-        raise ArgumentError, m
-    end
-=begin
-    calculateQuartile(qNo)
-    generateAverageAbsoluteDeviation(centralPointType=ArithmeticMeanId)
-    generateCoefficientOfVariation
-    generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber=nil)
-    generateHistogramAAbySegmentSize(segmentSize,startNumber=nil)
-    generateMeanAbsoluteDifference
-    generateMode
-    getMax
-    getMin(sVoX=nil)
-    getSum
-    isEvenN?
-    pushX(xFloat,onBadData=VectorOfX::FailOnBadData)
-    requestExcessKurtosis(formulaId=3)
-    requestKurtosis
-    requestMedian
-    requestQuartileCollection
-    requestRange
-    requestResultAACSV
-    requestResultCSVLine(includeHdr=false)
-    requestResultJSON
-    requestSkewness(formulaId=3)
-    requestStandardDeviation
-    requestSummaryCollection
-    requestVarianceSumOfDifferencesFromMean(populationCalculation=false)
-    requestVarianceXsSquaredMethod(populationCalculation=false)
-=end
 end
 
-def _parseSamesLibVectorOfDiscreteCommand(vodO)
-=begin
-    requestResultAACSV(xFloat)
-    requestResultCSVLine(xFloat)
-    requestResultJSON(xFloat)
-    transformToCSVLine
-    transformToJSON
-    getCount
-    getX(indexA,sortedVector=false)
-    calculateBinomialProbability(subjectValue,nTrials,nSuccesses)
-    getFrequency(subjectValue)
-    pushX(xItem,onBadData=VectorOfX::FailOnBadData)
-    requestMode
-    requestSummaryCollection
-=end
+def _parseSamesLibVectorOfDiscreteCommand(vodO,aList)
 end
 
 def _readSamesLibStdIn
+end
+
+def _requestResultSummary
+    requestResultAACSV
+    requestResultCSVLine(includeHdr=false)
+    requestResultJSON
+    requestSummaryCollection
+end
+
+def _requestVariance
+    requestVarianceSumOfDifferencesFromMean(populationCalculation=false)
+    requestVarianceXsSquaredMethod(populationCalculation=false)
+end
+
+def _scanDataClasses(clArg)
+    fn = clArg.sub(/.*\//,'')
+    positedclassfspec = "#{SamesClassColumnsDs}/#{fn}.vc.csv"
+    unless File.exist?(positedclassfspec)
+        STDERR.puts <<-INSTRUCTIONS
+        A column class file is required at #{positedclassfspec} to load the
+        data.  You may use either of two formats:
+
+        VectorOfContinuous,VectorOfDiscrete,..
+
+        or
+
+        C,D,...
+
+        See examples in the #{SamesClassColumnsDs} folder.
+        INSTRUCTIONS
+        m="No column class input specification accompanies '#{clArg}'."
+        raise ArgumentError, m
+    end
+    csvstr      = File.read( positedclassfspec )
+    ba          = csvstr.split(',')
+    vcarray     = nil
+    if ba[0] == 'C' or ba[0] == 'D' then
+        vcarray = VectorTable.arrayOfChar2VectorOfClasses(ba)
+    else
+        vcarray = VectorTable.arrayOfClassLabels2VectorOfClasses(ba)
+    end
+    return vcarray
 end
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -161,19 +226,29 @@ end
 
 def putsUsage
     puts <<-EOUsage
-USAGE:  #{$0} [Optional Qualifiers]
-    -h or --help:  This documentation.
+USAGE:  #{$0} <inputfile> [columns] [cmd] [cmd] [cmd]
+    inputfile:  For now, a csv file, but with a corresponding class columns
+    file in the folder #{SamesClassColumnsDs}, with one of two syntaxes,
+    indicating the vector type to use for each column in its corresponding
+    csv input file.
+    columns:  one or more integer in a csv string with only commas; no spaces.
+    cmds:  a list of commands with a parentheses surrounded list of arguments
+    when they are required.  Commands are in two groups:  Continuous, and
+    Discrete.
+    
     EOUsage
+    _displayCommands("Continuous",VoCHash,ArgumentsVoC)
+    _displayCommands("Discrete",VoDHash,ArgumentsVoD)
 end
 
 def loadDataFile(clArg)
-    fSpec,vcarray = _scanDataClasses(clArg)
-    _downloadMissingFileUsingURLConfigurationFile(fSpec)
-    unless File.exists?(fSpec)
-        raise ArgumentError, "File #{fSpec} was not found."
-    end
-    if fSpec =~ /.csv$/
-        localo = TableOfVectors.newFrom
+STDERR.puts "trace 0 clArg:  #{clArg}"
+    fspec = _determineDataInputFile(clArg)
+STDERR.puts "trace 1 fspec:  #{fspec}"
+    vcarray = _scanDataClasses(fspec)
+STDERR.puts "trace 2 vcarray:  #{vcarray.size}"
+    if fspec =~ /.csv$/ then
+        localo = VectorTable.newFromCSV(vcarray,fspec)
         return localo
     else
         m = "This file type (#{fSpec}) is not presently supported."
@@ -181,23 +256,54 @@ def loadDataFile(clArg)
     end
 end
 
-def parseCommands(cmdArguments)
+def parseCommands(cvO,cmdArray)
+    cmdArray.each do |lcmd|
+        result = cvO.send(VoCHash[lcmd])
+        puts "#{lcmd}:  #{result}"
+    end
 end
 
-def scanColumnsSpecification(columnSetId)
+def scanColumnsSpecification(columnSet,tovO)
+    ca = nil
+    if columnSet.is_a? Integer
+        ca = [columnSet]
+    elsif      isANumStr?(columnSet) then
+        ca = [columnSet.to_i]
+    elsif columnSet.is_a? String and columnSet =~ /\d,\d/
+        ca = columnSet.split(',').map(&:to_i)
+    end
+    return ca
 end
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Init
 
-putsUsage if ARGV.size == 0
+if ARGV.size == 0
+    STDERR.puts "Usage Error."
+    putsUsage
+    exit 1
+end
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Main
 
-loadDataFile(ARGV[0])               if ARGV.size >= 1
-scanColumnsSpecification(ARGV[1])   if ARGV.size >= 2
-parseCommands(ARGV)                 if ARGV.size >= 3
+tovo    = loadDataFile(ARGV[0])
+if ARGV.size > 1 then
+    columns = scanColumnsSpecification(ARGV[1],tovo)
+    cmds    = ARGV.drop(2)
+    columns.each do |lcolumn|
+        lcv = tovo.getVectorObject(lcolumn)
+        parseCommands(lcv,cmds)
+    end
+else
+    puts "Columns are as follows:"
+    i = 0
+    tovo.eachColumnVector do |lcv|
+        n = lcv.getCount
+        puts "Column[#{i}]:  #{lcv.class}, size:  #{n}."
+        i += 1
+    end
+end
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of ruby.main

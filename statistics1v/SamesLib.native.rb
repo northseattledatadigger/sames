@@ -1227,22 +1227,60 @@ class VectorTable
 
     class << self
 
+        def arrayOfChar2VectorOfClasses(aA)
+            oa = Hash.new
+            aA.each do |lc|
+                case lc
+                when 'C'
+                    oa.push(VectorOfContinuous)
+                when 'D'
+                    oa.push(VectorOfDiscrete)
+                else
+                    STDERR.puts "Allowed class identifier characters are {C,D} in this context."
+                    raise ArgumentError, "Identifier '#{lc}' is not recognized."
+                end
+            end
+            return oa
+        end
+
+        def arrayOfClassLabels2VectorOfClasses(aA)
+            oa = Array.new
+            aA.each do |llabel|
+                case llabel
+                when /VectorOfContinuous/
+                    oa.push(VectorOfContinuous)
+                when /VectorOfDiscrete/
+                    oa.push(VectorOfDiscrete)
+                else
+                    oa = "Identifier '#{llabel}' is not recognized as a class of X in this context."
+                    raise ArgumentError, m
+                end
+            end
+            return oa
+        end
+
         def isAllowedDataVectorClass?(vectorClass)
             return false    unless vectorClass.is_a? Class
             return true         if vectorClass.ancestors.include? VectorOfX
             return false
         end
 
-        def newFromCSV(vcSpec,fSpec,onBadData=VectorOfX::DefaultFillOnBadData,skipFirstLine=true)
+        def newFromCSV(vcSpec,fSpec,onBadData=VectorOfX::DefaultFillOnBadData,seeFirstLineAsHdr=true)
             localo = self.new(vcSpec)
             File.open(fSpec) do |fp|
                 i = 0
                 fp.each_line do |ll|
                     sll = ll.strip
-                    unless ( i == 0 and skipFirstLine )
-                        columns = sll.parse_csv
-                        localo.pushTableRow(columns,onBadData)
+                    if ( i == 0 ) then
+                        if seeFirstLineAsHdr then
+                            hdrcolumns = sll.parse_csv
+                            localo.useArrayForColumnIdentifiers(hdrcolumns)
+                            i += 1
+                            next
+                        end
                     end
+                    columns = sll.parse_csv
+                    localo.pushTableRow(columns,onBadData)
                     i += 1
                 end
             end
@@ -1255,6 +1293,7 @@ class VectorTable
         raise ArgumentError, "Argument Passed '#{vectorOfClasses.class}' NOT ARRAY" unless vectorOfClasses.is_a? Array
         @TableOfVectors     = Array.new
         @VectorOfClasses    = vectorOfClasses
+        @VectorOfHdrs       = Array.new
         i = 0
         @VectorOfClasses.each do |lci|
             if lci then
@@ -1263,8 +1302,25 @@ class VectorTable
             else
                 @TableOfVectors[i] = nil        
             end
+            @VectorOfHdrs.push("Column #{i}") # Use offset index as column numbers, NOT traditional.
             i += 1
         end
+    end
+
+    def eachColumnVector
+        @TableOfVectors.each do |lvo|
+            yield lvo
+        end
+    end
+
+    def getColumnCount
+        return @TableOfVectors.size
+    end
+
+    def getRowCount(columnIndex=0)
+        # As of 2023/11/14 I have put little thought into regular data, and hope simple
+        # validations will keep it away for now.
+        return @TableOfVectors[columnIndex].size
     end
 
     def getVectorObject(indexNo)
@@ -1285,6 +1341,15 @@ class VectorTable
             end
             i += 1
         end
+    end
+
+    def useArrayForColumnIdentifiers(hdrColumns)
+        raise ArgumentError unless hdrColumns.is_a? Array
+        unless hdrColumns.size == @VectorOfHdrs.size
+            m = "hdr columns passed has size #{hdrColumns.size}, but requires #{@VectorOfHdrs.size}"
+            raise ArgumentError, m
+        end
+        @VectorOfHdrs = hdrColumns
     end
 
 end
