@@ -236,15 +236,19 @@ end
 
 def putsUsage
     puts <<-EOUsage
-USAGE:  #{$0} <inputfile> [columns] [cmd] [cmd] [cmd]
+USAGE:  #{$0} <inputfile> [columns] [cmd] [precision]
     inputfile:  For now, a csv file, but with a corresponding class columns
     file in the folder #{SamesClassColumnsDs}, with one of two syntaxes,
     indicating the vector type to use for each column in its corresponding
     csv input file.
     columns:  one or more integer in a csv string with only commas; no spaces.
-    cmds:  a list of commands with a parentheses surrounded list of arguments
+    cmd:  a command with a parentheses surrounded list of arguments
     when they are required.  Commands are in two groups:  Continuous, and
     Discrete.
+    precision:  Causes any number results to be rounded to this number of
+    decimals.  This is especially important in acceptance tests, as rounding
+    the output from comparision data from apps is not the best option, so the
+    best alternative is to round to comply with the comparitor.
     
     EOUsage
     _displayCommands("Continuous",VoCHash,ArgumentsVoC)
