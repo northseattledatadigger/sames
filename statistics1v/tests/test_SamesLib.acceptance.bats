@@ -51,10 +51,13 @@ teardown() {
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Test on primary data example ( FirstTestDataSubjectFs )
 
-@test "$AppUnderTest calculate arithmetic mean." {
-    run $AppUnderTestFs >/dev/null 2>/dev/null
-    [ $status -eq 1 ]
+@test "$AppUnderTest calculate arithmetic mean for third column." {
+    run $AppUnderTestFs $FirstTestDataSubjectFs 2 mean
+    [ $status -eq 0 ]
     [[ -n $output ]]
+    #run $AppUnderTestFs $FirstTestDataSubjectFs 2 arithmeticmean
+    #[ $status -eq 0 ]
+    #[[ -n $output ]]
 }
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890

@@ -685,7 +685,7 @@ class VectorOfContinuous < VectorOfX
     HMeanAADId                  = 'HMeanAAD' # Harmonic Mean Average Absolute Deviation
     IsEvenId                    = 'IsEven'
     KurtosisId                  = 'Kurtosis'
-    MADId                       = 'MAD' # Mean Absolute Difference
+    MADId                       = 'MAD' # Mean Absolute Difference  NOTE that this will not be addressed in acceptance tests due to a paucity of presence in common apps.
     MaxId                       = 'Max'
     MedianAADId                 = 'MedianAAD'# Median Absolute Deviation
     MedianId                    = 'Median'
@@ -997,6 +997,7 @@ class VectorOfContinuous < VectorOfX
     end
 
     def requestResultAACSV
+        # NOTE: Mean Absolute Diffence is no longer featured here.
         scaa = requestSummaryCollection
         return <<-EOAACSV
 "#{ArithmeticMeanId}", #{scaa[ArithmeticMeanId]}
@@ -1006,7 +1007,6 @@ class VectorOfContinuous < VectorOfX
 "#{HarmonicMeanId}", #{scaa[HarmonicMeanId]}
 "#{IsEvenId}", #{scaa[IsEvenId]}
 "#{KurtosisId}", #{scaa[KurtosisId]}
-"#{MADId}", #{scaa[MADId]}
 "#{MaxId}", #{scaa[MaxId]}
 "#{MedianId}", #{scaa[MedianId]}
 "#{MedianAADId}", #{scaa[MedianAADId]}
@@ -1021,11 +1021,12 @@ EOAACSV
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
     def requestResultCSVLine(includeHdr=false)
+        # NOTE: Mean Absolute Diffence is no longer featured here.
         scaa        = requestSummaryCollection
         csvline     =   "#{scaa[ArithmeticMeanId]},#{scaa[ArMeanAADId]},"
         csvline     +=  "#{scaa[CoefficientOfVariationId]},"
         csvline     +=  "#{scaa[GeometricMeanId]},#{scaa[HarmonicMeanId]},"
-        csvline     +=  "#{scaa[IsEvenId]},#{scaa[KurtosisId]},#{scaa[MADId]},"
+        csvline     +=  "#{scaa[IsEvenId]},#{scaa[KurtosisId]},"
         csvline     +=  "#{scaa[MaxId]},#{scaa[MedianId]},#{scaa[MedianAADId]},"
         csvline     +=  "#{scaa[MinId]},#{scaa[ModeId]},#{scaa[NId]},"
         csvline     +=  "#{scaa[SkewnessId]},#{scaa[StandardDeviation]},"
@@ -1033,7 +1034,7 @@ EOAACSV
         if includeHdr then
             csvhdr  =   "#{ArithmeticMeanId},#{ArMeanAADId},"
             csvhdr  +=  "#{CoefficientOfVariationId},#{GeometricMeanId},"
-            csvhdr  +=  "#{HarmonicMeanId},#{IsEvenId},#{KurtosisId},#{MADId},"
+            csvhdr  +=  "#{HarmonicMeanId},#{IsEvenId},#{KurtosisId},"
             csvhdr  +=  "#{MaxId},#{MedianId},#{MedianAADId},#{MinId},#{ModeId},"
             csvhdr  +=  "#{NId},#{SkewnessId},#{StandardDeviation},#{SumId}"
             return <<EOCSV

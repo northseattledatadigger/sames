@@ -137,7 +137,7 @@ ArgumentsVoD = {
 # Lower Level Procedures
 
 def _determineDataInputFile(fName)
-    unless validateImplementationForThisFileType(fName)
+    unless _validateImplementationForThisFileType(fName)
         m = "No implementation in this application for file type of '#{fName}'."
         raise ArgumentError, m
     end
@@ -154,7 +154,7 @@ def _determineDataInputFile(fName)
     fs = "#{ds}/#{fn}"
     return fs       if File.exist?(fs)
     fileurl = getKeptFileURL(fn)
-    if assureInternetDataFileCopy(ds,fn,fileURL)
+    unless assureInternetDataFileCopy(ds,fn,fileurl)
         raise ArgumentError, "File name '#{fName}' not procured."
     end
     return fs if File.exist?(fs)
@@ -224,6 +224,11 @@ def _scanDataClasses(clArg)
         vcarray = VectorTable.arrayOfClassLabels2VectorOfClasses(ba)
     end
     return vcarray
+end
+
+def _validateImplementationForThisFileType(fName)
+    return true if fName =~ /\.csv$/
+    return false
 end
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
