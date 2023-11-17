@@ -1,0 +1,688 @@
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:01 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_simple_run_with_no_arguments-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_simple_run_with_no_arguments-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native simple run with no arguments.
+BATS_TEST_NUMBER:       1
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:01 PM PST 2023
+##### teardown test_-24AppUnderTest_simple_run_with_no_arguments-2e at Thu Nov 16 09:16:03 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:03 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_with_one_argument-2c_but_file_not_there-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_with_one_argument-2c_but_file_not_there-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native with one argument, but file not there.
+BATS_TEST_NUMBER:       2
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:03 PM PST 2023
+##### teardown test_-24AppUnderTest_with_one_argument-2c_but_file_not_there-2e at Thu Nov 16 09:16:05 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:05 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_with_one_argument-2c_but_file_not_a_valid_format-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_with_one_argument-2c_but_file_not_a_valid_format-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native with one argument, but file not a valid format.
+BATS_TEST_NUMBER:       3
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:05 PM PST 2023
+##### teardown test_-24AppUnderTest_with_one_argument-2c_but_file_not_a_valid_format-2e at Thu Nov 16 09:16:07 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:07 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_arithmetic_mean_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_arithmetic_mean_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate arithmetic mean for third column.
+BATS_TEST_NUMBER:       4
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:07 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_arithmetic_mean_for_third_column-2e at Thu Nov 16 09:16:09 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:09 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_harmonic_mean_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_harmonic_mean_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate harmonic mean for third column.
+BATS_TEST_NUMBER:       5
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:09 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_harmonic_mean_for_third_column-2e at Thu Nov 16 09:16:11 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:11 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_kurtosis_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_kurtosis_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate kurtosis for third column.
+BATS_TEST_NUMBER:       6
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:11 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_kurtosis_for_third_column-2e at Thu Nov 16 09:16:14 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:14 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_maximum_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_maximum_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate maximum for third column.
+BATS_TEST_NUMBER:       7
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:14 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_maximum_for_third_column-2e at Thu Nov 16 09:16:16 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:16 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_median_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_median_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate median for third column.
+BATS_TEST_NUMBER:       8
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:16 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_median_for_third_column-2e at Thu Nov 16 09:16:18 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:18 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_minimum_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_minimum_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate minimum for third column.
+BATS_TEST_NUMBER:       9
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:18 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_minimum_for_third_column-2e at Thu Nov 16 09:16:20 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:20 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_n_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_n_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate n for third column.
+BATS_TEST_NUMBER:       10
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:20 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_n_for_third_column-2e at Thu Nov 16 09:16:22 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:46 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_simple_run_with_no_arguments-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_simple_run_with_no_arguments-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native simple run with no arguments.
+BATS_TEST_NUMBER:       1
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:46 PM PST 2023
+##### teardown test_-24AppUnderTest_simple_run_with_no_arguments-2e at Thu Nov 16 09:16:48 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:48 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_with_one_argument-2c_but_file_not_there-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_with_one_argument-2c_but_file_not_there-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native with one argument, but file not there.
+BATS_TEST_NUMBER:       2
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:48 PM PST 2023
+##### teardown test_-24AppUnderTest_with_one_argument-2c_but_file_not_there-2e at Thu Nov 16 09:16:50 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:50 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_with_one_argument-2c_but_file_not_a_valid_format-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_with_one_argument-2c_but_file_not_a_valid_format-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native with one argument, but file not a valid format.
+BATS_TEST_NUMBER:       3
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:50 PM PST 2023
+##### teardown test_-24AppUnderTest_with_one_argument-2c_but_file_not_a_valid_format-2e at Thu Nov 16 09:16:52 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:52 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_arithmetic_mean_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_arithmetic_mean_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate arithmetic mean for third column.
+BATS_TEST_NUMBER:       4
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:52 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_arithmetic_mean_for_third_column-2e at Thu Nov 16 09:16:54 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:54 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_harmonic_mean_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_harmonic_mean_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate harmonic mean for third column.
+BATS_TEST_NUMBER:       5
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:54 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_harmonic_mean_for_third_column-2e at Thu Nov 16 09:16:56 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:57 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_kurtosis_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_kurtosis_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate kurtosis for third column.
+BATS_TEST_NUMBER:       6
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:57 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_kurtosis_for_third_column-2e at Thu Nov 16 09:16:59 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:16:59 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_maximum_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_maximum_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate maximum for third column.
+BATS_TEST_NUMBER:       7
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:16:59 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_maximum_for_third_column-2e at Thu Nov 16 09:17:01 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:01 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_median_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_median_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate median for third column.
+BATS_TEST_NUMBER:       8
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:01 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_median_for_third_column-2e at Thu Nov 16 09:17:03 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:29 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_simple_run_with_no_arguments-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_simple_run_with_no_arguments-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native simple run with no arguments.
+BATS_TEST_NUMBER:       1
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:29 PM PST 2023
+##### teardown test_-24AppUnderTest_simple_run_with_no_arguments-2e at Thu Nov 16 09:17:31 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:31 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_with_one_argument-2c_but_file_not_there-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_with_one_argument-2c_but_file_not_there-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native with one argument, but file not there.
+BATS_TEST_NUMBER:       2
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:31 PM PST 2023
+##### teardown test_-24AppUnderTest_with_one_argument-2c_but_file_not_there-2e at Thu Nov 16 09:17:33 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:33 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_with_one_argument-2c_but_file_not_a_valid_format-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_with_one_argument-2c_but_file_not_a_valid_format-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native with one argument, but file not a valid format.
+BATS_TEST_NUMBER:       3
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:33 PM PST 2023
+##### teardown test_-24AppUnderTest_with_one_argument-2c_but_file_not_a_valid_format-2e at Thu Nov 16 09:17:35 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:35 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_arithmetic_mean_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_arithmetic_mean_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate arithmetic mean for third column.
+BATS_TEST_NUMBER:       4
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:35 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_arithmetic_mean_for_third_column-2e at Thu Nov 16 09:17:37 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:37 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_harmonic_mean_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_harmonic_mean_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate harmonic mean for third column.
+BATS_TEST_NUMBER:       5
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:37 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_harmonic_mean_for_third_column-2e at Thu Nov 16 09:17:40 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:40 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_kurtosis_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_kurtosis_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate kurtosis for third column.
+BATS_TEST_NUMBER:       6
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:40 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_kurtosis_for_third_column-2e at Thu Nov 16 09:17:42 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:42 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_maximum_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_maximum_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate maximum for third column.
+BATS_TEST_NUMBER:       7
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:42 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_maximum_for_third_column-2e at Thu Nov 16 09:17:44 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:44 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_median_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_median_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate median for third column.
+BATS_TEST_NUMBER:       8
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:44 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_median_for_third_column-2e at Thu Nov 16 09:17:46 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:46 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_minimum_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_minimum_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate minimum for third column.
+BATS_TEST_NUMBER:       9
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:46 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_minimum_for_third_column-2e at Thu Nov 16 09:17:48 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:48 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_n_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_n_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate n for third column.
+BATS_TEST_NUMBER:       10
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:48 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_n_for_third_column-2e at Thu Nov 16 09:17:50 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:50 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_skewness_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_skewness_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate skewness for third column.
+BATS_TEST_NUMBER:       11
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:50 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_skewness_for_third_column-2e at Thu Nov 16 09:17:53 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:53 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_standard_deviation_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_standard_deviation_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate standard deviation for third column.
+BATS_TEST_NUMBER:       12
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:53 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_standard_deviation_for_third_column-2e at Thu Nov 16 09:17:55 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:17:55 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_sum_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_sum_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate sum for third column.
+BATS_TEST_NUMBER:       13
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:17:55 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_sum_for_third_column-2e at Thu Nov 16 09:17:57 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:21:29 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_simple_run_with_no_arguments-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_simple_run_with_no_arguments-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native simple run with no arguments.
+BATS_TEST_NUMBER:       1
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:21:29 PM PST 2023
+##### teardown test_-24AppUnderTest_simple_run_with_no_arguments-2e at Thu Nov 16 09:21:31 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:21:31 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_with_one_argument-2c_but_file_not_there-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_with_one_argument-2c_but_file_not_there-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native with one argument, but file not there.
+BATS_TEST_NUMBER:       2
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:21:31 PM PST 2023
+##### teardown test_-24AppUnderTest_with_one_argument-2c_but_file_not_there-2e at Thu Nov 16 09:21:33 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:21:33 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_with_one_argument-2c_but_file_not_a_valid_format-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_with_one_argument-2c_but_file_not_a_valid_format-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native with one argument, but file not a valid format.
+BATS_TEST_NUMBER:       3
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:21:33 PM PST 2023
+##### teardown test_-24AppUnderTest_with_one_argument-2c_but_file_not_a_valid_format-2e at Thu Nov 16 09:21:35 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:21:35 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_arithmetic_mean_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_arithmetic_mean_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate arithmetic mean for third column.
+BATS_TEST_NUMBER:       4
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:21:35 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_arithmetic_mean_for_third_column-2e at Thu Nov 16 09:21:38 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:21:38 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_kurtosis_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_kurtosis_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate kurtosis for third column.
+BATS_TEST_NUMBER:       5
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:21:38 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_kurtosis_for_third_column-2e at Thu Nov 16 09:21:40 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:21:40 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_maximum_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_maximum_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate maximum for third column.
+BATS_TEST_NUMBER:       6
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:21:40 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_maximum_for_third_column-2e at Thu Nov 16 09:21:42 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:21:42 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_median_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_median_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate median for third column.
+BATS_TEST_NUMBER:       7
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:21:42 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_median_for_third_column-2e at Thu Nov 16 09:21:44 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:21:44 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_minimum_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_minimum_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate minimum for third column.
+BATS_TEST_NUMBER:       8
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:21:44 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_minimum_for_third_column-2e at Thu Nov 16 09:21:46 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:21:46 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_n_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_n_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate n for third column.
+BATS_TEST_NUMBER:       9
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:21:46 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_n_for_third_column-2e at Thu Nov 16 09:21:48 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:21:48 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_skewness_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_skewness_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate skewness for third column.
+BATS_TEST_NUMBER:       10
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:21:48 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_skewness_for_third_column-2e at Thu Nov 16 09:21:51 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:21:51 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_standard_deviation_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_standard_deviation_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate standard deviation for third column.
+BATS_TEST_NUMBER:       11
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:21:51 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_standard_deviation_for_third_column-2e at Thu Nov 16 09:21:53 PM PST 2023
+
+AppUnderTest is:        ruby.main.native
+AppUnderTestFs is:      /home/nsdd/shop/sames/statistics1v/bin/ruby.main.native
+LibraryUnderTestFs:     /home/nsdd/shop/sames/statistics1v/SamesLib.native.rb
+FirstTestDataSubjectFs: /home/nsdd/shop/sames/testdata/sidewalkstreetratioupload.csv
+##### setup start at Thu Nov 16 09:21:53 PM PST 2023
+BATS_TEST_NAME:         test_-24AppUnderTest_calculate_sum_for_third_column-2e
+BATS_TEST_FILENAME:     /home/nsdd/shop/sames/statistics1v/tests/test_SamesLib.acceptance.bats
+BATS_TEST_DIRNAME:      /home/nsdd/shop/sames/statistics1v/tests
+BATS_TEST_NAMES:        test_-24AppUnderTest_calculate_sum_for_third_column-2e
+BATS_TEST_DESCRIPTION:  ruby.main.native calculate sum for third column.
+BATS_TEST_NUMBER:       12
+BATS_TMPDIR:            /tmp
+
+##### setup end at Thu Nov 16 09:21:53 PM PST 2023
+##### teardown test_-24AppUnderTest_calculate_sum_for_third_column-2e at Thu Nov 16 09:21:55 PM PST 2023
+

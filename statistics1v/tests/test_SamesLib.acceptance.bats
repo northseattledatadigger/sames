@@ -29,6 +29,7 @@ BATS_TMPDIR:            ${BATS_TMPDIR}
 EOHDR
 
     SWc3_AMean=$(sbin/requestSamplePointStatistics.bash     -B -i ../testdata/sidewalkstreetratioupload.csv -t -c3 -x       | grep '"ArithmeticMean"' | awk '{print $2}')
+    SWc3_HMean=$(sbin/requestSamplePointStatistics.bash     -B -i ../testdata/sidewalkstreetratioupload.csv -t -c3 -x       | grep '"HarmonicMean"' | awk '{print $2}')
     SWc3_DKurtosis=$(sbin/requestSamplePointStatistics.bash -B -i ../testdata/sidewalkstreetratioupload.csv -t -c3 -x -d    | grep '"Kurtosis"' | awk '{print $2}')
     SWc3_GKurtosis=$(sbin/requestSamplePointStatistics.bash -B -i ../testdata/sidewalkstreetratioupload.csv -t -c3 -x -g    | grep '"Kurtosis"' | awk '{print $2}')
     SWc3_PKurtosis=$(sbin/requestSamplePointStatistics.bash -B -i ../testdata/sidewalkstreetratioupload.csv -t -c3 -x -p    | grep '"Kurtosis"' | awk '{print $2}')

@@ -1230,6 +1230,14 @@ class VectorOfDiscrete < VectorOfX
 EOAACSV
     end
 
+    def requestResultCSVLine
+        raise ArgumentError, "Not Implemented"
+    end
+
+    def requestResultJSON
+        raise ArgumentError, "Not Implemented"
+    end
+
     attr_accessor   :OutputDecimalPrecision
 
     attr_reader     :FrequenciesAA

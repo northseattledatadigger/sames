@@ -1,8 +1,10 @@
-    4.  Finish building rest of ruby.main:
-        a.  Skel.
-        b.  bats tdd and flesh out.
-        c.  Add to sbin test generator tool while progressing for interacive checks and bats acceptance tests.
     5.  Begin to look at SamesLib.amateur.py.
+        i.      Slap together sane drafts of library and simple test suite.
+        ii.     Make SamesDs libraries and scripts:
+            ./slib/SBinLib.rb
+            ./slib/SamesTopLib.rb
+            ./tests/truby.rb
+        iii.    Slap together python3.main.py and python3.main.native in bin.
     6.  Begin to look at SamesLib.amateur.js.
     7.  Begin to look at SamesLib.amateur.rs.
     8.  Look back at results project.
@@ -20,3 +22,13 @@ Done for now:
         c.  Covering histogram
         d.  Covering frequencies
         e.  Covering oddments
+    4.  Finish building rest of ruby.main:
+        a.  Skel.
+        b.  bats tdd and flesh out.
+        c.  Add to sbin test generator tool while progressing for interacive checks and bats acceptance tests.
+    4.  Finish building rest of ruby.main:
+        d.  Put some very basic tests in for report outputs.
+        e.  Implememnt a few more methods, and variaitons, in VectorOfDiscrete, with unit tests.
+        f.  Look up and down through everything one more time, and try to do 1-3 more things.
+        NOTE HERE:  best I get back to refactoring this on end of working drafts of the others.  Outstanding issues include:
+            unhandled overflow problems with geometric and harmonic means.  Best comment in code and specifically handle overflows.

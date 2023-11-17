@@ -22,11 +22,11 @@ require 'test/unit'
 include Test::Unit::Assertions
 
 HereDs=File.expand_path(".", __dir__)
-SamesDs=File.expand_path("../..", __dir__)
+SAMESHOME=File.expand_path("../..", __dir__)
 
-TestDataDs="#{SamesDs}/testdata"
+TestDataDs="#{SAMESHOME}/testdata"
 
-require "#{SamesDs}/slib/SBinLib.rb"
+require "#{SAMESHOME}/slib/SBinLib.rb"
 
 FirstTestFileFs=returnIfThere("#{TestDataDs}/sidewalkstreetratioupload.csv")
 
