@@ -600,9 +600,10 @@ class VectorOfX
 
     BlankFieldOnBadData     = 0
     DefaultFillOnBadData    = 1
-    FailOnBadData           = 2
-    SkipRowOnBadData        = 3
-    ZeroFieldOnBadData      = 4
+    ExcludeRowOnBadData     = 2
+    FailOnBadData           = 3
+    SkipRowOnBadData        = 4
+    ZeroFieldOnBadData      = 5
 
     def _assureSortedVectorOfX(forceSort=false)
         if forceSort then
@@ -1214,6 +1215,21 @@ class VectorOfDiscrete < VectorOfX
         return x
     end
 
+    def requestResultAACSV
+        # NOTE: Mean Absolute Diffence is no longer featured here.
+        mode    = requestMode
+        n       = getCount
+        frequencies = ""
+        @FrequenciesAA.keys.sort.each do |lfkey|
+            frequencies += "\"Value: '#{lfkey}'\", \"Frequency:  #{@FrequenciesAA[lfkey]}\"\n"
+        end
+        content = <<-EOAACSV
+"N", #{n}
+#{frequencies}
+"Mode", #{mode}
+EOAACSV
+    end
+
     attr_accessor   :OutputDecimalPrecision
 
     attr_reader     :FrequenciesAA
@@ -1266,11 +1282,18 @@ class VectorTable
             return false
         end
 
-        def newFromCSV(vcSpec,fSpec,onBadData=VectorOfX::DefaultFillOnBadData,seeFirstLineAsHdr=true)
+        def newFromCSV(vcSpec,fSpec,onBadData=VectorOfX::ExcludeRowOnBadData,seeFirstLineAsHdr=true)
+            def skipIndicated(onBadData,ll)
+                if onBadData == VectorOfX::ExcludeRowOnBadData then
+                    return true if ll =~ /,,/
+                end
+                return false
+            end
             localo = self.new(vcSpec)
             File.open(fSpec) do |fp|
                 i = 0
                 fp.each_line do |ll|
+                    next if skipIndicated(onBadData,ll)
                     sll = ll.strip
                     if ( i == 0 ) then
                         if seeFirstLineAsHdr then
@@ -1325,6 +1348,9 @@ class VectorTable
     end
 
     def getVectorObject(indexNo)
+        unless 0 <= indexNo and indexNo < @TableOfVectors.size
+            raise ArgumentError, "Index number '#{indexNo}' provided is out of range {0,#{@TableOfVectors.size-1}}."
+        end
         unless VectorTable.isAllowedDataVectorClass?( @TableOfVectors[indexNo].class )
             raise ArgumentError, "Column #{indexNo} not configured for Data Processing."
         end
