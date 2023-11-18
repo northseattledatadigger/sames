@@ -1,11 +1,0 @@
---2023-11-12 23:03:50--  https://data-seattlecitygis.opendata.arcgis.com/datasets/SeattleCityGIS::guardrails-1.csv?where=1=1
-Resolving data-seattlecitygis.opendata.arcgis.com (data-seattlecitygis.opendata.arcgis.com)... 23.23.51.121, 44.215.202.167, 54.197.243.216
-Connecting to data-seattlecitygis.opendata.arcgis.com (data-seattlecitygis.opendata.arcgis.com)|23.23.51.121|:443... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: unspecified [text/csv]
-Saving to: ‘SeattleCityGIS::guardrails-1.csv?where=1=1’
-
-SeattleCityGIS::guardrails-1.csv?where=1=1        [<=>                                                                                              ]       0  --.-KB/s               SeattleCityGIS::guardrails-1.csv?where=1=1        [ <=>                                                                                             ] 151.41K   628KB/s               SeattleCityGIS::guardrails-1.csv?where=1=1        [  <=>                                                                                            ] 691.25K  1.66MB/s    in 0.4s    
-
-2023-11-12 23:03:51 (1.66 MB/s) - ‘SeattleCityGIS::guardrails-1.csv?where=1=1’ saved [707843]
-
