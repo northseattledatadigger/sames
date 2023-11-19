@@ -6,8 +6,10 @@
 #   https://www.calculatorsoup.com/calculators/statistics/mean-median-mode.php
 
 import csv
+from decimal import Decimal
 import json
-import math  
+import math
+import numbers
 import re
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -27,56 +29,50 @@ def generateModefromFrequencyAA(faaA):
     else:
         raise ValueError("Only argument must be frequency dictionary.")
 
-'''
 def isANumStr(strA):
-    if ( not isinstance(stra,str) ): 
+    if ( not isinstance(strA,str) ): 
         return False
-    if ( not re.search(r'^-?\d*\.?\d+$/',strA) ):
-        return False
-    return True
+    if ( re.search(r'^-?\d*\.?\d+$',strA) ):
+        return True
+    return False
 
 def isNumericVector(vA):
-    if ( any(isinstance(lve,Numbers.number) for lve in vA) ):
+    if not type(vA) is list:
+        raise ValueError("Only list arguments accepted.")
+    if len(vA) == 0:
+        return False
+    if ( all(isinstance(lve,numbers.Number) for lve in vA) ):
         return True
     return False
 
 def isUsableNumber(cA):
-    if ( isinstance(cA,Numbers.number) ):
+    if ( isinstance(cA,numbers.Number) ):
         return True
     if ( isANumStr(cA) ):
         return True
     return False
 
 def isUsableNumberVector(vA):
+    if not type(vA) is list:
+        raise ValueError("Only list arguments accepted.")
+    if len(vA) == 0:
+        return False
     if ( all(isUsableNumber(lve) for lve in vA) ):
         return True
     return False
 
-def isNumericVector?(vA)
-    raise ArgumentError unless vA.is_a? Array
-    return true if vA.all? { |lve| lve.is_a? Numeric }
-    return false
+def validateStringNumberRange(xFloat):
+    if ( not isinstance(xFloat,str) ): 
+        raise ValueError("Validation is ONLY for Strings.")
+    x = None
+    try:
+        x = float(xFloat)
+    except ValueError:
+        raise IndexError(f"{xFloat} larger than float capacity for this app.")
+    if ( math.isinf(x) ): 
+        raise IndexError(f"{xFloat} larger than float capacity for this app.")
 
-def isUsableNumber?(cA)
-    return true         if cA.is_a? Numeric
-    return true         if isANumStr?(cA)
-    return false
-
-def isUsableNumberVector?(vA)
-    raise ArgumentError unless vA.is_a? Array
-    return true if vA.all? { |lve| isUsableNumber?(lve) }
-    return false
-
-def validateStringNumberRange(xFloat)
-    unless xFloat.is_a? String
-        raise ArgumentError, "Validation is ONLY for Strings."
-    end
-    abbuffer = BigDecimal(xFloat)
-    afbuffer = xFloat.to_f
-    unless abbuffer == afbuffer
-        raise RangeError, "#{xFloat} larger than float capacity for this app."
-    end
-
+'''
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # HistogramOfX
