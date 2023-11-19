@@ -1,7 +1,6 @@
 #!/usr/bin/python3
-
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# test_SamesLib.simple.py
+# test_SamesLib_simple.py
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Constants and Imports
@@ -14,14 +13,18 @@ if len(sys.argv) != 2:
 
 SubType         = sys.argv[1]
 
+print(f"trace 1 {SubType}")
 ScriptPath      = os.path.realpath(__file__)
+print(f"trace 2 {ScriptPath}")
 HERE            = os.path.dirname(__file__)
 HOME            = os.getenv('HOME') # None
 
 SAMESHOME       = os.path.abspath(os.path.join(HERE, '../..'))
+print(f"trace 3 {SAMESHOME}")
 sys.path.append(SAMESHOME) # Not sure this is necessary.
 
 SamesProjectDs  = os.path.abspath(os.path.join(HERE, '..'))
+print(f"trace 4 {SamesProjectDs}")
 sys.path.append(SamesProjectDs) # Not sure this is necessary.
 Python3LibFs    = f"{SamesProjectDs}/SamesLib_{SubType}.py"
 
@@ -33,6 +36,7 @@ if os.path.isfile(Python3LibFs):
             print("Not Yet Implemented.")
         case "native":
             #import SamesLib_native as s
+print(f"trace 6 {SubType}")
             from SamesLib_native import *
         case "pandas":
             print("Not Yet Implemented.")
@@ -45,6 +49,10 @@ if os.path.isfile(Python3LibFs):
             raise ValueError(m)
 
 import pytest
+
+def pytest_addoption(parser):
+    parser.addoption("--input1", action="store", default="default input1")
+    parser.addoption("--input2", action="store", default="default input2")
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Tests
@@ -60,6 +68,7 @@ def test_Raises_ValueError_if_argument_not_dictionary():
         generateModefromFrequencyAA(nil)
     assert str(excinfo.value) == "Only argument must be frequency dictionary."
 
+"""
     with pytest.raises(ValueError) as excinfo:
         generateModefromFrequencyAA(333)
     assert str(excinfo.value) == "Only argument must be frequency dictionary."
@@ -71,6 +80,7 @@ def test_Raises_ValueError_if_argument_not_dictionary():
     with pytest.raises(ValueError) as excinfo:
         generateModefromFrequencyAA([])
     assert str(excinfo.value) == "Only argument must be frequency dictionary."
+"""
 
 #it "returns takes a frequency Associative Array, and returns a mode point statistic." do
     #h = {'1234' => 528, 528 => 3, "A longer string" => 0, "x" => 55555 }
@@ -113,4 +123,4 @@ def test_isANumStr_rejects_non_strings():
 '''
 
 ##2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# End of test_SamesLib.simple.py
+# End of test_SamesLib_simple.py

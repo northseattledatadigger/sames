@@ -7,27 +7,31 @@
 
 import csv
 import json
-import math  
 import re
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Global Support Routines
 
-
-def generateModefromFrequencyAA(faaA):
-    if isinstance(faaA, dict):
-        x = 0
-        m = 0
-        for lx, lfrequency in faaA.items():
-            if lfrequency > m:
-                x = lx
-                m = lfrequency
-        return x
-    else:
-        raise ValueError("Only argument must be frequency dictionary.")
+def getFactorial(nA):
+    if isinstance(nA,int):
+        nf = math.gamma(nA)
+        return nf
+    raise ValueError("Value passed to getFactorial is NOT integer.")
 
 '''
+def generateModefromFrequencyAA(faaA)
+    raise ArgumentError unless faaA.is_a? Hash
+    x = 0
+    m = 0
+    faaA.keys.each do |lx|
+        if faaA[lx] > m then
+            x = lx
+            m = faaA[lx]
+        end
+    end
+    return x
+
 def isANumStr(strA):
     if ( not isinstance(stra,str) ): 
         return False
@@ -1146,9 +1150,9 @@ class VectorOfDiscrete < VectorOfX
         psuccessfactor      = psuccess1trial**nSuccesses
         #STDERR.puts "\ntrace 6 calculateBinomialProbability #{pfailurefactor},#{psuccessfactor}"
 
-        successpermutations = math.factorial(nSuccesses)
-        failurepermutations = math.factorial(nTrials - nSuccesses)
-        trials_permutations = math.factorial(nTrials)
+        successpermutations = getFactorial(nSuccesses)
+        failurepermutations = getFactorial(nTrials - nSuccesses)
+        trials_permutations = getFactorial(nTrials)
         #STDERR.puts "\ntrace 7 calculateBinomialProbability #{successpermutations},#{failurepermutations},#{trials_permutations}"
         numerator           = trials_permutations * psuccessfactor * pfailurefactor
         denominator         = successpermutations * failurepermutations
