@@ -3,3 +3,4 @@ tmptestdata
 tmptestdata/*
 .swp
 .log
+__pycache__

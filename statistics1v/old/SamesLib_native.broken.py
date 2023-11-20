@@ -81,9 +81,9 @@ def validateStringNumberRange(xFloat)
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # HistogramOfX
 
-class HistogramOfX
+class HistogramOfX:
 
-    class RangeOccurrence 
+    class RangeOccurrence:
 
         def initialize(startNo,stopNo)
             raise ArgumentError unless startNo.is_a? Numeric

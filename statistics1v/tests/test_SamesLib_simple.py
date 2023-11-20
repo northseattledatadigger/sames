@@ -9,6 +9,9 @@ import os
 import sys 
 import unittest
 
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Tests for Global Procedures
+
 class Test_generateModefromFrequencyAA(unittest.TestCase):
 
     def test_Raises_ValueError_if_argument_not_dictionary(self):
@@ -122,14 +125,129 @@ class Test_validateStringNumberRange(unittest.TestCase):
         with self.assertRaises(IndexError) as context:
             sames.validateStringNumberRange("99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999.999999999999999999999999999999999999999999999999999999")
 
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Tests for HistogramOfX class
+
 class Test_HistogramOfX_Class(unittest.TestCase):
 
-    def test_argument_usage(self):
-        pass
+    def test_Simple_Construction(self):
+        localo = sames.HistogramOfX(1,5)
+        self.assertIsInstance( localo, sames.HistogramOfX )
+        localo.setOccurrenceRange(1,3)
+        localo.setOccurrenceRange(3,6)
+'''
+        localo.addToCounts(1)
+        localo.addToCounts(1)
+        localo.addToCounts(2)
+        localo.addToCounts(3)
+        localo.addToCounts(3)
+        localo.addToCounts(3)
+        result = localo.generateCountCollection
+        self.assertEqual( result[0][0], 1 )
+        self.assertEqual( result[0][1], 3 )
+        self.assertEqual( result[0][2], 3 )
+        self.assertEqual( result[1][0], 3 )
+        self.assertEqual( result[1][1], 6 )
+        self.assertEqual( result[1][2], 3 )
 
-    def test_anecdote_expected_results(self):
-        pass
+    def test_Construction_by_Segment_Size(self):
+        localo = HistogramOfX.newFromUniformSegmentSize(1,5,3)
+        localo.addToCounts(1)
+        localo.addToCounts(1)
+        localo.addToCounts(2)
+        localo.addToCounts(3)
+        localo.addToCounts(3)
+        localo.addToCounts(3)
+        result = localo.generateCountCollection
+        self.assertEqual( result[0][0], 1 )
+        self.assertEqual( result[0][1], 4 )
+        self.assertEqual( result[0][2], 6 )
+        self.assertEqual( result[1][0], 4 )
+        self.assertEqual( result[1][1], 7 )
+        self.assertEqual( result[1][2], 0 )
 
+    def test_Construction_by_Number_of_Segments(self):
+        localo = HistogramOfX.newFromDesiredSegmentCount(1,5,2)
+        localo.addToCounts(1)
+        localo.addToCounts(1)
+        localo.addToCounts(2)
+        localo.addToCounts(3)
+        localo.addToCounts(3)
+        localo.addToCounts(3)
+        result = localo.generateCountCollection
+        self.assertEqual( result[0][0], 1 )
+        self.assertEqual( result[0][1], 3.5 )
+        self.assertEqual( result[0][2], 6 )
+        self.assertEqual( result[1][0], 3.5 )
+        self.assertEqual( result[1][1], 6 )
+        self.assertEqual( result[1][2], 0 )
+
+    def test_Internal_class_RangeOccurrence(self):
+        localo = HistogramOfX::RangeOccurrence.new(1,2)
+        assert_instance_of HistogramOfX::RangeOccurrence, localo
+        self.assertEqual( 0, localo.Count
+        self.assertEqual( 1, localo.StartNo
+        self.assertEqual( 2, localo.StopNo
+        localo.addToCount
+        self.assertEqual( 1, localo.Count
+        assert localo.hasOverlap?(1,2)
+        assert_false localo.hasOverlap?(2,3)
+        assert localo.isInRange?(1)
+        assert localo.isInRange?(1.5)
+        assert_false localo.isInRange?(2)
+
+    def test_Internal_validation_against_overlapping_ranges(self):
+        localo = HistogramOfX.new(-128,128)
+        localo.setOccurrenceRange(-128,-64)
+        localo.setOccurrenceRange(-64,0)
+        localo.setOccurrenceRange(0,64)
+        localo.setOccurrenceRange(64,129)
+        assert_raise ArgumentError do
+            localo.setOccurrenceRange(25,99)
+
+    def test_Adding_to_counts(self):
+        localo = HistogramOfX.new(-5,0)
+        localo.setOccurrenceRange(0,5)
+        localo.addToCounts(1)
+        localo.addToCounts(2)
+        localo.addToCounts(-3)
+        assert_raise ArgumentError do
+            localo.addToCounts(8)
+
+    def test_Generating_an_ordered_list_of_vectors_of_counts(self):
+        localo = HistogramOfX.new(-128,128)
+        localo.setOccurrenceRange(-128,-64)
+        localo.setOccurrenceRange(-64,0)
+        localo.setOccurrenceRange(0,64)
+        localo.setOccurrenceRange(64,129)
+        localo.addToCounts(-99)
+        localo.addToCounts(12)
+        localo.addToCounts(53)
+        localo.addToCounts(64)
+        localo.addToCounts(3)
+        localo.addToCounts(2)
+        localo.addToCounts(22)
+        localo.addToCounts(-22)
+        result = localo.generateCountCollection
+        self.assertEqual( result[1][0], -64
+        self.assertEqual( result[1][1], 0
+        self.assertEqual( result[1][2], 1
+        self.assertEqual( result[3][0], 64
+        self.assertEqual( result[3][1], 129
+        self.assertEqual( result[3][2], 1
+
+    def test_Validation_that_the_Range_is_Complete(self):
+        localo = HistogramOfX.new(-128,128)
+        localo.setOccurrenceRange(-128,-64)
+        localo.setOccurrenceRange(-64,0)
+        localo.setOccurrenceRange(0,64)
+        localo.setOccurrenceRange(64,129)
+        localo.validateRangesComplete
+        localo.setOccurrenceRange(244,256)
+        assert_raise RangeError do
+            localo.validateRangesComplete
+'''
+       
 class Test_SumsOfPowers_Class(unittest.TestCase):
 
     def test_argument_usage(self):

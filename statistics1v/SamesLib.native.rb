@@ -188,7 +188,7 @@ class HistogramOfX
         end
     end
 
-    def initialize(lowestValue,highestValue=nil)
+    def initialize(lowestValue,highestValue)
         raise ArgumentError unless lowestValue.is_a? Numeric
         raise ArgumentError unless highestValue.is_a? Numeric
         @FrequencyAA    = Hash.new

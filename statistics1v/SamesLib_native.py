@@ -72,172 +72,165 @@ def validateStringNumberRange(xFloat):
     if ( math.isinf(x) ): 
         raise IndexError(f"{xFloat} larger than float capacity for this app.")
 
-'''
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-# HistogramOfX
+# HistogramOfX and RangeOccurrence
 
-class HistogramOfX
+class RangeOccurrence:
 
-    class RangeOccurrence 
+    def __init__(self,startNo,stopNo):
+        if ( not isinstance(startNo,numbers.Number) ):
+            raise ValueError
+        if ( not isinstance(stopNo,numbers.Number) ):
+            raise ValueError
+        self.Count      = 0
+        self.StartNo    = startNo
+        self.StopNo     = stopNo
 
-        def initialize(startNo,stopNo)
-            raise ArgumentError unless startNo.is_a? Numeric
-            raise ArgumentError unless stopNo.is_a? Numeric
-            @Count      = 0
-            @StartNo    = startNo
-            @StopNo     = stopNo
-        end
+    def addToCount(self):
+        self.Count += 1
 
-        def addToCount
-            @Count += 1
-        end
+    def hasOverlap(self,startNo,stopNo):
+        if ( not isinstance(startNo,numbers.Number) ):
+            raise ValueError
+        if ( not isinstance(stopNo,numbers.Number) ):
+            raise ValueError
+        if ( self.StartNo <= startNo and startNo < self.StopNo ):
+            return True
+        if ( self.StartNo < stopNo and stopNo <= self.StopNo ):
+            return True
+        return False
 
-        def hasOverlap?(startNo,stopNo)
-            raise ArgumentError unless startNo.is_a? Numeric
-            raise ArgumentError unless stopNo.is_a? Numeric
-            return true if @StartNo <= startNo and startNo < @StopNo
-            return true if @StartNo < stopNo and stopNo <= @StopNo
-            return false
-        end
+    def isInRange(xFloat):
+        if ( not isinstance(xFloat,numbers.Number) ):
+            raise ValueError
+        if ( xFloat < self.StartNo ):
+            return False
+        if ( self.StopNo <= xFloat ):
+            return False
+        return True
 
-        def isInRange?(xFloat)
-            raise ArgumentError unless xFloat.is_a? Numeric
-            return false unless xFloat >= @StartNo
-            return false unless xFloat < @StopNo
-            return true
-        end
+class HistogramOfX:
 
-        attr_reader :Count
-        attr_reader :StartNo
-        attr_reader :StopNo
-        
-    end
+    def __init__(self,lowestValue,highestValue):
+        if ( not isinstance(lowestValue,numbers.Number) ):
+            raise ValueError(f"lowestValue argument '{lowestValue}' is not a number.")
+        if ( not isinstance(highestValue,numbers.Number) ):
+            raise ValueError(f"highestValue argument '{highestValue}' is not a number.")
+        self.FrequencyAA    = {}
+        self.Max            = highestValue
+        self.Min            = lowestValue
 
-    class << self
-
-        def newFromDesiredSegmentCount(startNo,maxNo,desiredSegmentCount,extraMargin=0)
-            raise ArgumentError unless startNo.is_a? Numeric
-            raise ArgumentError unless maxNo.is_a? Numeric
-            raise ArgumentError unless desiredSegmentCount.is_a? Integer
-            raise ArgumentError unless extraMargin.is_a? Numeric
-            # xc 20231106:  Don't worry about cost of passing the AA around until efficiency passes later.
-            totalbreadth    = ( maxNo - startNo + 1 + extraMargin ).to_f
-            dscf            = desiredSegmentCount.to_f
-            segmentsize     = totalbreadth / dscf
-            #STDERR.puts "trace segmentsize:  #{segmentsize}"
-            localo          = self.newFromUniformSegmentSize(startNo,maxNo,segmentsize)
-            return localo
-        end
-
-        def newFromUniformSegmentSize(startNo,maxNo,segmentSize)
-            raise ArgumentError unless startNo.is_a? Numeric
-            raise ArgumentError unless maxNo.is_a? Numeric
-            raise ArgumentError unless segmentSize.is_a? Numeric
-            # xc 20231106:  Don't worry about cost of passing the AA around until efficiency passes later.
-            localo          = HistogramOfX.new(startNo,maxNo)
-            bottomno        = startNo
-            topno           = bottomno + segmentSize
-            while bottomno <= maxNo
-                localo.setOccurrenceRange(bottomno,topno)
-                bottomno    = topno
-                topno       += segmentSize
-            end
-            return localo
-        end
-
-    end
-
-    def _validateNoOverlap(startNo,stopNo)
-        raise ArgumentError unless startNo.is_a? Numeric
-        raise ArgumentError unless stopNo.is_a? Numeric
-        @FrequencyAA.values.each do |lroo|
-            if lroo.hasOverlap?(startNo,stopNo)
+    def _validateNoOverlap(self,startNo,stopNo):
+        if ( not isinstance(startNo,numbers.Number) ):
+            raise ValueError(f"startNo argument '{startNo}' is not a number.")
+        if ( not isinstance(stopNo,numbers.Number) ):
+            raise ValueError(f"stopNo argument '{stopNo}' is not a number.")
+        for lroo in self.FrequencyAA.values():
+            if lroo.hasOverlap(startNo,stopNo):
                 m = "Range [#{startNo},#{stopNo}] overlaps with another range:  [#{lroo.StartNo},#{lroo.StopNo}]."
-                raise ArgumentError, m
-            end
-        end
-    end
+                raise ValueError(m)
 
-    def initialize(lowestValue,highestValue=nil)
-        raise ArgumentError unless lowestValue.is_a? Numeric
-        raise ArgumentError unless highestValue.is_a? Numeric
-        @FrequencyAA    = Hash.new
-        @Max            = highestValue
-        @Min            = lowestValue
-    end
-
-    def addToCounts(xFloat)
-        raise ArgumentError unless xFloat.is_a? Numeric
-        @FrequencyAA.keys.sort.each do |lstartno|
-            lroo = @FrequencyAA[lstartno]
-            if xFloat < lroo.StopNo then
+    def addToCounts(self,xFloat):
+        print(f"trace 0 addToCounts:  {self.__class__}, {type(self)}, {xFloat}\n")
+        if ( not isinstance(xFloat,numbers.Number) ):
+            raise ValueError(f"xFloat argument '{xFloat}' is not a number.")
+        print(f"trace 1 addToCounts:  {xFloat}, {type(self.FrequencyAA)}, {len(self.FrequencyAA)}\n")
+        for lstartno in sorted(self.FrequencyAA):
+            print(f"trace lstartno:  {lstartno}\n")
+            lroo = self.FrequencyAA[lstartno]
+            if xFloat < lroo.StopNo:
                 lroo.addToCount
                 return
-            end
-        end
+        print(f"trace 8 addToCounts:  {xFloat}\n")
         m = "Programmer Error:  "
         m += "No Frequency range found for xFloat:  '#{xFloat}'."
-        raise ArgumentError, m
-    end
+        raise ValueError( m )
 
-    def generateCountCollection
+    def generateCountCollection(self):
         orderedlist = Array.new
-        @FrequencyAA.keys.sort.each do |lstartno|
-            lroo = @FrequencyAA[lstartno]
+        for lstartno in sorted(self.FrequencyAA):
+            lroo = self.FrequencyAA[lstartno]
             orderedlist.push([lstartno,lroo.StopNo,lroo.Count])
-        end
         return orderedlist
-    end
 
-    def setOccurrenceRange(startNo,stopNo)
-        raise ArgumentError unless startNo.is_a? Numeric
-        raise ArgumentError unless stopNo.is_a? Numeric
-        raise ArgumentError unless startNo < stopNo
-        _validateNoOverlap(startNo,stopNo)
-        @FrequencyAA[startNo]   = RangeOccurrence.new(startNo,stopNo)
-    end
+    @classmethod
+    def newFromDesiredSegmentCount(cls,startNo,maxNo,desiredSegmentCount,extraMargin=0):
+        if ( not isinstance(startNo,numbers.Number) ):
+            raise ValueError(f"startNo argument '{startNo}' is not a number.")
+        if ( not isinstance(maxNo,numbers.Number) ):
+            raise ValueError(f"maxNo argument '{maxNo}' is not a number.")
+        if ( type(desiredSegmentCount) != int ):
+            raise ValueError(f"desiredSegmentCount argument '{desiredSegmentCount}' is not an integer.")
+        if ( not isinstance(extraSegment,numbers.Number) ):
+            raise ValueError(f"extraSegment argument '{extraSegment}' is not a number.")
+        # xc 20231106:  Don't worry about cost of passing the AA around until efficiency passes later.
+        totalbreadth    = float( maxNo - startNo + 1 + extraMargin )
+        dscf            = float(desiredSegmentCount)
+        segmentsize     = totalbreadth / dscf
+        #STDERR.puts "trace segmentsize:  #{segmentsize}"
+        localo          = cls.newFromUniformSegmentSize(startNo,maxNo,segmentsize)
+        return localo
 
-    def validateRangesComplete
+    @classmethod
+    def newFromUniformSegmentSize(cls,startNo,maxNo,segmentSize):
+        if ( not isinstance(startNo,numbers.Number) ):
+            raise ValueError(f"startNo argument '{startNo}' is not a number.")
+        if ( not isinstance(stopNo,numbers.Number) ):
+            raise ValueError(f"stopNo argument '{stopNo}' is not a number.")
+        if ( not isinstance(segmentSize,numbers.Number) ):
+            raise ValueError(f"segmentSize argument '{segmentSize}' is not a number.")
+        # xc 20231106:  Don't worry about cost of passing the AA around until efficiency passes later.
+        localo          = HistogramOfX(startNo,maxNo)
+        bottomno        = startNo
+        topno           = bottomno + segmentSize
+        while bottomno <= maxNo:
+            localo.setOccurrenceRange(bottomno,topno)
+            bottomno    = topno
+            topno       += segmentSize
+        return localo
+
+    def setOccurrenceRange(self,startNo,stopNo):
+        if ( not isinstance(startNo,numbers.Number) ):
+            raise ValueError(f"startNo argument '{startNo}' is not a number.")
+        if ( not isinstance(stopNo,numbers.Number) ):
+            raise ValueError(f"stopNo argument '{stopNo}' is not a number.")
+        if stopNo <= startNo:
+            raise ValueError(f"stopNo must be larger than startNo.")
+        self._validateNoOverlap(startNo,stopNo)
+        self.FrequencyAA[startNo] = RangeOccurrence(startNo,stopNo)
+
+    def validateRangesComplete(self):
         i = 0
-        lroo = nil
-        previous_lroo = nil
-        @FrequencyAA.keys.sort.each do |lstartno|
-            lroo = @FrequencyAA[lstartno]
-            unless lstartno == lroo.StartNo
-                raise RangeError, "Programmer Error on startno assignments."
-            end
-            if i == 0 then
-                unless lroo.StartNo <= @Min
+        lroo = None
+        previous_lroo = None
+        for lstartno in sorted(self.FrequencyAA):
+            lroo = self.FrequencyAA[lstartno]
+            if lstartno != lroo.StartNo:
+                raise IndexError( "Programmer Error on startno assignments." )
+            if i == 0:
+                if lroo.StartNo > self.Min:# NOTE:  Start may be before the minimum,
+                                           # but NOT after it, as minimum value must
+                                           # be included in the first segment.
                     m = "Range [#{lroo.StartNo},#{lroo.StopNo}] "
-                    m += " starts after the minimum designated value '#{@Min}."
-                    raise RangeError, m
-                end
-            else
-                unless lroo.StartNo == previous_lroo.StopNo
+                    m += " starts after the minimum designated value '#{self.Min}."
+                    raise IndexError( m )
+            else:
+                if lroo.StartNo != previous_lroo.StopNo:
                     m = "Range [#{previous_lroo.StartNo},#{previous_lroo.StopNo}]"
                     m += " is not adjacent to the next range "
                     m += "[#{lroo.StartNo},#{lroo.StopNo}]."
-                    raise RangeError, m
-                end
-            end
+                    raise IndexError( m )
             i += 1
             previous_lroo = lroo
-        end
-        unless @Max <= lroo.StopNo
+
+        if self.Max > lroo.StopNo:
             m = "Range [#{lroo.StartNo},#{lroo.StopNo}] "
-            m += " ends before the maximum value '#{@Max}."
-            raise RangeError, m
-        end
+            m += " ends before the maximum value '#{self.Max}."
+            raise IndexError( m )
 
-    end
 
-    attr_reader :FrequencyAA
-    attr_reader :Max
-    attr_reader :Min
-        
-end
-
+'''
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # SumsOfPowers
@@ -251,9 +244,9 @@ class SumsOfPowers
     class << self
 
         def calculatePearsonsFirstSkewnessCoefficient(aMean,modeFloat,stdDev)
-            raise ArgumentError unless aMean.is_a? Numeric
-            raise ArgumentError unless modeFloat.is_a? Numeric
-            raise ArgumentError unless stdDev.is_a? Numeric
+            raise ValueError unless aMean.is_a? Numeric
+            raise ValueError unless modeFloat.is_a? Numeric
+            raise ValueError unless stdDev.is_a? Numeric
             # See 2023/11/05 "Pearson's first skewness coefficient" in:
             #   https://en.wikipedia.org/wiki/Skewness
             sc  = ( aMean - modeFloat ) / stdDev
@@ -261,9 +254,9 @@ class SumsOfPowers
         end
 
         def calculatePearsonsSecondSkewnessCoefficient(aMean,medianFloat,stdDev)
-            raise ArgumentError unless aMean.is_a? Numeric
-            raise ArgumentError unless medianFloat.is_a? Numeric
-            raise ArgumentError unless stdDev.is_a? Numeric
+            raise ValueError unless aMean.is_a? Numeric
+            raise ValueError unless medianFloat.is_a? Numeric
+            raise ValueError unless stdDev.is_a? Numeric
             # See 2023/11/05 "Pearson's second skewness coefficient" in:
             #   https://en.wikipedia.org/wiki/Skewness
             sc  = ( aMean - medianFloat ) / stdDev
@@ -278,7 +271,7 @@ class SumsOfPowers
         #   https://math.stackexchange.com/questions/2569510/proof-for-sum-of-squares-formula-statistics-related
         #
         if @DiffFromMeanInputsUsed
-            raise ArgumentError, "May ONLY be used with Sum of Xs Data."
+            raise ValueError, "May ONLY be used with Sum of Xs Data."
         end
         nreciprocal = ( 1.0 / @N.to_f )
         first  = @SumPowerOf2
@@ -293,7 +286,7 @@ class SumsOfPowers
         # My algegra: Sum( xi - mu )**3 ==
         #   Sum(xi**3) - 3*Sum(xi**2)*amean + 3*Sum(xi)*(amean**2) - mu**3
         if @DiffFromMeanInputsUsed
-            raise ArgumentError, "May ONLY be used with Sum of Xs Data."
+            raise ValueError, "May ONLY be used with Sum of Xs Data."
         end
         first   = @SumPowerOf3
         second  = 3 * @SumPowerOf2  *   @ArithmeticMean
@@ -309,7 +302,7 @@ class SumsOfPowers
         # My algegra: Sum( xi - mu )**4 ==
         #   Sum(xi**4) - 4*Sum(xi**3)*amean + 6*Sum(xi**2)(amean**2) - 4**Sum(xi)*(amean**3) + mu**4
         if @DiffFromMeanInputsUsed
-            raise ArgumentError, "May ONLY be used with Sum of Xs Data."
+            raise ValueError, "May ONLY be used with Sum of Xs Data."
         end
         first   = @SumPowerOf4
         second  = 4 * @SumPowerOf3 * @ArithmeticMean
@@ -320,10 +313,10 @@ class SumsOfPowers
         return result
     end
 
-    def initialize(populationDistribution=false)
+    def initialize(populationDistribution=False)
         @ArithmeticMean         = 0
         @N                      = 0
-        @DiffFromMeanInputsUsed    = false
+        @DiffFromMeanInputsUsed    = False
         @Population             = populationDistribution
 
         @SumOfXs                = 0
@@ -348,7 +341,7 @@ class SumsOfPowers
         #trace genExcessKurtosis_2_JR_R:  18.0, 708.0, 39.333333333333336, 60.0, 11.111111111111112, 0.5399999999999996
         #  2018-01-04 by Jonathan Regenstein https://rviews.rstudio.com/2018/01/04/introduction-to-kurtosis/
         unless @DiffFromMeanInputsUsed
-            raise ArgumentError, "May NOT be used with Sum of Xs Data."
+            raise ValueError, "May NOT be used with Sum of Xs Data."
         end
         nf          = @N.to_f
         numerator   = @SumPowerOf4 / nf
@@ -361,7 +354,7 @@ class SumsOfPowers
     def generateExcessKurtosis_3_365datascience
         #  https://365datascience.com/calculators/kurtosis-calculator/
         unless @DiffFromMeanInputsUsed
-            raise ArgumentError, "May NOT be used with Sum of Xs Data."
+            raise ValueError, "May NOT be used with Sum of Xs Data."
         end
         nf                  = @N.to_f
         stddev              = generateStandardDeviation
@@ -384,7 +377,7 @@ class SumsOfPowers
         # See 2023/11/05 "Standard biased estimator" in:
         #   https://en.wikipedia.org/wiki/Kurtosis
         unless @DiffFromMeanInputsUsed
-            raise ArgumentError, "May NOT be used with Sum of Xs Data."
+            raise ValueError, "May NOT be used with Sum of Xs Data."
         end
         nreciprocal     = ( 1.0 / @N.to_f )
         numerator       = nreciprocal * @SumPowerOf4
@@ -398,10 +391,10 @@ class SumsOfPowers
         # See 2023/11/05 "Standard unbiased estimator" in:
         #   https://en.wikipedia.org/wiki/Kurtosis
         unless @N > 3
-            raise ArgumentError, "This formula wll not be executed for N <= 3."
+            raise ValueError, "This formula wll not be executed for N <= 3."
         end
         unless @DiffFromMeanInputsUsed
-            raise ArgumentError, "May NOT be used with Sum of Xs Data."
+            raise ValueError, "May NOT be used with Sum of Xs Data."
         end
         #STDERR.puts "\ntrace 1 genKurtosis_Unbiased_DiffFromMeanCalculation:  #{@ArithmeticMean},#{@N},#{@DiffFromMeanInputsUsed},#{@Population},#{@SumOfXs},#{@SumPowerOf2},#{@SumPowerOf3},#{@SumPowerOf4}"
         nf = @N.to_f
@@ -444,7 +437,7 @@ class SumsOfPowers
 
     def calculateVarianceUsingSubjectAsDiffs
         unless @DiffFromMeanInputsUsed
-            raise ArgumentError, "May NOT be used with Sum of Xs Data."
+            raise ValueError, "May NOT be used with Sum of Xs Data."
         end
         nf              = @N.to_f
         v = @SumPowerOf2 / ( nf - 1.0 ) unless @Population
@@ -455,7 +448,7 @@ class SumsOfPowers
 
     def calculateVarianceUsingSubjectAsSumXs
         if @DiffFromMeanInputsUsed
-            raise ArgumentError, "May ONLY be used with Sum of Xs Data."
+            raise ValueError, "May ONLY be used with Sum of Xs Data."
         end
         ameansquared = @ArithmeticMean * @ArithmeticMean
         nf              = @N.to_f
@@ -519,7 +512,7 @@ class SumsOfPowers
         #NOTE:  There is NO POPULATION Skewness at this time.
         if @Population then
             m = "There is no POPULATION skewness formula implemented at this time."
-            raise ArgumentError, m
+            raise ValueError, m
         end
         skewness = nil
         case formulaId
@@ -531,20 +524,20 @@ class SumsOfPowers
             skewness = generateThirdDefinitionOfSampleSkewness_G1
         else
             m = "There is no skewness formula #{formulaId} implemented at this time."
-            raise ArgumentError, m
+            raise ValueError, m
         end
         return skewness
     end
 
     def setToDiffsFromMeanState(sumXs,nA)
-        raise ArgumentError unless sumXs.is_a? Numeric
-        raise ArgumentError unless nA.is_a? Integer
+        raise ValueError unless sumXs.is_a? Numeric
+        raise ValueError unless nA.is_a? Integer
         if @N > 0 then
             m = "#{@N} values have already been added to the sums."
             m += " You must reinit the object before setting to the Diffs From Mean state."
-            raise ArgumentError, m
+            raise ValueError, m
         end
-        @DiffFromMeanInputsUsed = true
+        @DiffFromMeanInputsUsed = True
         @N                      = nA
         @SumOfXs                = sumXs
 
@@ -576,7 +569,7 @@ class VectorOfX
     SkipRowOnBadData        = 4
     ZeroFieldOnBadData      = 5
 
-    def _assureSortedVectorOfX(forceSort=false)
+    def _assureSortedVectorOfX(forceSort=False)
         if forceSort then
             @SortedVectorOfX = @VectorOfX.sort
             return
@@ -588,7 +581,7 @@ class VectorOfX
 
     def initialize(aA=nil)
         if aA then
-            raise ArgumentError unless aA.is_a? Array
+            raise ValueError unless aA.is_a? Array
         end
         # The following is ONLY for testing:
         @SortedVectorOfX    = nil
@@ -600,28 +593,28 @@ class VectorOfX
         return @VectorOfX.size
     end
 
-    def getX(indexA,sortedVector=false)
-        raise ArgumentError, "Index Argument Missing:  Required."       unless indexA.is_a? Integer
-        raise ArgumentError, "Index Argument Not found in VectorOfX."   unless @VectorOfX[indexA]
+    def getX(indexA,sortedVector=False)
+        raise ValueError, "Index Argument Missing:  Required."       unless indexA.is_a? Integer
+        raise ValueError, "Index Argument Not found in VectorOfX."   unless @VectorOfX[indexA]
         return @VectorOfX[indexA]   unless sortedVector
         return @SortedVectorOfX[indexA] if sortedVector and @SortedVectorOfX.has_key?(indexA)
         return nil
     end
 
     def pushX(xFloat,onBadData)
-        raise ArgumentError, "Pure Virtual"
+        raise ValueError, "Pure Virtual"
     end
 
     def requestResultAACSV
-        raise ArgumentError, "Pure Virtual"
+        raise ValueError, "Pure Virtual"
     end
 
     def requestResultCSVLine
-        raise ArgumentError, "Pure Virtual"
+        raise ValueError, "Pure Virtual"
     end
 
     def requestResultJSON
-        raise ArgumentError, "Pure Virtual"
+        raise ValueError, "Pure Virtual"
     end
 
     def transformToCSVLine
@@ -675,8 +668,8 @@ class VectorOfContinuous < VectorOfX
 
     class << self
 
-        def newAfterInvalidatedDropped(arrayA,relayErrors=false)
-            raise ArgumentError unless arrayA.is_a? Array
+        def newAfterInvalidatedDropped(arrayA,relayErrors=False)
+            raise ValueError unless arrayA.is_a? Array
             localo = self.new
             v = Array.new
             i = 0
@@ -692,7 +685,7 @@ class VectorOfContinuous < VectorOfX
 
     end
 
-    def _addUpXsToSumsOfPowers(populationCalculation=false,sumOfDiffs=true)
+    def _addUpXsToSumsOfPowers(populationCalculation=False,sumOfDiffs=True)
         sopo    = SumsOfPowers.new(populationCalculation)
         if sumOfDiffs then
             n       = getCount
@@ -720,14 +713,14 @@ class VectorOfContinuous < VectorOfX
     end
 
     def initialize(vectorX=Array.new)
-        raise ArgumentError unless vectorX.is_a? Array
+        raise ValueError unless vectorX.is_a? Array
         @InputDecimalPrecision          = 4
         @OutputDecimalPrecision         = 4
-        @Population                     = false
+        @Population                     = False
         @SOPo                           = nil
         @SortedVectorOfX                = nil
-        @UseDiffFromMeanCalculations    = true
-        @ValidateStringNumbers          = false
+        @UseDiffFromMeanCalculations    = True
+        @ValidateStringNumbers          = False
         @VectorOfX                      = vectorX
     end
 
@@ -756,9 +749,9 @@ class VectorOfContinuous < VectorOfX
     end
 
     def calculateQuartile(qNo)
-        raise ArgumentError unless qNo.is_a? Integer
-        raise ArgumentError unless 0 <= qNo
-        raise ArgumentError unless qNo < 5
+        raise ValueError unless qNo.is_a? Integer
+        raise ValueError unless 0 <= qNo
+        raise ValueError unless qNo < 5
         _assureSortedVectorOfX
         n                       = getCount
         nf                      = n.to_f
@@ -797,7 +790,7 @@ class VectorOfContinuous < VectorOfX
             cpf = getMax
         else
             m = "This Average Absolute Mean formula has not implemented a statistic for central point '#{centralPointType}' at this time."
-            raise ArgumentError, m
+            raise ValueError, m
         end
         nf                      = @VectorOfX.size.to_f
         sumofabsolutediffs      = 0
@@ -806,7 +799,7 @@ class VectorOfContinuous < VectorOfX
             sumofabsolutediffs  += ( lx - cpf ).abs
             if previous > sumofabsolutediffs then
                 # These need review.  
-                raise RangeError, "previous #{previous} > sumofdiffssquared #{sumofabsolutediffs}"
+                raise IndexError, "previous #{previous} > sumofdiffssquared #{sumofabsolutediffs}"
             end
         end
         unrounded               = sumofabsolutediffs / nf
@@ -824,9 +817,9 @@ class VectorOfContinuous < VectorOfX
     end
 
     def generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber=nil)
-        raise ArgumentError unless desiredSegmentCount.is_a? Integer
+        raise ValueError unless desiredSegmentCount.is_a? Integer
         if startNumber then
-            raise ArgumentError unless startNumber.is_a? Numeric
+            raise ValueError unless startNumber.is_a? Numeric
         end
         max             = getMax
         startno         = _decideHistogramStartNumber(startNumber)
@@ -840,9 +833,9 @@ class VectorOfContinuous < VectorOfX
     end
 
     def generateHistogramAAbySegmentSize(segmentSize,startNumber=nil)
-        raise ArgumentError unless segmentSize.is_a? Numeric
+        raise ValueError unless segmentSize.is_a? Numeric
         if startNumber then
-            raise ArgumentError unless startNumber.is_a? Numeric
+            raise ValueError unless startNumber.is_a? Numeric
         end
         max             = getMax
         startno         = _decideHistogramStartNumber(startNumber)
@@ -897,25 +890,25 @@ class VectorOfContinuous < VectorOfX
 
     def isEvenN?
         n = @VectorOfX.size
-        return true if n % 2 == 0
-        return false
+        return True if n % 2 == 0
+        return False
     end
 
     def pushX(xFloat,onBadData=VectorOfX::FailOnBadData)
         unless isUsableNumber?(xFloat)
             case onBadData
             when VectorOfX::BlankFieldOnBadData
-                raise ArgumentError, "May Not Blank Fields"
+                raise ValueError, "May Not Blank Fields"
             when VectorOfX::DefaultFillOnBadData
                 xFloat=0.0
             when VectorOfX::FailOnBadData
-                raise ArgumentError, "#{xFloat} not usable number."
+                raise ValueError, "#{xFloat} not usable number."
             when VectorOfX::SkipRowOnBadData
                 return
             when VectorOfX::ZeroFieldOnBadData
                 xFloat=0.0
             else
-                raise ArgumentError, "Unimplemented onBadData value:  #{onBadData}."
+                raise ValueError, "Unimplemented onBadData value:  #{onBadData}."
             end
         end
         validateStringNumberRange(xFloat) if @ValidateStringNumbers
@@ -925,7 +918,7 @@ class VectorOfContinuous < VectorOfX
 
     def requestExcessKurtosis(formulaId=3)
         unless @UseDiffFromMeanCalculations
-            raise ArgumentError, "May NOT be used with Sum of Xs Data."
+            raise ValueError, "May NOT be used with Sum of Xs Data."
         end
         @SOPo           = _addUpXsToSumsOfPowers(@Population) unless @SOPo
         unrounded       = nil
@@ -936,7 +929,7 @@ class VectorOfContinuous < VectorOfX
             unrounded   = @SOPo.generateExcessKurtosis_3_365datascience
         else
             m="There is no excess kurtosis formula #{formulaId} implemented at this time."
-            raise ArgumentError, m
+            raise ValueError, m
         end
         rounded         = unrounded.round(@OutputDecimalPrecision)
         return rounded
@@ -992,7 +985,7 @@ EOAACSV
     end
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-    def requestResultCSVLine(includeHdr=false)
+    def requestResultCSVLine(includeHdr=False)
         # NOTE: Mean Absolute Diffence is no longer featured here.
         scaa        = requestSummaryCollection
         csvline     =   "#{scaa[ArithmeticMeanId]},#{scaa[ArMeanAADId]},"
@@ -1034,7 +1027,7 @@ EOCSV
         @SOPo = _addUpXsToSumsOfPowers(@Population,@UseDiffFromMeanCalculations)
         unroundedstddev = @SOPo.generateStandardDeviation
         if unroundedstddev == 0.0 then
-            raise RangeError, "Zero Result indicates squareroot error:  #{unroundedstddev}"
+            raise IndexError, "Zero Result indicates squareroot error:  #{unroundedstddev}"
         end
         stddev = unroundedstddev.round(@OutputDecimalPrecision)
         return stddev
@@ -1043,7 +1036,7 @@ EOCSV
     def requestSummaryCollection
         #NOTE:  Some of these are ONLY for sample.  For now, this is best used ONLY for Samples.
         #@SOPo                   = _addUpXsToSumsOfPowers(@Population,@UseDiffFromMeanCalculations)
-        @SOPo                   = _addUpXsToSumsOfPowers(false,@UseDiffFromMeanCalculations)
+        @SOPo                   = _addUpXsToSumsOfPowers(False,@UseDiffFromMeanCalculations)
         amean                   = calculateArithmeticMean
         ameanaad                = generateAverageAbsoluteDeviation
         coefficientofvariation  = generateCoefficientOfVariation
@@ -1082,15 +1075,15 @@ EOCSV
         }
     end
 
-    def requestVarianceSumOfDifferencesFromMean(populationCalculation=false)
+    def requestVarianceSumOfDifferencesFromMean(populationCalculation=False)
         @SOPo = _addUpXsToSumsOfPowers(populationCalculation)
         v = @SOPo.calculateVarianceUsingSubjectAsDiffs
         # Note rounding is not done here, as it would be double rounded with stddev.
         return v
     end
 
-    def requestVarianceXsSquaredMethod(populationCalculation=false)
-        @SOPo = _addUpXsToSumsOfPowers(populationCalculation,false)
+    def requestVarianceXsSquaredMethod(populationCalculation=False)
+        @SOPo = _addUpXsToSumsOfPowers(populationCalculation,False)
         v = @SOPo.calculateVarianceUsingSubjectAsSumXs
         # Note rounding is not done here, as it would be double rounded with stddev.
         return v
@@ -1123,9 +1116,9 @@ class VectorOfDiscrete < VectorOfX
 
     def calculateBinomialProbability(subjectValue,nTrials,nSuccesses)
         #STDERR.puts "\ntrace 0 calculateBinomialProbability(#{subjectValue},#{nTrials},#{nSuccesses})"
-        raise ArgumentError unless subjectValue
-        raise ArgumentError unless nTrials.is_a? Integer
-        raise ArgumentError unless nSuccesses.is_a? Integer
+        raise ValueError unless subjectValue
+        raise ValueError unless nTrials.is_a? Integer
+        raise ValueError unless nSuccesses.is_a? Integer
         n_failures          = nTrials - nSuccesses
 
         samplecount         = getCount
@@ -1154,7 +1147,7 @@ class VectorOfDiscrete < VectorOfX
     end
 
     def getFrequency(subjectValue)
-        raise ArgumentError unless subjectValue
+        raise ValueError unless subjectValue
         return @FrequenciesAA[subjectValue]
     end
 
@@ -1166,19 +1159,19 @@ class VectorOfDiscrete < VectorOfX
             when VectorOfX::DefaultFillOnBadData
                 xFloat=" "
             when VectorOfX::FailOnBadData
-                raise ArgumentError, "#{xItem} not usable value."
+                raise ValueError, "#{xItem} not usable value."
             when VectorOfX::SkipRowOnBadData
                 return
             when VectorOfX::ZeroFieldOnBadData
                 xItem=0.0
             else
-                raise ArgumentError, "Unimplemented onBadData value:  #{onBadData}."
+                raise ValueError, "Unimplemented onBadData value:  #{onBadData}."
             end
         end
         @FrequenciesAA[xItem] += 1       if @FrequenciesAA.has_key?(xItem)
         @FrequenciesAA[xItem] = 1    unless @FrequenciesAA.has_key?(xItem)
         @VectorOfX.push(xItem)
-        return true
+        return True
     end
 
     def requestMode
@@ -1202,11 +1195,11 @@ EOAACSV
     end
 
     def requestResultCSVLine
-        raise ArgumentError, "Not Implemented"
+        raise ValueError, "Not Implemented"
     end
 
     def requestResultJSON
-        raise ArgumentError, "Not Implemented"
+        raise ValueError, "Not Implemented"
     end
 
     attr_accessor   :OutputDecimalPrecision
@@ -1233,7 +1226,7 @@ class VectorTable
                     oa.push(VectorOfDiscrete)
                 else
                     STDERR.puts "Allowed class identifier characters are {C,D} in this context."
-                    raise ArgumentError, "Identifier '#{lc}' is not recognized."
+                    raise ValueError, "Identifier '#{lc}' is not recognized."
                 end
             end
             return oa
@@ -1249,24 +1242,24 @@ class VectorTable
                     oa.push(VectorOfDiscrete)
                 else
                     oa = "Identifier '#{llabel}' is not recognized as a class of X in this context."
-                    raise ArgumentError, m
+                    raise ValueError, m
                 end
             end
             return oa
         end
 
         def isAllowedDataVectorClass?(vectorClass)
-            return false    unless vectorClass.is_a? Class
-            return true         if vectorClass.ancestors.include? VectorOfX
-            return false
+            return False    unless vectorClass.is_a? Class
+            return True         if vectorClass.ancestors.include? VectorOfX
+            return False
         end
 
-        def newFromCSV(vcSpec,fSpec,onBadData=VectorOfX::ExcludeRowOnBadData,seeFirstLineAsHdr=true)
+        def newFromCSV(vcSpec,fSpec,onBadData=VectorOfX::ExcludeRowOnBadData,seeFirstLineAsHdr=True)
             def skipIndicated(onBadData,ll)
                 if onBadData == VectorOfX::ExcludeRowOnBadData then
-                    return true if ll =~ /,,/
+                    return True if ll =~ /,,/
                 end
-                return false
+                return False
             end
             localo = self.new(vcSpec)
             File.open(fSpec) do |fp|
@@ -1293,14 +1286,14 @@ class VectorTable
     end
 
     def initialize(vectorOfClasses)
-        raise ArgumentError, "Argument Passed '#{vectorOfClasses.class}' NOT ARRAY" unless vectorOfClasses.is_a? Array
+        raise ValueError, "Argument Passed '#{vectorOfClasses.class}' NOT ARRAY" unless vectorOfClasses.is_a? Array
         @TableOfVectors     = Array.new
         @VectorOfClasses    = vectorOfClasses
         @VectorOfHdrs       = Array.new
         i = 0
         @VectorOfClasses.each do |lci|
             if lci then
-                raise ArgumentError, "Class '#{lci.class}' Not Valid" unless self.class.isAllowedDataVectorClass?(lci)
+                raise ValueError, "Class '#{lci.class}' Not Valid" unless self.class.isAllowedDataVectorClass?(lci)
                 @TableOfVectors[i] = lci.new        if lci
             else
                 @TableOfVectors[i] = nil        
@@ -1328,18 +1321,18 @@ class VectorTable
 
     def getVectorObject(indexNo)
         unless 0 <= indexNo and indexNo < @TableOfVectors.size
-            raise ArgumentError, "Index number '#{indexNo}' provided is out of range {0,#{@TableOfVectors.size-1}}."
+            raise ValueError, "Index number '#{indexNo}' provided is out of range {0,#{@TableOfVectors.size-1}}."
         end
         unless VectorTable.isAllowedDataVectorClass?( @TableOfVectors[indexNo].class )
-            raise ArgumentError, "Column #{indexNo} not configured for Data Processing."
+            raise ValueError, "Column #{indexNo} not configured for Data Processing."
         end
         return @TableOfVectors[indexNo]
     end
 
     def pushTableRow(arrayA,onBadData=VectorOfX::DefaultFillOnBadData)
-        raise ArgumentError unless arrayA.is_a? Array
-        raise ArgumentError unless arrayA.size == @TableOfVectors.size
-        raise ArgumentError if onBadData == VectorOfX::SkipRowOnBadData
+        raise ValueError unless arrayA.is_a? Array
+        raise ValueError unless arrayA.size == @TableOfVectors.size
+        raise ValueError if onBadData == VectorOfX::SkipRowOnBadData
         i = 0
         @TableOfVectors.each do |lvoe|
             if lvoe.is_a? VectorOfX then
@@ -1350,10 +1343,10 @@ class VectorTable
     end
 
     def useArrayForColumnIdentifiers(hdrColumns)
-        raise ArgumentError unless hdrColumns.is_a? Array
+        raise ValueError unless hdrColumns.is_a? Array
         unless hdrColumns.size == @VectorOfHdrs.size
             m = "hdr columns passed has size #{hdrColumns.size}, but requires #{@VectorOfHdrs.size}"
-            raise ArgumentError, m
+            raise ValueError, m
         end
         @VectorOfHdrs = hdrColumns
     end
