@@ -395,19 +395,36 @@ describe SumsOfPowers do
     it "Generate second moment Subject Xs sum." do
         localo = SumsOfPowers.new(false)
         assert_respond_to localo, :_calculateSecondMomentSubjectXs
+        assert_raise ZeroDivisionError do
+            localo._calculateSecondMomentSubjectXs
+        end
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
         a = localo._calculateSecondMomentSubjectXs
+        assert_equal 44.666666666666664, a
     end
 
     it "Generate third moment Subject Xs sum." do
         localo = SumsOfPowers.new(false)
         assert_respond_to localo, :_calculateThirdMomentSubjectXs
         a = localo._calculateThirdMomentSubjectXs
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        a = localo._calculateThirdMomentSubjectXs
+        assert_equal 128.0, a
     end
 
     it "Generate fourth moment Subject Xs sum." do
         localo = SumsOfPowers.new(false)
         assert_respond_to localo, :_calculateFourthMomentSubjectXs
         a = localo._calculateFourthMomentSubjectXs
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        a = localo._calculateFourthMomentSubjectXs
+        assert_equal -510.0, a
     end
 
     it "Adding to the sums.." do
@@ -432,7 +449,7 @@ describe SumsOfPowers do
         assert_equal 4, localo.N
         result = localo.requestKurtosis
         #STDERR.puts "trace Generating kurtosis:  #{result}"
-        assert_equal -4.5, result
+        assert_equal 4.48879632289572, result
     end
 
     it "Generating skewness." do
@@ -660,15 +677,15 @@ describe VectorOfContinuous do
         amean       = localo.calculateArithmeticMean
         gmean       = localo.calculateGeometricMean
         hmean       = localo.calculateHarmonicMean
-        assert hmean < amean
-        assert hmean < gmean
+        assert_equal amean, gmean
+        assert_equal amean, hmean
         a           = [1,2,3,4,5,6,7,8,9]
         localo      = VectorOfContinuous.new(a)
         amean       = localo.calculateArithmeticMean
         gmean       = localo.calculateGeometricMean
         hmean       = localo.calculateHarmonicMean
-        assert hmean < amean
-        assert hmean < gmean
+        assert amean > gmean
+        assert gmean > hmean
     end
 
     it "Has a calculateQuartile method which returns the value for a designated quartile." do

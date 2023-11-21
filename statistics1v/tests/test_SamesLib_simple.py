@@ -135,14 +135,15 @@ class Test_HistogramOfX_Class(unittest.TestCase):
         self.assertIsInstance( localo, sames.HistogramOfX )
         localo.setOccurrenceRange(1,3)
         localo.setOccurrenceRange(3,6)
-'''
+        tracecount = localo.FrequencyAA[1].Count
         localo.addToCounts(1)
+        tracecount = localo.FrequencyAA[1].Count
         localo.addToCounts(1)
         localo.addToCounts(2)
         localo.addToCounts(3)
         localo.addToCounts(3)
         localo.addToCounts(3)
-        result = localo.generateCountCollection
+        result = localo.generateCountCollection()
         self.assertEqual( result[0][0], 1 )
         self.assertEqual( result[0][1], 3 )
         self.assertEqual( result[0][2], 3 )
@@ -151,14 +152,14 @@ class Test_HistogramOfX_Class(unittest.TestCase):
         self.assertEqual( result[1][2], 3 )
 
     def test_Construction_by_Segment_Size(self):
-        localo = HistogramOfX.newFromUniformSegmentSize(1,5,3)
+        localo = sames.HistogramOfX.newFromUniformSegmentSize(1,5,3)
         localo.addToCounts(1)
         localo.addToCounts(1)
         localo.addToCounts(2)
         localo.addToCounts(3)
         localo.addToCounts(3)
         localo.addToCounts(3)
-        result = localo.generateCountCollection
+        result = localo.generateCountCollection()
         self.assertEqual( result[0][0], 1 )
         self.assertEqual( result[0][1], 4 )
         self.assertEqual( result[0][2], 6 )
@@ -166,15 +167,16 @@ class Test_HistogramOfX_Class(unittest.TestCase):
         self.assertEqual( result[1][1], 7 )
         self.assertEqual( result[1][2], 0 )
 
+
     def test_Construction_by_Number_of_Segments(self):
-        localo = HistogramOfX.newFromDesiredSegmentCount(1,5,2)
+        localo = sames.HistogramOfX.newFromDesiredSegmentCount(1,5,2)
         localo.addToCounts(1)
         localo.addToCounts(1)
         localo.addToCounts(2)
         localo.addToCounts(3)
         localo.addToCounts(3)
         localo.addToCounts(3)
-        result = localo.generateCountCollection
+        result = localo.generateCountCollection()
         self.assertEqual( result[0][0], 1 )
         self.assertEqual( result[0][1], 3.5 )
         self.assertEqual( result[0][2], 6 )
@@ -183,39 +185,39 @@ class Test_HistogramOfX_Class(unittest.TestCase):
         self.assertEqual( result[1][2], 0 )
 
     def test_Internal_class_RangeOccurrence(self):
-        localo = HistogramOfX::RangeOccurrence.new(1,2)
-        assert_instance_of HistogramOfX::RangeOccurrence, localo
-        self.assertEqual( 0, localo.Count
-        self.assertEqual( 1, localo.StartNo
-        self.assertEqual( 2, localo.StopNo
-        localo.addToCount
-        self.assertEqual( 1, localo.Count
-        assert localo.hasOverlap?(1,2)
-        assert_false localo.hasOverlap?(2,3)
-        assert localo.isInRange?(1)
-        assert localo.isInRange?(1.5)
-        assert_false localo.isInRange?(2)
+        localo = sames.RangeOccurrence(1,2)
+        self.assertIsInstance( localo, sames.RangeOccurrence )
+        self.assertEqual( 0, localo.Count )
+        self.assertEqual( 1, localo.StartNo )
+        self.assertEqual( 2, localo.StopNo )
+        localo.addToCount()
+        self.assertEqual( 1, localo.Count )
+        self.assertTrue( localo.hasOverlap(1,2) )
+        self.assertFalse( localo.hasOverlap(2,3) )
+        self.assertTrue( localo.isInRange(1) )
+        self.assertTrue( localo.isInRange(1.5) )
+        self.assertFalse( localo.isInRange(2) )
 
     def test_Internal_validation_against_overlapping_ranges(self):
-        localo = HistogramOfX.new(-128,128)
+        localo = sames.HistogramOfX(-128,128)
         localo.setOccurrenceRange(-128,-64)
         localo.setOccurrenceRange(-64,0)
         localo.setOccurrenceRange(0,64)
         localo.setOccurrenceRange(64,129)
-        assert_raise ArgumentError do
+        with self.assertRaises(ValueError) as context:
             localo.setOccurrenceRange(25,99)
 
     def test_Adding_to_counts(self):
-        localo = HistogramOfX.new(-5,0)
+        localo = sames.HistogramOfX(-5,0)
         localo.setOccurrenceRange(0,5)
         localo.addToCounts(1)
         localo.addToCounts(2)
         localo.addToCounts(-3)
-        assert_raise ArgumentError do
+        with self.assertRaises(ValueError) as context:
             localo.addToCounts(8)
 
     def test_Generating_an_ordered_list_of_vectors_of_counts(self):
-        localo = HistogramOfX.new(-128,128)
+        localo = sames.HistogramOfX(-128,128)
         localo.setOccurrenceRange(-128,-64)
         localo.setOccurrenceRange(-64,0)
         localo.setOccurrenceRange(0,64)
@@ -228,33 +230,133 @@ class Test_HistogramOfX_Class(unittest.TestCase):
         localo.addToCounts(2)
         localo.addToCounts(22)
         localo.addToCounts(-22)
-        result = localo.generateCountCollection
-        self.assertEqual( result[1][0], -64
-        self.assertEqual( result[1][1], 0
-        self.assertEqual( result[1][2], 1
-        self.assertEqual( result[3][0], 64
-        self.assertEqual( result[3][1], 129
-        self.assertEqual( result[3][2], 1
+        result = localo.generateCountCollection()
+        self.assertEqual( result[1][0], -64 )
+        self.assertEqual( result[1][1], 0 )
+        self.assertEqual( result[1][2], 1 )
+        self.assertEqual( result[3][0], 64 )
+        self.assertEqual( result[3][1], 129 )
+        self.assertEqual( result[3][2], 1 )
 
     def test_Validation_that_the_Range_is_Complete(self):
-        localo = HistogramOfX.new(-128,128)
+        localo = sames.HistogramOfX(-128,128)
         localo.setOccurrenceRange(-128,-64)
         localo.setOccurrenceRange(-64,0)
         localo.setOccurrenceRange(0,64)
         localo.setOccurrenceRange(64,129)
         localo.validateRangesComplete
         localo.setOccurrenceRange(244,256)
-        assert_raise RangeError do
-            localo.validateRangesComplete
-'''
+        with self.assertRaises(IndexError) as context:
+            localo.validateRangesComplete()
        
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Tests for SumsOfPowers class
+
 class Test_SumsOfPowers_Class(unittest.TestCase):
 
-    def test_argument_usage(self):
-        pass
+    def test_Has_just_one_native_constructor(self):
+        localo = sames.SumsOfPowers(False)
+        self.assertIsInstance( localo, sames.SumsOfPowers )
 
-    def test_anecdote_expected_results(self):
-        pass
+    def test_Generation_of_Pearsons_First_Skewness_Coefficient_with_class_method(self):
+        # Need data here for better knowledge.  For now just make sure a number comes out.
+        a = sames.SumsOfPowers.calculatePearsonsFirstSkewnessCoefficient(25,3,1.57)
+        self.assertEqual( 14.012738853503183, a )
+       
+    def test_Generation_of_Pearsons_Second_Skewness_Coefficient_with_class_method(self):
+        # Need data here for better knowledge.  For now just make sure a number comes out.
+        a = sames.SumsOfPowers.calculatePearsonsSecondSkewnessCoefficient(25,3,1.57)
+        self.assertEqual( 14.012738853503183, a )
+        #STDERR.puts "trace a:  #{a}"
+       
+    def test_Generate_second_moment_Subject_Xs_sum(self):
+        localo = sames.SumsOfPowers(False)
+        self.assertTrue( hasattr(localo,'_calculateSecondMomentSubjectXs') )
+        self.assertTrue( callable(localo._calculateSecondMomentSubjectXs) )
+        with self.assertRaises( ZeroDivisionError ) as context:
+            a = localo._calculateSecondMomentSubjectXs()
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        a = localo._calculateSecondMomentSubjectXs()
+
+    def test_Generate_third_moment_Subject_Xs_sum(self):
+        localo = sames.SumsOfPowers(False)
+        self.assertTrue( hasattr(localo,'_calculateThirdMomentSubjectXs') )
+        self.assertTrue( callable(localo._calculateThirdMomentSubjectXs) )
+        a = localo._calculateThirdMomentSubjectXs()
+
+    def test_Generate_fourth_moment_Subject_Xs_sum(self):
+        localo = sames.SumsOfPowers(False)
+        self.assertTrue( hasattr(localo,'_calculateFourthMomentSubjectXs') )
+        self.assertTrue( callable(localo._calculateFourthMomentSubjectXs) )
+        a = localo._calculateFourthMomentSubjectXs()
+
+    def test_Adding_to_the_sums(self):
+        localo = sames.SumsOfPowers(False)
+        localo.addToSums(3)
+        self.assertEqual( 1, localo.N )
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+
+    def test_Generating_kurtosis(self):
+        a = [3,3,4,5]
+        localo  = sames.SumsOfPowers(False)
+        sizeofa = len(a)
+        sumofa  = sum(a)
+        localo.setToDiffsFromMeanState(sumofa,sizeofa)
+        localo.addToSums(a[0])
+        self.assertEqual( sizeofa, localo.N )
+        self.assertEqual( 4, localo.N )
+        localo.addToSums(a[1])
+        localo.addToSums(a[2])
+        localo.addToSums(a[3])
+        self.assertEqual( 4, localo.N )
+        result  = localo.requestKurtosis()
+        #STDERR.puts "trace Generating kurtosis:  #{result}"
+        #self.assertEqual( -4.5, result )
+        self.assertEqual( 4.48879632289572, result )
+
+    def test_Generating_skewness(self):
+        localo = sames.SumsOfPowers(False)
+        localo.addToSums(3)
+        self.assertEqual( 1, localo.N )
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        localo.addToSums(6)
+        result = localo.requestSkewness()
+        self.assertEqual( 56.25011459381775, result )
+
+    def test_Generating_standard_deviation(self):
+        localo = sames.SumsOfPowers(False)
+        localo.addToSums(3)
+        self.assertEqual( 1, localo.N )
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(4)
+        result = localo.generateStandardDeviation()
+        self.assertEqual( 0.5773502691896257, result )
+
+    def test_Generating_variance(self):
+        localo = sames.SumsOfPowers(False)
+        localo.setToDiffsFromMeanState(15,4)
+        localo.addToSums(3)
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        result = localo.calculateVarianceUsingSubjectAsDiffs()
+        self.assertEqual( 19.666666666666668, result )
+        localo = sames.SumsOfPowers(False)
+        localo.addToSums(3)
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        result = localo.calculateVarianceUsingSubjectAsSumXs()
+        self.assertEqual( 0.9166666666666666, result )
+        #self.assertEqual( 19.666666666666668, result )
+
 
 class Test_VectorOfX_Class(unittest.TestCase):
 

@@ -271,6 +271,8 @@ end
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # SumsOfPowers
 
+#NOTE:  https://stackoverflow.com/questions/60433495/why-does-dividing-by-zero-for-float-not-raise-an-exception-in-ruby
+
 class SumsOfPowers
 
     # NOTE:  The main merit to doing it this way is as a teaching or illustration
@@ -285,6 +287,7 @@ class SumsOfPowers
             raise ArgumentError unless stdDev.is_a? Numeric
             # See 2023/11/05 "Pearson's first skewness coefficient" in:
             #   https://en.wikipedia.org/wiki/Skewness
+            raise ZeroDivisionError if stdDev == 0
             sc  = ( aMean - modeFloat ) / stdDev
             return sc
         end
@@ -295,6 +298,7 @@ class SumsOfPowers
             raise ArgumentError unless stdDev.is_a? Numeric
             # See 2023/11/05 "Pearson's second skewness coefficient" in:
             #   https://en.wikipedia.org/wiki/Skewness
+            raise ZeroDivisionError if stdDev == 0
             sc  = ( aMean - medianFloat ) / stdDev
             return sc
         end
@@ -309,7 +313,9 @@ class SumsOfPowers
         if @DiffFromMeanInputsUsed
             raise ArgumentError, "May ONLY be used with Sum of Xs Data."
         end
-        nreciprocal = ( 1.0 / @N.to_f )
+        raise ZeroDivisionError if @N == 0
+        nf = @N.to_f
+        nreciprocal = ( 1.0 / nf )
         first  = @SumPowerOf2
         second = nreciprocal * ( @ArithmeticMean**2)
         ssx = first - second
@@ -320,7 +326,7 @@ class SumsOfPowers
         # My algegra, using unreduced arithmetic mean parts because that becomes complicated
         # when going to sample means, leads to a simple Pascal Triangle pattern:
         # My algegra: Sum( xi - mu )**3 ==
-        #   Sum(xi**3) - 3*Sum(xi**2)*amean + 3*Sum(xi)*(amean**2) - mu**3
+        #   Sum(xi**3) - 3*Sum(xi**2)*amean + 3*Sum(xi)*(amean**2) - amean**3
         if @DiffFromMeanInputsUsed
             raise ArgumentError, "May ONLY be used with Sum of Xs Data."
         end
@@ -336,7 +342,7 @@ class SumsOfPowers
         # My algegra, using unreduced arithmetic mean parts because that becomes complicated
         # when going to sample means, leads to a simple Pascal Triangle pattern:
         # My algegra: Sum( xi - mu )**4 ==
-        #   Sum(xi**4) - 4*Sum(xi**3)*amean + 6*Sum(xi**2)(amean**2) - 4**Sum(xi)*(amean**3) + mu**4
+        #   Sum(xi**4) - 4*Sum(xi**3)*amean + 6*Sum(xi**2)(amean**2) - 4**Sum(xi)*(amean**3) + amean**4
         if @DiffFromMeanInputsUsed
             raise ArgumentError, "May ONLY be used with Sum of Xs Data."
         end
@@ -350,15 +356,15 @@ class SumsOfPowers
     end
 
     def initialize(populationDistribution=false)
-        @ArithmeticMean         = 0
-        @N                      = 0
+        @ArithmeticMean         = 0.0
+        @N                      = 0.0
         @DiffFromMeanInputsUsed    = false
         @Population             = populationDistribution
 
-        @SumOfXs                = 0
-        @SumPowerOf2            = 0
-        @SumPowerOf3            = 0
-        @SumPowerOf4            = 0
+        @SumOfXs                = 0.0
+        @SumPowerOf2            = 0.0
+        @SumPowerOf3            = 0.0
+        @SumPowerOf4            = 0.0
     end
 
     def addToSums(sFloat)
@@ -379,8 +385,10 @@ class SumsOfPowers
         unless @DiffFromMeanInputsUsed
             raise ArgumentError, "May NOT be used with Sum of Xs Data."
         end
+        raise ZeroDivisionError if @N == 0
         nf          = @N.to_f
         numerator   = @SumPowerOf4 / nf
+        raise ZeroDivisionError if @SumPowerOf2 == 0
         denominator = ( @SumPowerOf2 / nf ) ** 2 
         ek          = ( numerator / denominator ) - 3
         #puts "trace genExcessKurtosis_2_JR_R:  #{nf}, #{@SumPowerOf4}, #{numerator}, #{@SumPowerOf2}, #{denominator}, #{ek}"
@@ -398,12 +406,15 @@ class SumsOfPowers
 
         leftnumerator       = nf * ( nf + 1.0 )
         leftdenominator     = ( nf - 1.0 ) * ( nf - 2.0 ) * ( nf - 3.0 )
+        raise ZeroDivisionError if leftdenominator == 0
         left                = leftnumerator / leftdenominator
 
+        raise ZeroDivisionError if s4 == 0
         middle              = @SumPowerOf4 / s4
 
         rightnumerator      = 3 * ( ( nf - 1 )**2 )
         rightdenominator    = ( nf - 2.0 ) * ( nf - 3.0 )
+        raise ZeroDivisionError if rightdenominator == 0
         right               = rightnumerator / rightdenominator
         ek                  = left * middle - right
         return ek
@@ -419,6 +430,7 @@ class SumsOfPowers
         numerator       = nreciprocal * @SumPowerOf4
         denominternal   = nreciprocal * @SumPowerOf2
         denominator     = denominternal * denominternal
+        raise ZeroDivisionError if denominator == 0
         g2              = numerator / denominator
         return g2
     end
@@ -432,23 +444,35 @@ class SumsOfPowers
         unless @DiffFromMeanInputsUsed
             raise ArgumentError, "May NOT be used with Sum of Xs Data."
         end
-        #STDERR.puts "\ntrace 1 genKurtosis_Unbiased_DiffFromMeanCalculation:  #{@ArithmeticMean},#{@N},#{@DiffFromMeanInputsUsed},#{@Population},#{@SumOfXs},#{@SumPowerOf2},#{@SumPowerOf3},#{@SumPowerOf4}"
+        #puts "\ntrace 1 genKurtosis_Unbiased_DiffFromMeanCalculation:  #{@ArithmeticMean},#{@N},#{@DiffFromMeanInputsUsed},#{@Population},#{@SumOfXs},#{@SumPowerOf2},#{@SumPowerOf3},#{@SumPowerOf4}"
         nf = @N.to_f
+        #puts "\ntrace 2 genKurtosis_Unbiased_DiffFromMeanCalculation:  #{nf}"
 
         leftnumerator       = ( nf + 1.0 ) * nf * ( nf - 1.0 )
+        #puts "\ntrace 3 genKurtosis_Unbiased_DiffFromMeanCalculation:  #{leftnumerator}"
         leftdenominator     = ( nf - 2.0 ) * ( nf - 3.0 )
+        #puts "\ntrace 4 genKurtosis_Unbiased_DiffFromMeanCalculation:  #{leftdenominator}"
+        raise ZeroDivisionError if leftdenominator == 0
         left                = leftnumerator / leftdenominator
+        #puts "\ntrace 5 genKurtosis_Unbiased_DiffFromMeanCalculation:  #{left}, #{@SumPowerOf4}, #{@SumPowerOf2}"
 
         middle              = @SumPowerOf4 / ( @SumPowerOf2**2 )
+        #puts "\ntrace 6 genKurtosis_Unbiased_DiffFromMeanCalculation:  #{middle}"
 
         rightnumerator      = ( nf - 1.0 )**2
+        #puts "\ntrace 7 genKurtosis_Unbiased_DiffFromMeanCalculation:  #{rightnumerator}"
         rightdenominator    = ( nf - 2.0 ) * ( nf - 3.0 )
+        #puts "\ntrace 8 genKurtosis_Unbiased_DiffFromMeanCalculation:  #{rightdenominator}"
+        raise ZeroDivisionError if rightdenominator == 0
         right               = rightnumerator / rightdenominator
+        #puts "\ntrace 9 genKurtosis_Unbiased_DiffFromMeanCalculation:  #{right}"
         sue_G2              = left * middle - right
-        #STDERR.puts "\nsue_G2              = left * middle * right: #{sue_G2}              = #{left} * #{middle} * #{right}"
+        #puts "\ntrace a genKurtosis_Unbiased_DiffFromMeanCalculation:  #{sue_G2}"
 
         return sue_G2
     end
+
+    # https://en.wikipedia.org/wiki/IEEE_754#Exception_handling
 
     def calculateNaturalEstimatorOfPopulationSkewness_g1
         # See 2023/11/05 "Sample Skewness" in:
@@ -467,6 +491,7 @@ class SumsOfPowers
             numerator   = nreciprocal * third
         end
         denominator     = ( Math.sqrt( inside_den ) )**3
+        raise ZeroDivisionError if denominator == 0
         g1              = numerator / denominator
         return g1
     end
@@ -476,9 +501,14 @@ class SumsOfPowers
             raise ArgumentError, "May NOT be used with Sum of Xs Data."
         end
         nf              = @N.to_f
-        v = @SumPowerOf2 / ( nf - 1.0 ) unless @Population
-        v = @SumPowerOf2 / nf               if @Population
-        #STDERR.puts "trace 8 #{self.class}.genVarianceUsingSubjectAsDiffs:  #{v}, #{nf}, #{@Population}, #{@SumPowerOf2}"
+        if @Population then
+            raise ZeroDivisionError if nf == 0
+            v = @SumPowerOf2 / nf
+        else
+            denominator = nf - 1.0
+            raise ZeroDivisionError if denominator == 0
+            v = @SumPowerOf2 / denominator
+        end
         return v
     end
 
@@ -489,9 +519,12 @@ class SumsOfPowers
         ameansquared = @ArithmeticMean * @ArithmeticMean
         nf              = @N.to_f
         if @Population then
+            raise ZeroDivisionError if nf == 0
             v = ( @SumPowerOf2 - nf * ameansquared ) / nf
         else
-            v = ( @SumPowerOf2 - nf * ameansquared ) / ( nf - 1.0 )
+            denominator = nf - 1.0
+            raise ZeroDivisionError if denominator == 0
+            v = ( @SumPowerOf2 - nf * ameansquared ) / denominator
         end
         #STDERR.puts "trace 8 #{self.class}.genVarianceUsingSubjectAsSumXs: #{v}, #{nf}, #{@Population}, #{@SumPowerOf2}, #{ameansquared}"
         return v
@@ -500,7 +533,9 @@ class SumsOfPowers
     def generateNaturalEstimatorOfPopulationSkewness_b1
         # See 2023/11/05 "Sample Skewness" in:
         #   https://en.wikipedia.org/wiki/Skewness
-        nreciprocal     = ( 1.0 / @N.to_f )
+        raise ZeroDivisionError if @N == 0
+        nf              = @N.to_f
+        nreciprocal     = ( 1.0 / nf )
         numerator       = nil
         if @DiffFromMeanInputsUsed then
             numerator   = nreciprocal * @SumPowerOf3
@@ -510,6 +545,7 @@ class SumsOfPowers
         end
         stddev          = generateStandardDeviation
         denominator     = stddev**3
+        raise ZeroDivisionError if denominator == 0
         b1              = numerator / denominator
         return b1
     end
@@ -534,6 +570,7 @@ class SumsOfPowers
         nf      = @N.to_f
         k3      = ( nf**2 ) * b1
         k2_3s2  = ( nf - 1 ) * ( nf - 2 )
+        raise ZeroDivisionError if k2_3s2 == 0
         ss_G1   = k3 / k2_3s2
         return ss_G1
     end
@@ -575,9 +612,10 @@ class SumsOfPowers
         end
         @DiffFromMeanInputsUsed = true
         @N                      = nA
-        @SumOfXs                = sumXs
+        @SumOfXs                = sumXs.to_f
 
-        @ArithmeticMean         = ( sumXs.to_f / nA.to_f )
+        raise ZeroDivisionError if @N == 0
+        @ArithmeticMean         = ( sumXs.to_f / @N.to_f )
     end
 
     attr_accessor :Population
@@ -763,12 +801,14 @@ class VectorOfContinuous < VectorOfX
     def calculateArithmeticMean
         nf          = @VectorOfX.size.to_f
         sumxs       = @VectorOfX.sum.to_f
+        raise ZeroDivisionError if nf == 0
         unrounded   = sumxs / nf
         rounded     = unrounded.round(@OutputDecimalPrecision)
         return rounded
     end
 
     def calculateGeometricMean
+        raise ZeroDivisionError if @VectorOfX.size == 0
         exponent    = ( 1.0 / @VectorOfX.size.to_f )
         productxs   = @VectorOfX.reduce(1, :*)
         unrounded   = productxs**exponent
@@ -778,8 +818,12 @@ class VectorOfContinuous < VectorOfX
 
     def calculateHarmonicMean
         nf          = @VectorOfX.size.to_f
-        sumrecips   = @VectorOfX.inject { |sum, x| sum + 1.0 / x.to_f } 
-        unrounded   = nf / sumrecips
+        sumreciprocals = 0
+        @VectorOfX.each do |lx|
+            raise ZeroDivisionError if lx == 0
+            sumreciprocals += 1.0 / lx
+        end
+        unrounded   = nf / sumreciprocals
         rounded     = unrounded.round(@OutputDecimalPrecision)
         return rounded
     end
@@ -829,6 +873,7 @@ class VectorOfContinuous < VectorOfX
             raise ArgumentError, m
         end
         nf                      = @VectorOfX.size.to_f
+        raise ZeroDivisionError if nf == 0
         sumofabsolutediffs      = 0
         @VectorOfX.each do |lx|
             previous            = sumofabsolutediffs
@@ -847,6 +892,7 @@ class VectorOfContinuous < VectorOfX
         @SOPo       = _addUpXsToSumsOfPowers(@Population,@SumOfDiffs) unless @SOPo
         amean       = @SOPo.ArithmeticMean
         stddev      = @SOPo.generateStandardDeviation
+        raise ZeroDivisionError if amean == 0
         unrounded   = stddev / amean
         rounded     = unrounded.round(@OutputDecimalPrecision)
         return rounded
@@ -894,6 +940,7 @@ class VectorOfContinuous < VectorOfX
             end
         end
         denominator                 = nf * ( nf - 1.0 )
+        raise ZeroDivisionError if denominator == 0
         unrounded                   = sumofabsolutediffs / denominator
         rounded                     = unrounded.round(@OutputDecimalPrecision)
         return rounded
@@ -1162,6 +1209,7 @@ class VectorOfDiscrete < VectorOfX
 
         freqcountf          = @FrequenciesAA[subjectValue].to_f
 
+        raise ZeroDivisionError if samplecount == 0
         psuccess1trial      = freqcountf / samplecountf # Probability of success in 1 trial.
 
         pfailure1trial      = 1.0 - psuccess1trial
@@ -1177,6 +1225,7 @@ class VectorOfDiscrete < VectorOfX
         #STDERR.puts "\ntrace 7 calculateBinomialProbability #{successpermutations},#{failurepermutations},#{trials_permutations}"
         numerator           = trials_permutations * psuccessfactor * pfailurefactor
         denominator         = successpermutations * failurepermutations
+        raise ZeroDivisionError if denominator == 0
         binomialprobability = numerator / denominator
         #STDERR.puts "\ntrace 8 calculateBinomialProbability #{numerator},#{denominator},#{binomialprobability}"
         return binomialprobability
