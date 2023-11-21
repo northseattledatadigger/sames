@@ -670,9 +670,12 @@ class VectorOfX
     def getX(indexA,sortedVector=false)
         raise ArgumentError, "Index Argument Missing:  Required."       unless indexA.is_a? Integer
         raise ArgumentError, "Index Argument Not found in VectorOfX."   unless @VectorOfX[indexA]
-        return @VectorOfX[indexA]   unless sortedVector
-        return @SortedVectorOfX[indexA] if sortedVector and @SortedVectorOfX.has_key?(indexA)
-        return nil
+    
+        if sortedVector and @SortedVectorOfX[indexA] then
+            _assureSortedVectorOfX() # in case update occurred from pushX.
+            return @SortedVectorOfX[indexA]
+        else
+            return @VectorOfX[indexA]
     end
 
     def pushX(xFloat,onBadData)
@@ -706,6 +709,7 @@ class VectorOfX
 
 end
 
+'''
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # VectorOfContinouos for floating point based distributions.  All Xs floats.

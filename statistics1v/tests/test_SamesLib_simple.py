@@ -355,16 +355,86 @@ class Test_SumsOfPowers_Class(unittest.TestCase):
         localo.addToSums(5)
         result = localo.calculateVarianceUsingSubjectAsSumXs()
         self.assertEqual( 0.9166666666666666, result )
-        #self.assertEqual( 19.666666666666668, result )
 
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Tests for Base Class VectorOfX
+#
+# Most testing on these routines will be in the daughter classes where the
+# behavior is manifest.  Note the initialize method was only defined to aid
+# these tests.
 
 class Test_VectorOfX_Class(unittest.TestCase):
 
-    def test_argument_usage(self):
-        pass
+    def test_has_a__assureSortedVectorOfX_method_for_internal_updates_to_the_SortedVectorOfX_vector(self):
+        a       = [3,2,1]
+        localo  = sames.VectorOfX(a)
+        self.assertTrue( hasattr(localo,'_assureSortedVectorOfX') )
+        self.assertTrue( callable(localo._assureSortedVectorOfX) )
+        localo._assureSortedVectorOfX()
+        lsvx    = len(localo.SortedVectorOfX)
+        self.assertEqual(lsvx, 3)
+        self.assertEqual(localo.SortedVectorOfX[0], 1)
+        self.assertEqual(localo.SortedVectorOfX[1], 2)
+        self.assertEqual(localo.SortedVectorOfX[2], 3)
 
-    def test_anecdote_expected_results(self):
-        pass
+    def test_Constructs_with_no_argument_or_ruby_array(self):
+        localo = sames.VectorOfX()
+        a = [1.5,99,5876.1234,"String",""]
+        localo = sames.VectorOfX(a)
+        self.assertIsInstance( localo, sames.VectorOfX )
+
+    def test_Has_a_working_getCount_method(self):
+        localo = sames.VectorOfX()
+        self.assertEqual( 0, localo.getCount() )
+        a = [1.5,99,5876.1234,"String",""]
+        localo = sames.VectorOfX(a)
+        self.assertEqual( 5, localo.getCount() )
+
+    def test_Has_a_working_getX_method(self):
+        a = [1.5,99,5876.1234,"String",""]
+        localo = sames.VectorOfX(a)
+        self.assertEqual( localo.getX(2),5876.1234 )
+
+    def test_pushX_method_is_pure_virtual(self):
+        localo = sames.VectorOfX()
+        self.assertTrue( hasattr(localo,'pushX') )
+        self.assertTrue( callable(localo.pushX) )
+        with self.assertRaises( ValueError ) as context:
+            localo.pushX("anything",sames.VectorOfX.DefaultFillOnBadData)
+
+    def test_requestResultAACSV_method_is_pure_virtual(self):
+        localo = sames.VectorOfX()
+        self.assertTrue( hasattr(localo,'requestResultAACSV') )
+        self.assertTrue( callable(localo.requestResultAACSV) )
+
+    def test_requestResultCSVLine_method_is_pure_virtual(self):
+        localo = sames.VectorOfX()
+        self.assertTrue( hasattr(localo,'requestResultCSVLine') )
+        self.assertTrue( callable(localo.requestResultCSVLine) )
+
+    def test_requestResultCSVJSON_method_is_pure_virtual(self):
+        localo = sames.VectorOfX()
+        self.assertTrue( hasattr(localo,'requestResultJSON') )
+        self.assertTrue( callable(localo.requestResultJSON) )
+
+    def test_Has_tranformation_method_to_output_a_line_of_CSV_for_the_VectorOfX_data(self):
+        a = [1.5,99,5876.1234,"String"]
+        localo = sames.VectorOfX(a)
+        result = localo.transformToCSVLine()
+        self.assertEqual( "1.5,99,5876.1234,\"String\"", result )
+
+    def test_Has_tranformation_method_to_output_a_string_of_JSON_for_the_VectorOfX_data(self):
+        a = [1.5,99,5876.1234,"String",""]
+        localo = sames.VectorOfX(a)
+        s = localo.transformToJSON()
+        self.assertRegex(s, "5876.1234")
+
+    def test_Has_read_handles_for_internal_data_arrays(self):
+        a = [1.5,99,5876.1234,"String",""]
+        localo = sames.VectorOfX(a)
+        self.assertTrue( hasattr(localo,'VectorOfX') )
+        self.assertTrue( hasattr(localo,'SortedVectorOfX') )
+
 
 class Test_VectorOfContinuous_Class(unittest.TestCase):
 
@@ -420,7 +490,7 @@ if __name__ == '__main__':
     sys.path.append(SAMESHOME) # Not sure this is necessary.
 
     SamesProjectDs  = os.path.abspath(os.path.join(HERE, '..'))
-    print(f"trace 4 {SamesProjectDs}")
+    #print(f"trace 4 {SamesProjectDs}")
     sys.path.append(SamesProjectDs) # Not sure this is necessary.
     Python3LibFs    = f"{SamesProjectDs}/SamesLib_{SubType}.py"
 

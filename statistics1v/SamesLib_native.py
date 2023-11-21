@@ -543,7 +543,6 @@ class SumsOfPowers:
 
         self.ArithmeticMean         = ( float( sumXs ) / float( nA ) )
 
-'''
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # VectorOfX Base Class
@@ -558,51 +557,78 @@ class VectorOfX:
     ZeroFieldOnBadData      = 5
 
     def _assureSortedVectorOfX(self,forceSort=False):
-        if forceSort then
-            self.SortedVectorOfX = self.VectorOfX.sort
+        #print(f"trace 0 {forceSort}, {self.VectorOfX}, {self.SortedVectorOfX}")
+        if forceSort:
+            self.SortedVectorOfX = sorted(self.VectorOfX)
             return
-        if not self.SortedVectorOfX or ( self.SortedVectorOfX.size != self.VectorOfX.size ) then
-            self.SortedVectorOfX = self.VectorOfX.sort
+        if type(self.SortedVectorOfX) is list:
+            #print(f"trace x1 {self.SortedVectorOfX[0]}")
+            svxl    = len(self.SortedVectorOfX)
+            #print(f"trace x2 {svxl}")
+            vxl     = len(self.VectorOfX)
+            #print(f"trace x3 {vxl}")
+            if vxl == svxl:
+                return
+        #print(f"trace x8")
+        self.SortedVectorOfX = sorted(self.VectorOfX)
+        #print(f"trace x9 {self.SortedVectorOfX}")
 
-    def __init__(aA=None):
-        if aA then
-            raise ValueError if not aA.is_a? Array
+    def __init__(self,aA=None):
+        # Each daughter must make its own constructor.
         # The following is ONLY for testing:
+        if aA:
+            if type(aA) is list:
+                self.VectorOfX  = aA
+            else:
+                raise(ValueError)
+        else:
+            self.VectorOfX      = []
         self.SortedVectorOfX    = None
-        self.VectorOfX          = Array.new  if not aA
-        self.VectorOfX          = aA             if aA
 
     def getCount(self):
-        return self.VectorOfX.size
+        l = len(self.VectorOfX)
+        return l
 
     def getX(self,indexA,sortedVector=False):
-        raise ValueError, "Index Argument Missing:  Required."       if not indexA.is_a? Integer
-        raise ValueError, "Index Argument Not found in VectorOfX."   if not self.VectorOfX[indexA]
-        return self.VectorOfX[indexA]   if not sortedVector
-        return self.SortedVectorOfX[indexA] if sortedVector and self.SortedVectorOfX.has_key?(indexA)
-        return None
+        if type(indexA) != int:
+            raise ValueError("Index Argument Missing:  Required.")     
+        if not self.VectorOfX[indexA]:
+            raise ValueError("Index Argument Not found in VectorOfX.") 
+        if sortedVector and self.SortedVectorOfX[indexA]:
+            self._assureSortedVectorOfX() # in case update occurred from pushX.
+            return self.SortedVectorOfX[indexA]                       
+        else:
+            return self.VectorOfX[indexA]
 
     def pushX(self,xFloat,onBadData):
-        raise ValueError, "Pure Virtual"
+        raise ValueError( "Pure Virtual" )
 
     def requestResultAACSV(self):
-        raise ValueError, "Pure Virtual"
+        raise ValueError( "Pure Virtual" )
 
     def requestResultCSVLine(self):
-        raise ValueError, "Pure Virtual"
+        raise ValueError( "Pure Virtual" )
 
     def requestResultJSON(self):
-        raise ValueError, "Pure Virtual"
+        raise ValueError( "Pure Virtual" )
 
     def transformToCSVLine(self):
-        b = self.VectorOfX.to_csv
+        b = ""
+        for lx in self.VectorOfX:
+            if len(b) > 0:
+                b += ","
+            if isinstance(lx,str):
+                b += f"\"{lx}\""
+            else:
+                b += str(lx)
         return b
 
     def transformToJSON(self):
-        b = self.VectorOfX.to_json
+        b = json.dumps(self.VectorOfX)
         return b
 
 
+'''
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # VectorOfContinouos for floating point based distributions.  All Xs floats.
@@ -833,7 +859,7 @@ class VectorOfContinuous(VectorOfX):
         return True if n % 2 == 0
         return False
 
-    def pushX(self,xFloat,onBadData=VectorOfX::FailOnBadData):
+    def pushX(self,xFloat,onBadData=VectorOfX.FailOnBadData):
         if not isUsableNumber?(xFloat)
             case onBadData
             when VectorOfX::BlankFieldOnBadData
@@ -1062,7 +1088,7 @@ class VectorOfDiscrete(VectorOfX):
         raise ValueError if not subjectValue
         return self.FrequenciesAA[subjectValue]
 
-    def pushX(self,xItem,onBadData=VectorOfX::FailOnBadData):
+    def pushX(self,xItem,onBadData=VectorOfX.FailOnBadData):
         if not xItem and "#{xItem}".size > 0
             case onBadData
             when VectorOfX::BlankFieldOnBadData

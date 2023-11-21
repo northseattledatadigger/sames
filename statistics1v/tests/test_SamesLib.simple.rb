@@ -555,12 +555,12 @@ describe VectorOfX do
         assert_respond_to localo, :requestResultAACSV
     end
 
-    it "requestResultAACSV(xFloat) method is pure virtual." do
+    it "requestResultCSVLine(xFloat) method is pure virtual." do
         localo = VectorOfX.new
         assert_respond_to localo, :requestResultCSVLine
     end
 
-    it "requestResultAACSV(xFloat) method is pure virtual." do
+    it "requestResultCSVJSON(xFloat) method is pure virtual." do
         localo = VectorOfX.new
         assert_respond_to localo, :requestResultJSON
     end
