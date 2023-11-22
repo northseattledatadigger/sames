@@ -17,7 +17,6 @@ import re
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Global Support Routines
 
-
 def generateModefromFrequencyAA(faaA):
     if isinstance(faaA, dict):
         x = 0
@@ -956,36 +955,36 @@ class VectorOfContinuous(VectorOfX):
         # NOTE: Mean Absolute Diffence is no longer featured here.
         scaa = self.requestSummaryCollection()
         content =   ""
-        content +=  f"\"{ArithmeticMeanId}\", {scaa[ArithmeticMeanId]}\n"
-        content +=  f"\"{ArMeanAADId}\", {scaa[ArMeanAADId]}\n"
-        content +=  f"\"{CoefficientOfVariationId}\", {scaa[CoefficientOfVariationId]}\n"
-        content +=  f"\"{GeometricMeanId}\", {scaa[GeometricMeanId]}\n"
-        content +=  f"\"{HarmonicMeanId}\", {scaa[HarmonicMeanId]}\n"
-        content +=  f"\"{IsEvenId}\", {scaa[IsEvenId]}\n"
-        content +=  f"\"{KurtosisId}\", {scaa[KurtosisId]}\n"
-        content +=  f"\"{MaxId}\", {scaa[MaxId]}\n"
-        content +=  f"\"{MedianId}\", {scaa[MedianId]}\n"
-        content +=  f"\"{MedianAADId}\", {scaa[MedianAADId]}\n"
-        content +=  f"\"{MinId}\", {scaa[MinId]}\n"
-        content +=  f"\"{ModeId}\", {scaa[ModeId]}\n"
-        content +=  f"\"{NId}\", {scaa[NId]}\n"
-        content +=  f"\"{SkewnessId}\", {scaa[SkewnessId]}\n"
-        content +=  f"\"{StandardDeviation}\", {scaa[StandardDeviation]}\n"
-        content +=  f"\"{SumId}\", {scaa[SumId]}\n"
+        content +=  f"\"{VectorOfContinuous.ArithmeticMeanId}\", {scaa[VectorOfContinuous.ArithmeticMeanId]}\n"
+        content +=  f"\"{VectorOfContinuous.ArMeanAADId}\", {scaa[VectorOfContinuous.ArMeanAADId]}\n"
+        content +=  f"\"{VectorOfContinuous.CoefficientOfVariationId}\", {scaa[VectorOfContinuous.CoefficientOfVariationId]}\n"
+        content +=  f"\"{VectorOfContinuous.GeometricMeanId}\", {scaa[VectorOfContinuous.GeometricMeanId]}\n"
+        content +=  f"\"{VectorOfContinuous.HarmonicMeanId}\", {scaa[VectorOfContinuous.HarmonicMeanId]}\n"
+        content +=  f"\"{VectorOfContinuous.IsEvenId}\", {scaa[VectorOfContinuous.IsEvenId]}\n"
+        content +=  f"\"{VectorOfContinuous.KurtosisId}\", {scaa[VectorOfContinuous.KurtosisId]}\n"
+        content +=  f"\"{VectorOfContinuous.MaxId}\", {scaa[VectorOfContinuous.MaxId]}\n"
+        content +=  f"\"{VectorOfContinuous.MedianId}\", {scaa[VectorOfContinuous.MedianId]}\n"
+        content +=  f"\"{VectorOfContinuous.MedianAADId}\", {scaa[VectorOfContinuous.MedianAADId]}\n"
+        content +=  f"\"{VectorOfContinuous.MinId}\", {scaa[VectorOfContinuous.MinId]}\n"
+        content +=  f"\"{VectorOfContinuous.ModeId}\", {scaa[VectorOfContinuous.ModeId]}\n"
+        content +=  f"\"{VectorOfContinuous.NId}\", {scaa[VectorOfContinuous.NId]}\n"
+        content +=  f"\"{VectorOfContinuous.SkewnessId}\", {scaa[VectorOfContinuous.SkewnessId]}\n"
+        content +=  f"\"{VectorOfContinuous.StandardDeviation}\", {scaa[VectorOfContinuous.StandardDeviation]}\n"
+        content +=  f"\"{VectorOfContinuous.SumId}\", {scaa[VectorOfContinuous.SumId]}\n"
         return content
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
     def requestResultCSVLine(self,includeHdr=False):
         # NOTE: Mean Absolute Diffence is no longer featured here.
-        scaa        = requestSummaryCollection
-        csvline     =   f"\"{scaa[ArithmeticMeanId]}\",\"{scaa[ArMeanAADId]}\","
-        csvline     +=  f"\"{scaa[CoefficientOfVariationId]}\","
-        csvline     +=  f"\"{scaa[GeometricMeanId]}\",\"{scaa[HarmonicMeanId]}\","
-        csvline     +=  f"\"{scaa[IsEvenId]}\",\"{scaa[KurtosisId]}\","
-        csvline     +=  f"\"{scaa[MaxId]}\",\"{scaa[MedianId]}\",\"{scaa[MedianAADId]}\","
-        csvline     +=  f"\"{scaa[MinId]}\",\"{scaa[ModeId]}\",\"{scaa[NId]}\","
-        csvline     +=  f"\"{scaa[SkewnessId]}\",\"{scaa[StandardDeviation]}\","
-        csvline     +=  f"\"{scaa[SumId]}\""
+        scaa        = self.requestSummaryCollection()
+        csvline     =   f"\"{scaa[VectorOfContinuous.ArithmeticMeanId]}\",\"{scaa[VectorOfContinuous.ArMeanAADId]}\","
+        csvline     +=  f"\"{scaa[VectorOfContinuous.CoefficientOfVariationId]}\","
+        csvline     +=  f"\"{scaa[VectorOfContinuous.GeometricMeanId]}\",\"{scaa[VectorOfContinuous.HarmonicMeanId]}\","
+        csvline     +=  f"\"{scaa[VectorOfContinuous.IsEvenId]}\",\"{scaa[VectorOfContinuous.KurtosisId]}\","
+        csvline     +=  f"\"{scaa[VectorOfContinuous.MaxId]}\",\"{scaa[VectorOfContinuous.MedianId]}\",\"{scaa[VectorOfContinuous.MedianAADId]}\","
+        csvline     +=  f"\"{scaa[VectorOfContinuous.MinId]}\",\"{scaa[VectorOfContinuous.ModeId]}\",\"{scaa[VectorOfContinuous.NId]}\","
+        csvline     +=  f"\"{scaa[VectorOfContinuous.SkewnessId]}\",\"{scaa[VectorOfContinuous.StandardDeviation]}\","
+        csvline     +=  f"\"{scaa[VectorOfContinuous.SumId]}\""
         if includeHdr:
             csvhdr  =   f"\"{ArithmeticMeanId}\",\"{ArMeanAADId}\","
             csvhdr  +=  f"\"{CoefficientOfVariationId}\",\"{GeometricMeanId}\","
@@ -1033,33 +1032,33 @@ class VectorOfContinuous(VectorOfX):
             kurtosis            = round(unrounded,self.OutputDecimalPrecision)
         mad                     = self.generateMeanAbsoluteDifference()
         median                  = self.requestMedian()
-        medianaad               = self.generateAverageAbsoluteDeviation(MedianId)
+        medianaad               = self.generateAverageAbsoluteDeviation(VectorOfContinuous.MedianId)
         xmin,xmax               = self.requestRange()
         mode                    = self.generateMode()
         n                       = self.getCount()
         unrounded               = self.SOPo.requestSkewness()
         skewness                = round(unrounded,self.OutputDecimalPrecision)
         unrounded               = self.SOPo.generateStandardDeviation()
-        stddef                  = round(unrounded,self.OutputDecimalPrecision)
+        stddev                  = round(unrounded,self.OutputDecimalPrecision)
         xsum                    = self.getSum()
         return {
-            ArithmeticMeanId:           amean,
-            ArMeanAADId:                ameanaad,
-            CoefficientOfVariationId:   coefficientofvariation,
-            GeometricMeanId:            gmean,
-            HarmonicMeanId:             hmean,
-            IsEvenId:                   is_even,
-            KurtosisId:                 kurtosis,
-            MADId:                      mad,
-            MaxId:                      xmax,
-            MedianId:                   median,
-            MedianAADId:                medianaad,
-            MinId:                      xmin,
-            ModeId:                     mode,
-            NId:                        n,
-            SkewnessId:                 skewness,
-            StandardDeviation:          stddev,   
-            SumId:                      xsum
+            VectorOfContinuous.ArithmeticMeanId:           amean,
+            VectorOfContinuous.ArMeanAADId:                ameanaad,
+            VectorOfContinuous.CoefficientOfVariationId:   coefficientofvariation,
+            VectorOfContinuous.GeometricMeanId:            gmean,
+            VectorOfContinuous.HarmonicMeanId:             hmean,
+            VectorOfContinuous.IsEvenId:                   is_even,
+            VectorOfContinuous.KurtosisId:                 kurtosis,
+            VectorOfContinuous.MADId:                      mad,
+            VectorOfContinuous.MaxId:                      xmax,
+            VectorOfContinuous.MedianId:                   median,
+            VectorOfContinuous.MedianAADId:                medianaad,
+            VectorOfContinuous.MinId:                      xmin,
+            VectorOfContinuous.ModeId:                     mode,
+            VectorOfContinuous.NId:                        n,
+            VectorOfContinuous.SkewnessId:                 skewness,
+            VectorOfContinuous.StandardDeviation:          stddev,   
+            VectorOfContinuous.SumId:                      xsum
         }
 
     def requestVarianceSumOfDifferencesFromMean(self,populationCalculation=False):
@@ -1118,13 +1117,11 @@ class VectorOfDiscrete(VectorOfX):
         successpermutations = math.factorial(nSuccesses)
         failurepermutations = math.factorial(nTrials - nSuccesses)
         trials_permutations = math.factorial(nTrials)
-        #STDERR.puts "\ntrace 7 calculateBinomialProbability #{successpermutations},#{failurepermutations},#{trials_permutations}"
-        numerator           = trials_permutations * psuccessfactor * pfailurefactor
-        denominator         = successpermutations * failurepermutations
-        unrounded           = numerator / denominator
-        rounded             = round(unrounded,self.OutputDecimalPrecision)
-        #STDERR.puts "\ntrace 8 calculateBinomialProbability #{numerator},#{denominator},#{binomialprobability}"
-        return rounded
+        #print(f"\ntrace 7 calculateBinomialProbability {successpermutations},{failurepermutations},{trials_permutations}")
+        numerator           = float( trials_permutations * psuccessfactor * pfailurefactor )
+        denominator         = float( successpermutations * failurepermutations )
+        result              = numerator / denominator
+        return result
 
     def getFrequency(self,subjectValue):
         if not subjectValue:
@@ -1151,11 +1148,11 @@ class VectorOfDiscrete(VectorOfX):
             self.FrequenciesAA[xItem] += 1
         else:
             self.FrequenciesAA[xItem] = 1
-        self.VectorOfX.push(xItem)
+        self.VectorOfX.append(xItem)
         return True
 
     def requestMode(self):
-        x = self.generateModefromFrequencyAA(self.FrequenciesAA)
+        x = generateModefromFrequencyAA(self.FrequenciesAA)
         return x
 
     def requestResultAACSV(self):

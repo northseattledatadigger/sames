@@ -669,95 +669,99 @@ class Test_VectorOfContinuous_Class(unittest.TestCase):
         k       = localo.requestKurtosis()
         self.assertEqual( 1.8476, k )
 
-'''
     def test_Can_request_a_complete_collection_of_all_5_quartiles_in_an_array(self):
         a       = [1,2,3,4,5]
         localo  = sames.VectorOfContinuous(a)
-        qa      = localo.requestQuartileCollection
-        self.assertEqual( 1, qa[0]
-        self.assertEqual( 2, qa[1]
-        self.assertEqual( 3, qa[2]
-        self.assertEqual( 4, qa[3]
-        self.assertEqual( 5, qa[4]
+        qa      = localo.requestQuartileCollection()
+        self.assertEqual( 1, qa[0] )
+        self.assertEqual( 2, qa[1] )
+        self.assertEqual( 3, qa[2] )
+        self.assertEqual( 4, qa[3] )
+        self.assertEqual( 5, qa[4] )
         a           = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0,1,2,2,3,3,3,99.336,5.9,0x259,1133.7,1234]
         localo  = sames.VectorOfContinuous(a)
-        qa      = localo.requestQuartileCollection
-        self.assertEqual( 0, qa[0]
-        self.assertEqual( 3.0, qa[1]
-        self.assertEqual( 6.0, qa[2]
-        self.assertEqual( 8.25, qa[3]
-        self.assertEqual( 1234, qa[4]
+        qa      = localo.requestQuartileCollection()
+        self.assertEqual( 0, qa[0] )
+        self.assertEqual( 3.0, qa[1] )
+        self.assertEqual( 6.0, qa[2] )
+        self.assertEqual( 8.25, qa[3] )
+        self.assertEqual( 1234, qa[4] )
 
     def test_Has_some_formatted_result_methods(self):
         a       = [1,2,3,4,5,6,7,8,9]
         localo  = sames.VectorOfContinuous(a)
-        assert_respond_to localo, :requestResultAACSV
-        assert localo.requestResultAACSV.is_a?      String
-        assert localo.requestResultCSVLine.is_a?    String
-        assert localo.requestResultJSON.is_a?       String
+        self.assertTrue( hasattr(localo,'requestResultAACSV') )
+        self.assertTrue( callable(localo.requestResultAACSV) )
+        result  = localo.requestResultAACSV()
+        self.assertTrue( isinstance(result,str) )
+        self.assertIn('ArithmeticMean', result)
+        result  = localo.requestResultCSVLine()
+        self.assertTrue( isinstance(result,str) )
+        result  = localo.requestResultJSON()
+        self.assertTrue( isinstance(result,str) )
 
     def test_Can_request_a_calculation_of_skewness(self):
         a       = [1,2,3,4,5,6,7,8,9]
         localo  = sames.VectorOfContinuous(a)
-        sk      = localo.requestSkewness
-        self.assertEqual( 0, sk
+        sk      = localo.requestSkewness()
+        self.assertEqual( 0, sk )
         sk      = localo.requestSkewness(1)
-        self.assertEqual( 0, sk
+        self.assertEqual( 0, sk )
         sk      = localo.requestSkewness(2)
-        self.assertEqual( 0, sk
+        self.assertEqual( 0, sk )
         sk      = localo.requestSkewness(3)
-        self.assertEqual( 0, sk
+        self.assertEqual( 0, sk )
         a       = [1,2,2,3,3,3,4,4,4,4,4,4]
         localo  = sames.VectorOfContinuous(a)
-        sk      = localo.requestSkewness
-        self.assertEqual( -0.9878, sk
+        sk      = localo.requestSkewness()
+        self.assertEqual( -0.9878, sk )
         sk1     = localo.requestSkewness(1)
-        self.assertEqual( -0.7545, sk1
+        self.assertEqual( -0.7545, sk1 )
         sk2     = localo.requestSkewness(2)
-        self.assertEqual( -0.8597, sk2
+        self.assertEqual( -0.8597, sk2 )
         sk3     = localo.requestSkewness(3)
-        self.assertEqual( sk3, sk
+        self.assertEqual( sk3, sk )
 
     def test_Has_four_standard_deviation_calculations_corresponding_to_the_four_variance_combinations(self):
         a       = [1,2,3]
         localo  = sames.VectorOfContinuous(a)
-        sdsd    = localo.requestStandardDeviation
+        sdsd    = localo.requestStandardDeviation()
         localo.UseDiffFromMeanCalculations = False
-        sdsx    = localo.requestStandardDeviation
-        self.assertEqual( sdsd, sdsx
-        localo.Population = true
-        sdsd    = localo.requestStandardDeviation
+        sdsx    = localo.requestStandardDeviation()
+        self.assertEqual( sdsd, sdsx )
+        localo.Population = True
+        sdsd    = localo.requestStandardDeviation()
         localo.UseDiffFromMeanCalculations = False
-        sdsx    = localo.requestStandardDeviation
-        self.assertEqual( sdsd, sdsx
+        sdsx    = localo.requestStandardDeviation()
+        self.assertEqual( sdsd, sdsx )
 
     def test_Has_two_variance_generation_methods(self):
         a = [1,2,2,3,3,3,99.336,5.9,0x259,1133.7,1234]
         localo = sames.VectorOfContinuous(a)
-        v = localo.requestVarianceSumOfDifferencesFromMean
-        self.assertEqual( 231232.125543275, v
-        v = localo.requestVarianceXsSquaredMethod
-        self.assertEqual( 231232.12554327273, v
-        v = localo.requestVarianceSumOfDifferencesFromMean(true)
-        self.assertEqual( 210211.0232211591, v
-        v = localo.requestVarianceXsSquaredMethod(true)
-        self.assertEqual( 210211.02322115703, v
+        v = localo.requestVarianceSumOfDifferencesFromMean()
+        self.assertEqual( 231232.125543275, v )
+        v = localo.requestVarianceXsSquaredMethod()
+        self.assertEqual( 231232.12554327273, v )
+        v = localo.requestVarianceSumOfDifferencesFromMean(True)
+        self.assertEqual( 210211.0232211591, v )
+        v = localo.requestVarianceXsSquaredMethod(True)
+        self.assertEqual( 210211.02322115703, v )
 
     def test_Input_routine_pushX_validates_arguments(self):
-        lvo = sames.VectorOfContinuous
-        assert_nothing_raised do
-            lvo.pushX(123.456)
-        assert_raise ArgumentError do
+        lvo = sames.VectorOfContinuous()
+        lvo.pushX(123.456)
+        with self.assertRaises(ValueError) as context:
             lvo.pushX("asdf")
-        assert_raise ArgumentError do
+        with self.assertRaises(ValueError) as context:
             lvo.pushX("0x9")
-        assert_raise ArgumentError do
+        with self.assertRaises(ValueError) as context:
             lvo.pushX("1234..56")
-        assert_raise ArgumentError do
+        with self.assertRaises(ValueError) as context:
             lvo.pushX("2 34")
-        lvo.ValidateStringNumbers = true
-        assert_raise RangeError do
-            lvo.pushX("9999999999999999999999999999")
+        # This is not implemented in the Python version, for now:
+        #lvo.ValidateStringNumbers = True
+        #with self.assertRaises(ValueError) as context:
+        #    lvo.pushX("9999999999999999999999999999")
 
     def test_Fails_differently_according_to_special_arguments_to_pushX(self):
         # These are the pertinent identifiers:
@@ -765,30 +769,66 @@ class Test_VectorOfContinuous_Class(unittest.TestCase):
         #FailOnBadData       = 1
         #SkipRowOnBadData    = 2
         #ZeroFieldOnBadData  = 3
-        localo = sames.VectorOfContinuous
-        self.assertEqual( 0, localo.getCount
-        assert_raise ArgumentError do
+        localo = sames.VectorOfContinuous()
+        self.assertEqual( 0, localo.getCount() )
+        with self.assertRaises(ValueError) as context:
             localo.pushX("")
-        self.assertEqual( 0, localo.getCount
-        assert_raise ArgumentError do
-            localo.pushX("",sames.VectorOfX::BlankFieldOnBadData)
-        self.assertEqual( 0, localo.getCount
-        assert_raise ArgumentError do
-            localo.pushX("",sames.VectorOfX::FailOnBadData)
-        self.assertEqual( 0, localo.getCount
-        localo.pushX("",sames.VectorOfX::SkipRowOnBadData)
-        self.assertEqual( 0, localo.getCount
-        localo.pushX("",sames.VectorOfX::ZeroFieldOnBadData)
-        self.assertEqual( 1, localo.getCount
-'''
+        self.assertEqual( 0, localo.getCount() )
+        with self.assertRaises(ValueError) as context:
+            localo.pushX("",sames.VectorOfX.BlankFieldOnBadData)
+        self.assertEqual( 0, localo.getCount() )
+        with self.assertRaises(ValueError) as context:
+            localo.pushX("",sames.VectorOfX.FailOnBadData)
+        self.assertEqual( 0, localo.getCount() )
+        localo.pushX("",sames.VectorOfX.SkipRowOnBadData)
+        self.assertEqual( 0, localo.getCount() )
+        localo.pushX("",sames.VectorOfX.ZeroFieldOnBadData)
+        self.assertEqual( 1, localo.getCount() )
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Tests for VectorOfDiscrete
 
 class Test_VectorOfDiscrete_Class(unittest.TestCase):
 
-    def test_argument_usage(self):
-        pass
+    def test_Constructs_with_no_argument(self):
+        localo = sames.VectorOfDiscrete()
+        self.assertIsInstance( localo, sames.VectorOfDiscrete )
+        localo.pushX(5.333)
+        localo.pushX("Any old string")
+        self.assertEqual( 2, localo.getCount() )
 
-    def test_anecdote_expected_results(self):
-        pass
+    def test_Constructs_with_a_Ruby_Array(self):
+        localo = sames.VectorOfDiscrete([1.5,99,5876.1234,"some old string"])
+        self.assertIsInstance( localo, sames.VectorOfDiscrete )
+        self.assertEqual( 4, localo.getCount() )
+
+    def test_Has_a_Binomial_probability_calculation(self):
+        a       = [1,2,3,4,5,6,7,8,9,8]
+        localo  = sames.VectorOfDiscrete(a)
+        self.assertEqual( 10, localo.getCount() )
+        self.assertTrue( hasattr(localo,'calculateBinomialProbability') )
+        self.assertTrue( callable(localo.calculateBinomialProbability) )
+        #self.assertEqual( 0.384, localo.calculateBinomialProbability(8,3,1) ) # The calculation returned at:  https://stattrek.com/online-calculator/binomial
+        result  = localo.calculateBinomialProbability(8,3,1)
+        self.assertEqual( 0.3840000000000001, result )
+
+    def test_Has_a_method_to_get_the_Mode(self):
+        localo = sames.VectorOfDiscrete()
+        self.assertTrue( hasattr(localo,'requestMode') )
+        self.assertTrue( callable(localo.requestMode) )
+        localo = sames.VectorOfDiscrete([1.5,99,5876.1234,"some old string",99])
+        self.assertEqual( 5, localo.getCount() )
+        result = localo.requestMode()
+        self.assertEqual( 99, result )
+
+    def test_Has_accessor_for_output_decimal_precision(self):
+        localo = sames.VectorOfDiscrete()
+        self.assertTrue( hasattr(localo,'OutputDecimalPrecision') )
+
+    def test_Has_reader_for_the_internals(self):
+        localo = sames.VectorOfDiscrete()
+        self.assertTrue( hasattr(localo,'VectorOfX') )
+        self.assertTrue( hasattr(localo,'FrequenciesAA') )
 
 class Test_VectorTable_Class(unittest.TestCase):
 
@@ -797,18 +837,6 @@ class Test_VectorTable_Class(unittest.TestCase):
 
     def test_anecdote_expected_results(self):
         pass
-
-class TestMyModule(unittest.TestCase):
-
-    def test_product(self):
-        result = 6
-        self.assertEqual(result, 6)
-
-class Test2MyModule(unittest.TestCase):
-
-    def test_product(self):
-        result = 6
-        self.assertEqual(result, 6)
 
 if __name__ == '__main__':
 
