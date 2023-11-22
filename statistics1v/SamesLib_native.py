@@ -1253,13 +1253,14 @@ class VectorTable:
         self.VectorOfHdrs       = []
         i = 0
         for lci in self.VectorOfClasses:
-            if lci:
+            if lci is not None:
                 if not self.__class__.isAllowedDataVectorClass(lci):
                     raise ValueError( f"Class '{lci.__class__}' Not Valid" )
-                self.TableOfVectors[i] = lci()
+                b = lci()
+                self.TableOfVectors.append(b)
             else:
-                self.TableOfVectors[i] = None        
-            self.VectorOfHdrs.push("Column #{i}") # Use offset index as column numbers, NOT traditional.
+                self.TableOfVectors.append(None)
+            self.VectorOfHdrs.append(f"Column #{i}") # Use offset index as column numbers, NOT traditional.
             i += 1
 
     def getColumnCount(self):

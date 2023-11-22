@@ -830,13 +830,27 @@ class Test_VectorOfDiscrete_Class(unittest.TestCase):
         self.assertTrue( hasattr(localo,'VectorOfX') )
         self.assertTrue( hasattr(localo,'FrequenciesAA') )
 
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Tests for VectorTable
+
 class Test_VectorTable_Class(unittest.TestCase):
 
-    def test_argument_usage(self):
-        pass
-
-    def test_anecdote_expected_results(self):
-        pass
+    def test_Constructs_with_just_a_class_column_argument(self):
+           #2001-01,2020-09,Long-term migrant,Arrivals,Male,0-4 years,341,0,Final
+        vcsa = [None,None,None,None,None,None,sames.VectorOfContinuous,sames.VectorOfContinuous,None]
+        localo = sames.VectorTable(vcsa)
+        self.assertIsInstance( localo, sames.VectorTable )
+    
+    def test_Allows_adding_a_data_row_s_of_vector_elements(self):
+           #2001-01,2020-09,Long-term migrant,Arrivals,Male,0-4 years,341,0,Final
+        vcsa = [None,None,None,None,None,None,sames.VectorOfContinuous,sames.VectorOfContinuous,None]
+        localo = sames.VectorTable(vcsa)
+        a = ['Nil0','Nil1','Nil2','Nil3','Nil4','Nil5',123456,77,'Nil8']
+        localo.pushTableRow(a)
+        lvi6o = localo.getVectorObject(6)
+        self.assertIsInstance( lvi6o, sames.VectorOfContinuous )
+        lvi7o = localo.getVectorObject(7)
+        self.assertIsInstance( lvi7o, sames.VectorOfContinuous )
 
 if __name__ == '__main__':
 
