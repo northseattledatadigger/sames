@@ -436,13 +436,360 @@ class Test_VectorOfX_Class(unittest.TestCase):
         self.assertTrue( hasattr(localo,'SortedVectorOfX') )
 
 
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Tests for sames.VectorOfContinuous, and most base class methods inherited.
+
 class Test_VectorOfContinuous_Class(unittest.TestCase):
 
-    def test_argument_usage(self):
-        pass
+    def test_Constructs_with_no_argument(self):
+        localo = sames.VectorOfContinuous()
+        self.assertIsInstance( localo, sames.VectorOfContinuous )
+        localo.pushX(5.333)
 
-    def test_anecdote_expected_results(self):
-        pass
+    def test_Constructs_with_a_Ruby_Array(self):
+        sames.VectorOfContinuous([1.5,99,5876.1234])
+        localo = sames.VectorOfContinuous([99.336,5.9,0x259,88441133.7,1234])
+        self.assertIsInstance( localo, sames.VectorOfContinuous )
+
+'''
+    def test_Has_constructor_which_drops_bad_values(self):
+        a = ["1.5","99","5876.1234","1234 ","asdf"]
+        localo = nil
+        assert_nothing_raised do
+            localo = sames.VectorOfContinuousAfterInvalidatedDropped(a,false)
+        assert_equal 4, localo.getCount
+        assert_equal 1.5, localo.getMin
+        assert_equal 5876.1234, localo.getMax
+
+    def test_Has_internal_focused_method_to_construct_a_new_SumsOfPowers_object_for_moment_statistics(self):
+        a = [1,2,3]
+        localo  = sames.VectorOfContinuous(a)
+        assert_equal localo.getCount, 3
+        assert_respond_to localo, :_addUpXsToSumsOfPowers
+        sopo    = localo._addUpXsToSumsOfPowers
+        assert sopo.is_a? SumsOfPowers
+
+    def test_Has_internal_focused_method_to_decide_startno_value_for_histogram(self):
+        a = [1,2,3]
+        localo = sames.VectorOfContinuous(a)
+        assert_equal localo.getCount, 3
+        startno = localo._decideHistogramStartNumber
+        assert startno == 1
+        startno = localo._decideHistogramStartNumber(0)
+        assert startno == 0
+
+    def test_Calculates_arithmetic_mean_in_two_places(self):
+        a = [1,2,3]
+        localo  = sames.VectorOfContinuous(a)
+        vocoam  = localo.calculateArithmeticMean
+        sopo    = localo._addUpXsToSumsOfPowers
+        assert sopo.is_a? SumsOfPowers
+        sopoam  = sopo.ArithmeticMean
+        assert_equal vocoam, sopoam
+
+    def test_Calculates_geometric_mean(self):
+        a = [1,2,3,4,5]
+        localo  = sames.VectorOfContinuous(a)
+        gmean  = localo.calculateGeometricMean
+        assert_equal 2.6052, gmean
+        a           = [2,2,2,2]
+        localo      = sames.VectorOfContinuous(a)
+        amean       = localo.calculateArithmeticMean
+        gmean       = localo.calculateGeometricMean
+        assert_equal amean, gmean
+        a           = [1,2,3,4,5,6,7,8,9]
+        localo      = sames.VectorOfContinuous(a)
+        amean       = localo.calculateArithmeticMean
+        gmean       = localo.calculateGeometricMean
+        assert amean > gmean
+
+    def test_Calculates_harmonic_mean(self):
+        a = [1,2,3,4,5]
+        localo  = sames.VectorOfContinuous(a)
+        hmean  = localo.calculateHarmonicMean
+        assert_equal 2.1898, hmean
+        a           = [2,2,2,2]
+        localo      = sames.VectorOfContinuous(a)
+        amean       = localo.calculateArithmeticMean
+        gmean       = localo.calculateGeometricMean
+        hmean       = localo.calculateHarmonicMean
+        assert_equal amean, gmean
+        assert_equal amean, hmean
+        a           = [1,2,3,4,5,6,7,8,9]
+        localo      = sames.VectorOfContinuous(a)
+        amean       = localo.calculateArithmeticMean
+        gmean       = localo.calculateGeometricMean
+        hmean       = localo.calculateHarmonicMean
+        assert amean > gmean
+        assert gmean > hmean
+
+    def test_Has_a_calculateQuartile_method_which_returns_the_value_for_a_designated_quartile(self):
+        a  = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0]
+        sa = a.sort
+        #puts "trace a:  #{a}, #{sa}, #{a.size}"
+        localo = sames.VectorOfContinuous(a)
+        qv = localo.calculateQuartile(1)
+        assert_equal qv, 3
+
+        a       = [1,2,3,4,5]
+        localo  = sames.VectorOfContinuous(a)
+        qv      = localo.calculateQuartile(0)
+        assert_equal qv, 1
+        #puts "trace BEGIN first quartile"
+        qv      = localo.calculateQuartile(1)
+        #puts "trace END first quartile"
+        assert_equal qv, 2
+        qv      = localo.calculateQuartile(2)
+        assert_equal qv, 3
+        qv      = localo.calculateQuartile(3)
+        assert_equal qv, 4
+        qv      = localo.calculateQuartile(4)
+        assert_equal qv, 5
+
+        a       = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0]
+        sa      = a.sort
+        localo  = sames.VectorOfContinuous(a)
+        qv      = localo.calculateQuartile(0)
+        assert_equal qv, 0
+        qv      = localo.calculateQuartile(1)
+        assert_equal qv, 3.0
+        qv      = localo.calculateQuartile(2)
+        assert_equal qv, 7.0
+        qv      = localo.calculateQuartile(3)
+        assert_equal qv, 8.0
+        qv      = localo.calculateQuartile(4)
+        assert_equal qv, 9.0
+
+    def test_Generates_a_Average_Absolute_Deviation_for_Arithmetic_Geometric_Harmonic_Means_Median_Min_Max_Mode(self):
+        a           = [1,2,3,4,5,6,7,8.9]
+        localo      = sames.VectorOfContinuous(a)
+        amaad1      = localo.generateAverageAbsoluteDeviation
+        assert_equal 2.1125, amaad1
+        amaad2      = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::ArithmeticMeanId)
+        assert_equal amaad1, amaad2
+        gmaad       = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::GeometricMeanId)
+        assert_equal 2.1588, gmaad
+        hmaad       = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::HarmonicMeanId)
+        assert_equal 2.3839, hmaad
+        medianaad   = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::MedianId)
+        assert_equal 2.1125, medianaad
+        minaad      = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::MinId)
+        assert_equal 3.6125, minaad
+        maxaad      = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::MaxId)
+        assert_equal 4.2875, maxaad
+        modeaad     = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::ModeId)
+        assert_equal 4.2875, modeaad
+        a           = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0]
+        localo      = sames.VectorOfContinuous(a)
+        aad         = localo.generateAverageAbsoluteDeviation
+        assert_equal 2.6112, aad
+        aad         = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::MedianId)
+        assert_equal 2.5172, aad
+
+    def test_Generates_a_coefficient_of_variation(self):
+        a = [1,2,3,4,5,6,7,8.9]
+        localo      = sames.VectorOfContinuous(a)
+        amean       = localo.calculateArithmeticMean
+        stddev      = localo.requestStandardDeviation
+        herecov     = ( stddev / amean ).round(localo.OutputDecimalPrecision)
+        cov         = localo.generateCoefficientOfVariation
+        assert_equal cov, herecov
+
+    def test_Has_two_methods_to_Generate_a_matrix_of_histogram_data(self):
+        a = [1,2,3,4,5,6,7,8,9]
+        localo = sames.VectorOfContinuous(a)
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,1)
+        assert_equal 3, hdaa.size
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,0)
+        assert_equal 3, hdaa.size
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,-1)
+        assert_equal 3, hdaa.size
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(4,1)
+        assert_equal 4, hdaa.size
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(5,0)
+        assert_equal 5, hdaa.size
+        hdaa = localo.generateHistogramAAbySegmentSize(2,1)
+        diff0 = hdaa[0][1] - hdaa[0][0]
+        #STDERR.puts "trace diff0 = hdaa[0][1] - hdaa[0][0]:  #{diff0} == #{hdaa[0][1]} - #{hdaa[0][0]}"
+        assert_equal diff0, 2.0
+        diff1 = hdaa[1][1] - hdaa[1][0]
+        assert_equal diff1, 2
+        hdaa = localo.generateHistogramAAbySegmentSize(3,0)
+        diff2 = hdaa[2][1] - hdaa[2][0]
+        assert_equal diff2, 3
+
+    def test_Generates_a_Mean_Absolute_Difference(self):
+        a = [1,2,3,4,5,6,7,8.9]
+        localo      = sames.VectorOfContinuous(a)
+        mad         = localo.generateMeanAbsoluteDifference
+        assert_equal 3.225, mad
+
+    def test_Can_get_the_minimum_median_maximum_and_mode(self):
+        a       = [1,2,3,4,5,6,7,8,9]
+        localo  = sames.VectorOfContinuous(a)
+        assert_equal localo.getCount, 9
+        assert_equal 1, localo.getMin
+        assert_equal 5, localo.requestMedian
+        assert_equal 9, localo.getMax
+        assert_equal 1, localo.generateMode # Question here:  should I return a sentinal when it is uniform?  NOTE
+        a       = [1,2,3,4,5,6,7,8,9,8,7,8]
+        localo  = sames.VectorOfContinuous(a)
+        min,max = localo.requestRange
+        assert_equal localo.getCount, 12
+        assert_equal 1, min
+        #puts "trace BEGIN median mmmm test"
+        assert_equal 6.5, localo.requestMedian
+        #puts "trace END median mmmm"
+        assert_equal 9, max
+        assert_equal 8, localo.generateMode # Question here:  should I return a sentinal when it is uniform?  NOTE
+
+    def test_Has_a_method_to_test_if_the_Vector_Of_X_has_an_even_N(self):
+        a = [1,2,3,4,5,6,7,8.9]
+        localo      = sames.VectorOfContinuous(a)
+        assert localo.isEvenN?
+        a = [1,2,3,4,5,6,7,8.9,11]
+        localo      = sames.VectorOfContinuous(a)
+        assert ( not localo.isEvenN? )
+
+    def test_Has_an_method_to_return_the_sum(self):
+        a       = [1,2,2,3,3,3]
+        localo  = sames.VectorOfContinuous(a)
+        assert_equal localo.getCount, 6
+        assert_equal 14, localo.getSum
+
+    def test_Can_request_calculation_of_kurtosis(self):
+        a = [1,2,3,4,5,6,7,8,9]
+        localo  = sames.VectorOfContinuous(a)
+        ek      = localo.requestExcessKurtosis(2)
+        #STDERR.puts "trace ek:  #{ek}"
+        assert_equal -1.23, ek
+        ek      = localo.requestExcessKurtosis
+        assert_equal -1.2, ek
+        k       = localo.requestKurtosis
+        #STDERR.puts "trace k:  #{k}"
+        assert_equal 1.8476, k
+
+        localo.UseDiffFromMeanCalculations = false
+        # NOTE:  These need to be implemented so the tests will change. TBD
+        assert_raise ArgumentError do
+            localo.requestExcessKurtosis(2)
+        assert_raise ArgumentError do
+            localo.requestExcessKurtosis
+        k       = localo.requestKurtosis
+        #STDERR.puts "trace k:  #{k}"
+        assert_equal 1.8476, k
+
+    def test_Can_request_a_complete_collection_of_all_5_quartiles_in_an_array(self):
+        a       = [1,2,3,4,5]
+        localo  = sames.VectorOfContinuous(a)
+        qa      = localo.requestQuartileCollection
+        assert_equal 1, qa[0]
+        assert_equal 2, qa[1]
+        assert_equal 3, qa[2]
+        assert_equal 4, qa[3]
+        assert_equal 5, qa[4]
+        a           = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0,1,2,2,3,3,3,99.336,5.9,0x259,1133.7,1234]
+        localo  = sames.VectorOfContinuous(a)
+        qa      = localo.requestQuartileCollection
+        assert_equal 0, qa[0]
+        assert_equal 3.0, qa[1]
+        assert_equal 6.0, qa[2]
+        assert_equal 8.25, qa[3]
+        assert_equal 1234, qa[4]
+
+    def test_Has_some_formatted_result_methods(self):
+        a       = [1,2,3,4,5,6,7,8,9]
+        localo  = sames.VectorOfContinuous(a)
+        assert_respond_to localo, :requestResultAACSV
+        assert localo.requestResultAACSV.is_a?      String
+        assert localo.requestResultCSVLine.is_a?    String
+        assert localo.requestResultJSON.is_a?       String
+
+    def test_Can_request_a_calculation_of_skewness(self):
+        a       = [1,2,3,4,5,6,7,8,9]
+        localo  = sames.VectorOfContinuous(a)
+        sk      = localo.requestSkewness
+        assert_equal 0, sk
+        sk      = localo.requestSkewness(1)
+        assert_equal 0, sk
+        sk      = localo.requestSkewness(2)
+        assert_equal 0, sk
+        sk      = localo.requestSkewness(3)
+        assert_equal 0, sk
+        a       = [1,2,2,3,3,3,4,4,4,4,4,4]
+        localo  = sames.VectorOfContinuous(a)
+        sk      = localo.requestSkewness
+        assert_equal -0.9878, sk
+        sk1     = localo.requestSkewness(1)
+        assert_equal -0.7545, sk1
+        sk2     = localo.requestSkewness(2)
+        assert_equal -0.8597, sk2
+        sk3     = localo.requestSkewness(3)
+        assert_equal sk3, sk
+
+    def test_Has_four_standard_deviation_calculations_corresponding_to_the_four_variance_combinations(self):
+        a       = [1,2,3]
+        localo  = sames.VectorOfContinuous(a)
+        sdsd    = localo.requestStandardDeviation
+        localo.UseDiffFromMeanCalculations = false
+        sdsx    = localo.requestStandardDeviation
+        assert_equal sdsd, sdsx
+        localo.Population = true
+        sdsd    = localo.requestStandardDeviation
+        localo.UseDiffFromMeanCalculations = false
+        sdsx    = localo.requestStandardDeviation
+        assert_equal sdsd, sdsx
+
+    def test_Has_two_variance_generation_methods(self):
+        a = [1,2,2,3,3,3,99.336,5.9,0x259,1133.7,1234]
+        localo = sames.VectorOfContinuous(a)
+        v = localo.requestVarianceSumOfDifferencesFromMean
+        assert_equal 231232.125543275, v
+        v = localo.requestVarianceXsSquaredMethod
+        assert_equal 231232.12554327273, v
+        v = localo.requestVarianceSumOfDifferencesFromMean(true)
+        assert_equal 210211.0232211591, v
+        v = localo.requestVarianceXsSquaredMethod(true)
+        assert_equal 210211.02322115703, v
+
+    def test_Input_routine_pushX_validates_arguments(self):
+        lvo = sames.VectorOfContinuous
+        assert_nothing_raised do
+            lvo.pushX(123.456)
+        assert_raise ArgumentError do
+            lvo.pushX("asdf")
+        assert_raise ArgumentError do
+            lvo.pushX("0x9")
+        assert_raise ArgumentError do
+            lvo.pushX("1234..56")
+        assert_raise ArgumentError do
+            lvo.pushX("2 34")
+        lvo.ValidateStringNumbers = true
+        assert_raise RangeError do
+            lvo.pushX("9999999999999999999999999999")
+
+    def test_Fails_differently_according_to_special_arguments_to_pushX(self):
+        # These are the pertinent identifiers:
+        #BlankFieldOnBadData = 0
+        #FailOnBadData       = 1
+        #SkipRowOnBadData    = 2
+        #ZeroFieldOnBadData  = 3
+        localo = sames.VectorOfContinuous
+        assert_equal 0, localo.getCount
+        assert_raise ArgumentError do
+            localo.pushX("")
+        assert_equal 0, localo.getCount
+        assert_raise ArgumentError do
+            localo.pushX("",sames.VectorOfX::BlankFieldOnBadData)
+        assert_equal 0, localo.getCount
+        assert_raise ArgumentError do
+            localo.pushX("",sames.VectorOfX::FailOnBadData)
+        assert_equal 0, localo.getCount
+        localo.pushX("",sames.VectorOfX::SkipRowOnBadData)
+        assert_equal 0, localo.getCount
+        localo.pushX("",sames.VectorOfX::ZeroFieldOnBadData)
+        assert_equal 1, localo.getCount
+'''
 
 class Test_VectorOfDiscrete_Class(unittest.TestCase):
 

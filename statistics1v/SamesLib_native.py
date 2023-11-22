@@ -628,7 +628,6 @@ class VectorOfX:
         return b
 
 
-'''
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # VectorOfContinouos for floating point based distributions.  All Xs floats.
@@ -663,46 +662,9 @@ class VectorOfContinuous(VectorOfX):
     StddevSumxsSampleId         = 'StddevSumxsSample'
     SumId                       = 'Sum'
 
-    class << self
-
-    @classmethod
-    def newAfterInvalidatedDropped(cls,arrayA,relayErrors=False):
-        raise ValueError if not arrayA.is_a? Array
-        localo = self.new
-        v = Array.new
-        i = 0
-        arrayA.each do |le|
-            sle = le.strip
-            next if not isUsableNumber?(sle)
-            b = float( sle )
-            localo.pushX(b)
-            i += 1
-        return localo
-
-    def _addUpXsToSumsOfPowers(self,populationCalculation=False,sumOfDiffs=True):
-        sopo    = SumsOfPowers.new(populationCalculation)
-        if sumOfDiffs:
-            n       = getCount
-            sum     = getSum
-            sopo.setToDiffsFromMeanState(sum,n)
-        if sumOfDiffs:
-            amean   = calculateArithmeticMean
-            self.VectorOfX.each do |lx|
-                diff = lx - amean
-                sopo.addToSums(diff)
-        else: # sum of Xs
-            self.VectorOfX.each do |lx|
-                sopo.addToSums(lx)
-        end
-        return sopo
-
-    def _decideHistogramStartNumber(self,startNumber=None):
-        startno = getMin            if not startNumber
-        startno = float( startNumber )  if startNumber
-        return startno
-
-    def initialize(self,vectorX=Array.new):
-        raise ValueError if not vectorX.is_a? Array
+    def __init__(self,vectorX=[]):
+        if not type(vectorX) is list:
+            raise ValueError
         self.InputDecimalPrecision          = 4
         self.OutputDecimalPrecision         = 4
         self.Population                     = False
@@ -712,38 +674,73 @@ class VectorOfContinuous(VectorOfX):
         self.ValidateStringNumbers          = False
         self.VectorOfX                      = vectorX
 
+    def _addUpXsToSumsOfPowers(self,populationCalculation=False,sumOfDiffs=True):
+        sopo    = SumsOfPowers.new(populationCalculation)
+        if sumOfDiffs:
+            n       = self.getCount()
+            sum     = self.getSum()
+            sopo.setToDiffsFromMeanState(sum,n)
+        if sumOfDiffs:
+            amean   = self.calculateArithmeticMean()
+            for lx in self.VectorOfX:
+                diff = lx - amean
+                sopo.addToSums(diff)
+        else: # sum of Xs
+            for lx in self.VectorOfX:
+                sopo.addToSums(lx)
+        return sopo
+
+    def _decideHistogramStartNumber(self,startNumber=None):
+        startno = None
+        if startNumber:
+            startno = float( startNumber )
+        else:
+            startno = self.getMin()
+        return startno
+
     def calculateArithmeticMean(self):
-        nf          = float( self.VectorOfX.size )
-        sumxs       = float( self.VectorOfX.sum )
+        n           = self.getCount()
+        nf          = float( n )
+        sumxs       = self.getSum()
         unrounded   = sumxs / nf
-        rounded     = unrounded.round(self.OutputDecimalPrecision)
+        rounded     = round(unrounded,self.OutputDecimalPrecision)
         return rounded
 
     def calculateGeometricMean(self):
-        exponent    = ( 1.0 / float( self.VectorOfX.size ) )
-        productxs   = self.VectorOfX.reduce(1, :*)
-        unrounded   = productxs**exponent
-        rounded     = unrounded.round(self.OutputDecimalPrecision)
+        n               = self.getCount()
+        exponent        = ( 1.0 / float( n ) )
+        productxs       = 1.0
+        for lx in self.VectorOfX:
+            productxs   *= lx
+        unrounded       = productxs**exponent
+        rounded         = round(unrounded,self.OutputDecimalPrecision)
         return rounded
 
     def calculateHarmonicMean(self):
-        nf          = float( self.VectorOfX.size )
-        sumrecips   = self.VectorOfX.inject { |sum, x| sum + 1.0 / float( x ) } 
-        unrounded   = nf / sumrecips
-        rounded     = unrounded.round(self.OutputDecimalPrecision)
+        n               = self.getCount()
+        nf              = float( n )
+        sumrecips       = 0.0
+        for lx in self.VectorOfX:
+            sumrecips   += 1.0 / lx
+            productxs   *= lx
+        unrounded       = nf / sumrecips
+        rounded         = round(unrounded,self.OutputDecimalPrecision)
         return rounded
 
     def calculateQuartile(self,qNo):
-        raise ValueError if not qNo.is_a? Integer
-        raise ValueError if not 0 <= qNo
-        raise ValueError if not qNo < 5
-        _assureSortedVectorOfX
-        n                       = getCount
+        if type(qNo) != int:
+            raise ValueError
+        if qNo < 0:
+            raise ValueError
+        if 5 <= qNo:
+            raise ValueError
+        self._assureSortedVectorOfX()
+        n                       = self.getCount()
         nf                      = float( n )
         qindexfloat             = qNo * ( nf - 1.0 ) / 4.0
         thisquartilefraction    = qindexfloat % 1
         qvalue = None
-        if thisquartilefraction % 1 == 0 then
+        if thisquartilefraction % 1 == 0:
             qi                  = int( qindexfloat )
             qvalue              = self.SortedVectorOfX[qi]
         else:
@@ -756,284 +753,316 @@ class VectorOfContinuous(VectorOfX):
 
     def generateAverageAbsoluteDeviation(self,centralPointType=ArithmeticMeanId):
         cpf = None
-        case centralPointType
-        when ArithmeticMeanId
-            cpf = calculateArithmeticMean
-        when GeometricMeanId
-            cpf = calculateGeometricMean
-        when HarmonicMeanId
-            cpf = calculateHarmonicMean
-        when MaxId
-            cpf = getMax
-        when MedianId
-            cpf = requestMedian
-        when MinId
-            cpf = generateMode
-        when ModeId
-            cpf = getMax
-        else:
-            m = "This Average Absolute Mean formula has not implemented a statistic for central point '#{centralPointType}' at this time."
-            raise ValueError, m
+        match centralPointType:
+            case VectorOfContinuous.ArithmeticMeanId:
+                cpf = calculateArithmeticMean
+            case VectorOfContinuous.GeometricMeanId:
+                cpf = calculateGeometricMean
+            case VectorOfContinuous.HarmonicMeanId:
+                cpf = calculateHarmonicMean
+            case VectorOfContinuous.MaxId:
+                cpf = getMax
+            case VectorOfContinuous.MedianId:
+                cpf = requestMedian
+            case VectorOfContinuous.MinId:
+                cpf = generateMode
+            case VectorOfContinuous.ModeId:
+                cpf = getMax
+            case _:
+                m = "This Average Absolute Mean formula has not implemented a statistic for central point '#{centralPointType}' at this time."
+                raise ValueError( m )
         nf                      = float( self.VectorOfX.size )
         sumofabsolutediffs      = 0
-        self.VectorOfX.each do |lx|
+        for lx in self.VectorOfX:
             previous            = sumofabsolutediffs
-            sumofabsolutediffs  += ( lx - cpf ).abs
-            if previous > sumofabsolutediffs then
+            sumofabsolutediffs  += abs( lx - cpf )
+            if previous > sumofabsolutediffs:
                 # These need review.  
-                raise IndexError, "previous #{previous} > sumofdiffssquared #{sumofabsolutediffs}"
-        end
+                raise IndexError( "previous #{previous} > sumofdiffssquared #{sumofabsolutediffs}" )
         unrounded               = sumofabsolutediffs / nf
-        rounded                 = unrounded.round(self.OutputDecimalPrecision)
+        rounded                 = round(unrounded,self.OutputDecimalPrecision)
         return rounded
 
     def generateCoefficientOfVariation(self):
-        self.SOPo       = _addUpXsToSumsOfPowers(self.Population,self.SumOfDiffs) if not self.SOPo
-        amean       = self.SOPo.ArithmeticMean
-        stddev      = self.SOPo.generateStandardDeviation
-        unrounded   = stddev / amean
-        rounded     = unrounded.round(self.OutputDecimalPrecision)
+        if not self.SOPo:
+            self.SOPo   = _addUpXsToSumsOfPowers(self.Population,self.SumOfDiffs)
+        amean           = self.SOPo.ArithmeticMean
+        stddev          = self.SOPo.generateStandardDeviation
+        unrounded       = stddev / amean
+        rounded         = round(unrounded,self.OutputDecimalPrecision)
         return rounded
 
     def generateHistogramAAbyNumberOfSegments(self,desiredSegmentCount,startNumber=None):
-        raise ValueError if not desiredSegmentCount.is_a? Integer
-        if startNumber then
-            raise ValueError if not startNumber.is_a? Numeric
-        max             = getMax
-        startno         = _decideHistogramStartNumber(startNumber)
-        histo = HistogramOfX.newFromDesiredSegmentCount(startno,max,desiredSegmentCount)
-        histo.validateRangesComplete
-        self.VectorOfX.each do |lx|
+        if type(desiredSegmentCount) != int:
+            raise ValueError
+        if startNumber:
+            if not isinstance(startNumber,numbers.Number):
+                raise ValueError
+        maxx            = self.getMax()
+        startno         = self._decideHistogramStartNumber(startNumber)
+        histo           = HistogramOfX.newFromDesiredSegmentCount(startno,maxx,desiredSegmentCount)
+        histo.validateRangesComplete()
+        for lx in self.VectorOfX:
             histo.addToCounts(lx)
-        resultvectors   = histo.generateCountCollection
+        resultvectors   = histo.generateCountCollection()
         return resultvectors
 
     def generateHistogramAAbySegmentSize(self,segmentSize,startNumber=None):
-        raise ValueError if not segmentSize.is_a? Numeric
-        if startNumber then
-            raise ValueError if not startNumber.is_a? Numeric
-        max             = getMax
-        startno         = _decideHistogramStartNumber(startNumber)
-        histo = HistogramOfX.newFromUniformSegmentSize(startno,max,segmentSize)
-        histo.validateRangesComplete
-        self.VectorOfX.each do |lx|
+        if not isinstance(segmentSize,numbers.Number):
+            raise ValueError
+        if startNumber:
+            if not isinstance(startNumber,numbers.Number):
+                raise ValueError
+        maxx            = getMax
+        startno         = self._decideHistogramStartNumber(startNumber)
+        histo           = HistogramOfX.newFromUniformSegmentSize(startno,maxx,segmentSize)
+        histo.validateRangesComplete()
+        for lx in self.VectorOfX:
             histo.addToCounts(lx)
-        resultvectors   = histo.generateCountCollection
+        resultvectors   = histo.generateCountCollection()
         return resultvectors
 
     def generateMeanAbsoluteDifference(self):
         # https://en.wikipedia.org/wiki/Mean_absolute_difference
-        nf                          = float( self.VectorOfX.size )
+        n                           = self.getCount()
+        nf                          = float( n )
         sumofabsolutediffs          = 0.0
-        self.VectorOfX.each do |lxi|
-            self.VectorOfX.each do |lxj|
-                sumofabsolutediffs  += ( lxi - lxj ).abs
-        end
+        for lxi in self.VectorOfX:
+            for lxj in self.VectorOfX:
+                sumofabsolutediffs  += abs( lxi - lxj )
+
         denominator                 = nf * ( nf - 1.0 )
         unrounded                   = sumofabsolutediffs / denominator
-        rounded                     = unrounded.round(self.OutputDecimalPrecision)
+        rounded                     = round(unrounded,self.OutputDecimalPrecision)
         return rounded
 
     def generateMode(self):
-        lfaa            = Hash.new # Init local frequency associative array.
-        self.VectorOfX.each do |lx|
-            lfaa[lx]    = 1   if not lfaa.has_key?(lx)
-            lfaa[lx]    += 1      if lfaa.has_key?(lx)
-        x               = generateModefromFrequencyAA(lfaa)
+        lfaa                = {} # Init local frequency associative array.
+        for lx in self.VectorOfX:
+            if lx in lfaa:
+                lfaa[lx]    += 1
+            else:
+                lfaa[lx]    = 1
+        x               = self.generateModefromFrequencyAA(lfaa)
         return x
 
     def getMax(self):
-        _assureSortedVectorOfX
+        self._assureSortedVectorOfX()
         return self.SortedVectorOfX[-1]
 
     def getMin(self,sVoX=None):
-        _assureSortedVectorOfX
+        self._assureSortedVectorOfX()
         return self.SortedVectorOfX[0]
 
-    def getSum(self):
-        sumxs = self.VectorOfX.sum
+    def genSum():
+        sumxs = sum(self.VectorOfX)
         return sumxs
 
-    def isEvenN?(self):
-        n = self.VectorOfX.size
-        return True if n % 2 == 0
+    def isEvenN(self):
+        n = self.getCount()
+        if n % 2 == 0:
+            return True
         return False
 
+    @classmethod
+    def newAfterInvalidatedDropped(cls,arrayA,relayErrors=False):
+        localo = cls.new
+        if not type(arrayA) is list:
+            raise ValueError
+        v = []
+        i = 0
+        for le in arrayA:
+            sle = le
+            if isinstance(le,str):
+                sle = le.strip
+            if not isUsableNumber(sle):
+                continue
+            b = float( sle )
+            localo.pushX(b)
+            i += 1
+        return localo
+
     def pushX(self,xFloat,onBadData=VectorOfX.FailOnBadData):
-        if not isUsableNumber?(xFloat)
-            case onBadData
-            when VectorOfX::BlankFieldOnBadData
-                raise ValueError, "May Not Blank Fields"
-            when VectorOfX::DefaultFillOnBadData
-                xFloat=0.0
-            when VectorOfX::FailOnBadData
-                raise ValueError, "#{xFloat} not usable number."
-            when VectorOfX::SkipRowOnBadData
-                return
-            when VectorOfX::ZeroFieldOnBadData
-                xFloat=0.0
-            else:
-                raise ValueError, "Unimplemented onBadData value:  #{onBadData}."
-        end
-        validateStringNumberRange(xFloat) if self.ValidateStringNumbers
+        if not isUsableNumber(xFloat):
+            match onBadData:
+                case VectorOfX.BlankFieldOnBadData:
+                    raise ValueError( "May Not Blank Fields" )
+                case VectorOfX.DefaultFillOnBadData:
+                    xFloat=0.0
+                case VectorOfX.FailOnBadData:
+                    raise ValueError( "#{xFloat} not usable number." )
+                case VectorOfX.SkipRowOnBadData:
+                    return
+                case VectorOfX.ZeroFieldOnBadData:
+                    xFloat=0.0
+                case _:
+                    raise ValueError( "Unimplemented onBadData value:  #{onBadData}." )
+        if self.ValidateStringNumbers:
+            self.validateStringNumberRange(xFloat)
         lfn = float(xFloat)
         lrn = round(lfn,self.InputDecimalPrecision)
-        self.VectorOfX.push(lrn)
+        self.VectorOfX.append(lrn)
 
     def requestExcessKurtosis(self,formulaId=3):
-        if not self.UseDiffFromMeanCalculations
-            raise ValueError, "May NOT be used with Sum of Xs Data."
-        self.SOPo       = _addUpXsToSumsOfPowers(self.Population) if not self.SOPo
+        if not self.UseDiffFromMeanCalculations:
+            raise ValueError( "May NOT be used with Sum of Xs Data." )
+        if not self.SOPo:
+            self.SOPo   = self._addUpXsToSumsOfPowers(self.Population)
         unrounded       = None
-        case formulaId
-        when 2
-            unrounded   = self.SOPo.calculateExcessKurtosis_2_JR_R
-        when 3
-            unrounded   = self.SOPo.generateExcessKurtosis_3_365datascience
-        else:
-            m="There is no excess kurtosis formula #{formulaId} implemented at this time."
-            raise ValueError, m
-        rounded         = unrounded.round(self.OutputDecimalPrecision)
+        match formulaId:
+            case 2:
+                unrounded   = self.SOPo.calculateExcessKurtosis_2_JR_R()
+            case 3:
+                unrounded   = self.SOPo.generateExcessKurtosis_3_365datascience()
+            case _:
+                m="There is no excess kurtosis formula #{formulaId} implemented at this time."
+                raise ValueError( m )
+
+        rounded         = round(unrounded,self.OutputDecimalPrecision)
         return rounded
 
     def requestKurtosis(self):
-        self.SOPo       = _addUpXsToSumsOfPowers(self.Population) if not self.SOPo
-        unrounded   = self.SOPo.requestKurtosis
-        rounded     = unrounded.round(self.OutputDecimalPrecision)
+        if not self.SOPo:
+            self.SOPo   = _addUpXsToSumsOfPowers(self.Population)
+        unrounded       = self.SOPo.requestKurtosis
+        rounded         = round(unrounded,self.OutputDecimalPrecision)
         return rounded
 
     def requestMedian(self):
-        q2 = calculateQuartile(2)
+        q2 = self.calculateQuartile(2)
         return q2
 
     def requestQuartileCollection(self):
-        qos0 = calculateQuartile(0)
-        qos1 = calculateQuartile(1)
-        qos2 = calculateQuartile(2)
-        qos3 = calculateQuartile(3)
-        qos4 = calculateQuartile(4)
+        qos0 = self.calculateQuartile(0)
+        qos1 = self.calculateQuartile(1)
+        qos2 = self.calculateQuartile(2)
+        qos3 = self.calculateQuartile(3)
+        qos4 = self.calculateQuartile(4)
         return [qos0,qos1,qos2,qos3,qos4]
 
     def requestRange(self):
-        _assureSortedVectorOfX
+        self._assureSortedVectorOfX()
         return self.SortedVectorOfX[0], self.SortedVectorOfX[-1]
 
     def requestResultAACSV(self):
         # NOTE: Mean Absolute Diffence is no longer featured here.
-        scaa = requestSummaryCollection
-        return <<-EOAACSV
-"#{ArithmeticMeanId}", #{scaa[ArithmeticMeanId]}
-"#{ArMeanAADId}", #{scaa[ArMeanAADId]}
-"#{CoefficientOfVariationId}", #{scaa[CoefficientOfVariationId]}
-"#{GeometricMeanId}", #{scaa[GeometricMeanId]}
-"#{HarmonicMeanId}", #{scaa[HarmonicMeanId]}
-"#{IsEvenId}", #{scaa[IsEvenId]}
-"#{KurtosisId}", #{scaa[KurtosisId]}
-"#{MaxId}", #{scaa[MaxId]}
-"#{MedianId}", #{scaa[MedianId]}
-"#{MedianAADId}", #{scaa[MedianAADId]}
-"#{MinId}", #{scaa[MinId]}
-"#{ModeId}", #{scaa[ModeId]}
-"#{NId}", #{scaa[NId]}
-"#{SkewnessId}", #{scaa[SkewnessId]}
-"#{StandardDeviation}", #{scaa[StandardDeviation]}
-"#{SumId}", #{scaa[SumId]}
-EOAACSV
+        scaa = self.requestSummaryCollection()
+        content =   ""
+        content +=  f"\"{ArithmeticMeanId}\", {scaa[ArithmeticMeanId]}\n"
+        content +=  f"\"{ArMeanAADId}\", {scaa[ArMeanAADId]}\n"
+        content +=  f"\"{CoefficientOfVariationId}\", {scaa[CoefficientOfVariationId]}\n"
+        content +=  f"\"{GeometricMeanId}\", {scaa[GeometricMeanId]}\n"
+        content +=  f"\"{HarmonicMeanId}\", {scaa[HarmonicMeanId]}\n"
+        content +=  f"\"{IsEvenId}\", {scaa[IsEvenId]}\n"
+        content +=  f"\"{KurtosisId}\", {scaa[KurtosisId]}\n"
+        content +=  f"\"{MaxId}\", {scaa[MaxId]}\n"
+        content +=  f"\"{MedianId}\", {scaa[MedianId]}\n"
+        content +=  f"\"{MedianAADId}\", {scaa[MedianAADId]}\n"
+        content +=  f"\"{MinId}\", {scaa[MinId]}\n"
+        content +=  f"\"{ModeId}\", {scaa[ModeId]}\n"
+        content +=  f"\"{NId}\", {scaa[NId]}\n"
+        content +=  f"\"{SkewnessId}\", {scaa[SkewnessId]}\n"
+        content +=  f"\"{StandardDeviation}\", {scaa[StandardDeviation]}\n"
+        content +=  f"\"{SumId}\", {scaa[SumId]}\n"
+        return content
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
     def requestResultCSVLine(self,includeHdr=False):
         # NOTE: Mean Absolute Diffence is no longer featured here.
         scaa        = requestSummaryCollection
-        csvline     =   "#{scaa[ArithmeticMeanId]},#{scaa[ArMeanAADId]},"
-        csvline     +=  "#{scaa[CoefficientOfVariationId]},"
-        csvline     +=  "#{scaa[GeometricMeanId]},#{scaa[HarmonicMeanId]},"
-        csvline     +=  "#{scaa[IsEvenId]},#{scaa[KurtosisId]},"
-        csvline     +=  "#{scaa[MaxId]},#{scaa[MedianId]},#{scaa[MedianAADId]},"
-        csvline     +=  "#{scaa[MinId]},#{scaa[ModeId]},#{scaa[NId]},"
-        csvline     +=  "#{scaa[SkewnessId]},#{scaa[StandardDeviation]},"
-        csvline     +=  "#{scaa[SumId]}"
-        if includeHdr then
-            csvhdr  =   "#{ArithmeticMeanId},#{ArMeanAADId},"
-            csvhdr  +=  "#{CoefficientOfVariationId},#{GeometricMeanId},"
-            csvhdr  +=  "#{HarmonicMeanId},#{IsEvenId},#{KurtosisId},"
-            csvhdr  +=  "#{MaxId},#{MedianId},#{MedianAADId},#{MinId},#{ModeId},"
-            csvhdr  +=  "#{NId},#{SkewnessId},#{StandardDeviation},#{SumId}"
-            return <<EOCSV
-#{csvhdr}
-#{csvline}
-EOCSV
+        csvline     =   f"\"{scaa[ArithmeticMeanId]}\",\"{scaa[ArMeanAADId]}\","
+        csvline     +=  f"\"{scaa[CoefficientOfVariationId]}\","
+        csvline     +=  f"\"{scaa[GeometricMeanId]}\",\"{scaa[HarmonicMeanId]}\","
+        csvline     +=  f"\"{scaa[IsEvenId]}\",\"{scaa[KurtosisId]}\","
+        csvline     +=  f"\"{scaa[MaxId]}\",\"{scaa[MedianId]}\",\"{scaa[MedianAADId]}\","
+        csvline     +=  f"\"{scaa[MinId]}\",\"{scaa[ModeId]}\",\"{scaa[NId]}\","
+        csvline     +=  f"\"{scaa[SkewnessId]}\",\"{scaa[StandardDeviation]}\","
+        csvline     +=  f"\"{scaa[SumId]}\""
+        if includeHdr:
+            csvhdr  =   f"\"{ArithmeticMeanId}\",\"{ArMeanAADId}\","
+            csvhdr  +=  f"\"{CoefficientOfVariationId}\",\"{GeometricMeanId}\","
+            csvhdr  +=  f"\"{HarmonicMeanId}\",\"{IsEvenId}\",\"{KurtosisId}\","
+            csvhdr  +=  f"\"{MaxId}\",\"{MedianId}\",\"{MedianAADId}\",\"{MinId}\",\"{ModeId}\","
+            csvhdr  +=  f"\"{NId}\",\"{SkewnessId}\",\"{StandardDeviation}\",\"{SumId}\""
+            return f"{csvhdr}\n{csvline}\n"
         else:
             return csvline
-    end
 
     def requestResultJSON(self):
-        scaa = requestSummaryCollection
-        jsonstr = scaa.to_json
+        scaa    = self.requestSummaryCollection()
+        jsonstr = json.dumps(self.VectorOfX)
         return jsonstr
 
     def requestSkewness(self,formulaId=3):
-        self.SOPo = _addUpXsToSumsOfPowers(self.Population) if not self.SOPo
-        unrounded = self.SOPo.requestSkewness(formulaId)
-        rounded = unrounded.round(self.OutputDecimalPrecision)
+        if not self.SOPo:
+            self.SOPo   = self._addUpXsToSumsOfPowers(self.Population)
+        unrounded       = self.SOPo.requestSkewness(formulaId)
+        rounded         = round(unrounded,self.OutputDecimalPrecision)
+        return rounded
 
     def requestStandardDeviation(self):
-        self.SOPo = _addUpXsToSumsOfPowers(self.Population,self.UseDiffFromMeanCalculations)
+        if not self.SOPo:
+            self.SOPo   = self._addUpXsToSumsOfPowers(self.Population,self.UseDiffFromMeanCalculations)
         unroundedstddev = self.SOPo.generateStandardDeviation
-        if unroundedstddev == 0.0 then
-            raise IndexError, "Zero Result indicates squareroot error:  #{unroundedstddev}"
-        stddev = unroundedstddev.round(self.OutputDecimalPrecision)
+        if unroundedstddev == 0.0:
+            raise IndexError( "Zero Result indicates squareroot error:  #{unroundedstddev}" )
+        stddev = round(unroundedstddev,self.OutputDecimalPrecision)
         return stddev
 
     def requestSummaryCollection(self):
         #NOTE:  Some of these are ONLY for sample.  For now, this is best used ONLY for Samples.
-        #self.SOPo                   = _addUpXsToSumsOfPowers(self.Population,self.UseDiffFromMeanCalculations)
-        self.SOPo                   = _addUpXsToSumsOfPowers(False,self.UseDiffFromMeanCalculations)
-        amean                   = calculateArithmeticMean
-        ameanaad                = generateAverageAbsoluteDeviation
-        coefficientofvariation  = generateCoefficientOfVariation
-        gmean                   = calculateGeometricMean
-        hmean                   = calculateHarmonicMean
-        is_even                 = isEvenN?
+        #self.SOPo               = self._addUpXsToSumsOfPowers(self.Population,self.UseDiffFromMeanCalculations)
+        self.SOPo               = self._addUpXsToSumsOfPowers(False,self.UseDiffFromMeanCalculations)
+        amean                   = self.calculateArithmeticMean()
+        ameanaad                = self.generateAverageAbsoluteDeviation()
+        coefficientofvariation  = self.generateCoefficientOfVariation()
+        gmean                   = self.calculateGeometricMean()
+        hmean                   = self.calculateHarmonicMean()
+        is_even                 = self.isEvenN()
         kurtosis                = "SumXsCalc Not Yet Available"
-        kurtosis                = self.SOPo.requestKurtosis.round(self.OutputDecimalPrecision) if self.UseDiffFromMeanCalculations
-        mad                     = generateMeanAbsoluteDifference
-        median                  = requestMedian
-        medianaad               = generateAverageAbsoluteDeviation(MedianId)
-        min,max                 = requestRange
-        mode                    = generateMode
-        n                       = getCount
-        skewness                = self.SOPo.requestSkewness.round(self.OutputDecimalPrecision)
-        stddev                  = self.SOPo.generateStandardDeviation.round(self.OutputDecimalPrecision)
-        sum                     = getSum
+        if self.UseDiffFromMeanCalculations:
+            unrounded           = self.SOPo.requestKurtosis()
+            kurtosis            = round(unrounded,self.OutputDecimalPrecision)
+        mad                     = self.generateMeanAbsoluteDifference()
+        median                  = self.requestMedian()
+        medianaad               = self.generateAverageAbsoluteDeviation(MedianId)
+        xmin,xmax               = self.requestRange()
+        mode                    = self.generateMode()
+        n                       = self.getCount()
+        unrounded               = self.SOPo.requestSkewness()
+        skewness                = round(unrounded,self.OutputDecimalPrecision)
+        unrounded               = self.SOPo.generateStandardDeviation()
+        stddef                  = round(unrounded,self.OutputDecimalPrecision)
+        xsum                    = self.getSum()
         return {
-            ArithmeticMeanId            => amean,
-            ArMeanAADId                 => ameanaad,
-            CoefficientOfVariationId    => coefficientofvariation,
-            GeometricMeanId             => gmean,
-            HarmonicMeanId              => hmean,
-            IsEvenId                    => is_even,
-            KurtosisId                  => kurtosis,
-            MADId                       => mad,
-            MaxId                       => max,
-            MedianId                    => median,
-            MedianAADId                 => medianaad,
-            MinId                       => min,
-            ModeId                      => mode,
-            NId                         => n,
-            SkewnessId                  => skewness,
-            StandardDeviation           => stddev,   
-            SumId                       => sum
+            ArithmeticMeanId:           amean,
+            ArMeanAADId:                ameanaad,
+            CoefficientOfVariationId:   coefficientofvariation,
+            GeometricMeanId:            gmean,
+            HarmonicMeanId:             hmean,
+            IsEvenId:                   is_even,
+            KurtosisId:                 kurtosis,
+            MADId:                      mad,
+            MaxId:                      xmax,
+            MedianId:                   median,
+            MedianAADId:                medianaad,
+            MinId:                      xmin,
+            ModeId:                     mode,
+            NId:                        n,
+            SkewnessId:                 skewness,
+            StandardDeviation:          stddev,   
+            SumId:                      xsum
         }
 
     def requestVarianceSumOfDifferencesFromMean(self,populationCalculation=False):
-        self.SOPo = _addUpXsToSumsOfPowers(populationCalculation)
-        v = self.SOPo.calculateVarianceUsingSubjectAsDiffs
+        self.SOPo = self._addUpXsToSumsOfPowers(populationCalculation)
+        v = self.SOPo.calculateVarianceUsingSubjectAsDiffs()
         # Note rounding is not done here, as it would be double rounded with stddev.
         return v
 
     def requestVarianceXsSquaredMethod(self,populationCalculation=False):
-        self.SOPo = _addUpXsToSumsOfPowers(populationCalculation,False)
-        v = self.SOPo.calculateVarianceUsingSubjectAsSumXs
+        self.SOPo = self._addUpXsToSumsOfPowers(populationCalculation,False)
+        v = self.SOPo.calculateVarianceUsingSubjectAsSumXs()
         # Note rounding is not done here, as it would be double rounded with stddev.
         return v
 
@@ -1044,23 +1073,27 @@ EOCSV
 
 class VectorOfDiscrete(VectorOfX):
 
-    def initialize(self,vectorX=Array.new):
-        self.FrequenciesAA          = Hash.new
-        self.OutputDecimalPrecision = 4
+    def __init__(self,vectorX=[]):
+        self.FrequenciesAA          = {}
+        self.OutputDecimalPrecision = 4.0
         self.VectorOfX              = vectorX
-        self.VectorOfX.each do |lx|
-            self.FrequenciesAA[lx]  += 1    if self.FrequenciesAA.has_key?(lx)
-            self.FrequenciesAA[lx]  = 1 if not self.FrequenciesAA.has_key?(lx)
-    end
+        for lx in self.VectorOfX:
+            if lx in self.FrequenciesAA:
+                self.FrequenciesAA[lx]  += 1   
+            else:
+                self.FrequenciesAA[lx]  = 1
 
     def calculateBinomialProbability(self,subjectValue,nTrials,nSuccesses):
         #STDERR.puts "\ntrace 0 calculateBinomialProbability(#{subjectValue},#{nTrials},#{nSuccesses})"
-        raise ValueError if not subjectValue
-        raise ValueError if not nTrials.is_a? Integer
-        raise ValueError if not nSuccesses.is_a? Integer
+        if not subjectValue: # Re-assess this later, for here and Ruby.
+            raise ValueError
+        if type(nTrials) != int:
+            raise ValueError
+        if type(nSuccesses) != int:
+            raise ValueError
         n_failures          = nTrials - nSuccesses
 
-        samplecount         = getCount
+        samplecount         = self.getCount()
         samplecountf        = float( samplecount )
 
         freqcountf          = float( self.FrequenciesAA[subjectValue] )
@@ -1080,180 +1113,194 @@ class VectorOfDiscrete(VectorOfX):
         #STDERR.puts "\ntrace 7 calculateBinomialProbability #{successpermutations},#{failurepermutations},#{trials_permutations}"
         numerator           = trials_permutations * psuccessfactor * pfailurefactor
         denominator         = successpermutations * failurepermutations
-        binomialprobability = numerator / denominator
+        unrounded           = numerator / denominator
+        rounded             = round(unrounded,self.OutputDecimalPrecision)
         #STDERR.puts "\ntrace 8 calculateBinomialProbability #{numerator},#{denominator},#{binomialprobability}"
-        return binomialprobability
+        return rounded
 
     def getFrequency(self,subjectValue):
-        raise ValueError if not subjectValue
+        if not subjectValue:
+            raise ValueError
         return self.FrequenciesAA[subjectValue]
 
     def pushX(self,xItem,onBadData=VectorOfX.FailOnBadData):
-        if not xItem and "#{xItem}".size > 0
-            case onBadData
-            when VectorOfX::BlankFieldOnBadData
-                xItem=" "
-            when VectorOfX::DefaultFillOnBadData
-                xFloat=" "
-            when VectorOfX::FailOnBadData
-                raise ValueError, "#{xItem} not usable value."
-            when VectorOfX::SkipRowOnBadData
-                return
-            when VectorOfX::ZeroFieldOnBadData
-                xItem=0.0
-            else:
-                raise ValueError, "Unimplemented onBadData value:  #{onBadData}."
-        self.FrequenciesAA[xItem] += 1       if self.FrequenciesAA.has_key?(xItem)
-        self.FrequenciesAA[xItem] = 1    if not self.FrequenciesAA.has_key?(xItem)
+        if not xItem and len(f"{xItem}") > 0:
+            match onBadData:
+                case VectorOfX.BlankFieldOnBadData:
+                    xItem=" "
+                case VectorOfX.DefaultFillOnBadData:
+                    xFloat=" "
+                case VectorOfX.FailOnBadData:
+                    raise ValueError( "#{xItem} not usable value." )
+                case VectorOfX.SkipRowOnBadData:
+                    return
+                case VectorOfX.ZeroFieldOnBadData:
+                    xItem=0.0
+                case _:
+                    raise ValueError( "Unimplemented onBadData value:  #{onBadData}." )
+
+        if xItem in self.FrequenciesAA:
+            self.FrequenciesAA[xItem] += 1
+        else:
+            self.FrequenciesAA[xItem] = 1
         self.VectorOfX.push(xItem)
         return True
 
     def requestMode(self):
-        x = generateModefromFrequencyAA(self.FrequenciesAA)
+        x = self.generateModefromFrequencyAA(self.FrequenciesAA)
         return x
 
     def requestResultAACSV(self):
         # NOTE: Mean Absolute Diffence is no longer featured here.
-        mode    = requestMode
-        n       = getCount
-        frequencies = ""
-        self.FrequenciesAA.keys.sort.each do |lfkey|
-            frequencies += "\"Value: '#{lfkey}'\", \"Frequency:  #{self.FrequenciesAA[lfkey]}\"\n"
-        content = <<-EOAACSV
-"N", #{n}
-#{frequencies}
-"Mode", #{mode}
-EOAACSV
+        mode    = self.requestMode()
+        n       = self.getCount()
+        content = f"\"N\", {n}\n"
+        for lfkey in sorted(self.FrequenciesAA):
+            content += f"\"Value: '{lfkey}'\", \"Frequency:  {self.FrequenciesAA[lfkey]}\"\n"
+        content += f"\"Mode\", {mode}"
+        return content
 
     def requestResultCSVLine(self):
-        raise ValueError, "Not Implemented"
+        raise ValueError( "Not Implemented" )
 
     def requestResultJSON(self):
-        raise ValueError, "Not Implemented"
-
-    attr_accessor   :OutputDecimalPrecision
-
-    attr_reader     :FrequenciesAA
+        raise ValueError( "Not Implemented" )
 
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # VectorTable for reading and processing contents of 2 dimentional matrices.
+# NOTE:  Indexing for columns and vectors in this class are reversed from normal
+# in accommodation of the way things are used.
 
 class VectorTable:
 
-    class << self
+    @classmethod
+    def _skipIndicated(cls,onBadData,ll):
+        if onBadData == VectorOfX.ExcludeRowOnBadData:
+            if ( re.search(r',,',ll) ):
+                return True
+        return False
 
-        def arrayOfChar2VectorOfClasses(self,aA):
-            oa = Hash.new
-            aA.each do |lc|
-                case lc
-                when 'C'
+    @classmethod
+    def arrayOfChar2VectorOfClasses(cls,aA):
+        oa = Array.new
+        for lc in aA:
+            match lc:
+                case 'C':
                     oa.push(VectorOfContinuous)
-                when 'D'
+                case 'D':
                     oa.push(VectorOfDiscrete)
-                else:
-                    STDERR.puts "Allowed class identifier characters are {C,D} in this context."
-                    raise ValueError, "Identifier '#{lc}' is not recognized."
-            end
-            return oa
+                case _:
+                    m = "Allowed class identifier characters are {C,D} in this context."
+                    m +=  f"\nIdentifier '{lc}' is not recognized."
+                    raise ValueError( m )
 
-        def arrayOfClassLabels2VectorOfClasses(self,aA):
-            oa = Array.new
-            aA.each do |llabel|
-                case llabel
-                when /VectorOfContinuous/
+        return oa
+
+    @classmethod
+    def arrayOfClassLabels2VectorOfClasses(cls,aA):
+        oa = Array.new
+        for llabel in aA:
+            match llabel:
+                case 'VectorOfContinuous':
                     oa.push(VectorOfContinuous)
-                when /VectorOfDiscrete/
+                case 'VectorOfDiscrete':
                     oa.push(VectorOfDiscrete)
-                else:
-                    oa = "Identifier '#{llabel}' is not recognized as a class of X in this context."
-                    raise ValueError, m
-            end
-            return oa
+                case _:
+                    oa = f"Identifier '{llabel}' is not recognized as a class of X in this context."
+                    raise ValueError( m )
 
-        def isAllowedDataVectorClass?(self,vectorClass):
-            return False    if not vectorClass.is_a? Class
-            return True         if vectorClass.ancestors.include? VectorOfX
-            return False
+        return oa
 
-        def newFromCSV(self,vcSpec,fSpec,onBadData=VectorOfX::ExcludeRowOnBadData,seeFirstLineAsHdr=True):
-            def skipIndicated(self,onBadData,ll):
-                if onBadData == VectorOfX::ExcludeRowOnBadData then
-                    return True if ll =~ /,,/
-                return False
-            localo = self.new(vcSpec)
-            File.open(fSpec) do |fp|
-                i = 0
-                fp.each_line do |ll|
-                    next if skipIndicated(onBadData,ll)
-                    sll = ll.strip
-                    if ( i == 0 ) then
-                        if seeFirstLineAsHdr then
-                            hdrcolumns = sll.parse_csv
-                            localo.useArrayForColumnIdentifiers(hdrcolumns)
-                            i += 1
-                            next
-                    end
-                    columns = sll.parse_csv
-                    localo.pushTableRow(columns,onBadData)
-                    i += 1
-            return localo
+    @classmethod
+    def isAllowedDataVectorClass(cls,vectorClass):
+        if issubclass( vectorClass, VectorOfX ):
+            return True
+        return False
+
+    @classmethod
+    def newFromCSV(cls,vcSpec,fSpec,onBadData=VectorOfX.ExcludeRowOnBadData,seeFirstLineAsHdr=True):
+        localo = self.new(vcSpec)
+        with open(fSpec) as fp:
+            i = 0
+            for ll in fp:
+                if skipIndicated(onBadData,ll):
+                    continue
+                sll = ll.strip()
+                if i == 0:
+                    if seeFirstLineAsHdr:
+                        hdrcolumns = list(csv.reader([sll]))[0]
+                        localo.useArrayForColumnIdentifiers(hdrcolumns)
+                        i += 1
+                        continue
+                columns = list(csv.reader([sll]))[0] # More evidence that python is a programming sewer.
+                localo.pushTableRow(columns,onBadData)
+                i += 1
+        return localo
 
 
-    def initialize(self,vectorOfClasses):
-        raise ValueError, "Argument Passed '#{vectorOfClasses.class}' NOT ARRAY" if not vectorOfClasses.is_a? Array
-        self.TableOfVectors     = Array.new
+    def __init__(self,vectorOfClasses):
+        if not type(vectorOfClasses) is list:
+            raise ValueError( f"Argument Passed '{vectorOfClasses.__class__}' NOT ARRAY" )
+        self.TableOfVectors     = []
         self.VectorOfClasses    = vectorOfClasses
-        self.VectorOfHdrs       = Array.new
+        self.VectorOfHdrs       = []
         i = 0
-        self.VectorOfClasses.each do |lci|
-            if lci then
-                raise ValueError, "Class '#{lci.class}' Not Valid" if not self.class.isAllowedDataVectorClass?(lci)
-                self.TableOfVectors[i] = lci.new        if lci
+        for lci in self.VectorOfClasses:
+            if lci:
+                if not self.__class__.isAllowedDataVectorClass(lci):
+                    raise ValueError( f"Class '{lci.__class__}' Not Valid" )
+                self.TableOfVectors[i] = lci()
             else:
                 self.TableOfVectors[i] = None        
             self.VectorOfHdrs.push("Column #{i}") # Use offset index as column numbers, NOT traditional.
             i += 1
 
-    def eachColumnVector(self):
-        self.TableOfVectors.each do |lvo|
-            yield lvo
-
     def getColumnCount(self):
-        return self.TableOfVectors.size
+        ccount = len( self.TableOfVectors )
+        return ccount
 
     def getRowCount(self,columnIndex=0):
         # As of 2023/11/14 I have put little thought into regular data, and hope simple
         # validations will keep it away for now.
-        return self.TableOfVectors[columnIndex].size
+        rcount = len( self.TableOfVectors[columnIndex] )
+        return rcount
 
     def getVectorObject(self,indexNo):
-        if not 0 <= indexNo and indexNo < self.TableOfVectors.size
-            raise ValueError, "Index number '#{indexNo}' provided is out of range {0,#{self.TableOfVectors.size-1}}."
-        if not VectorTable.isAllowedDataVectorClass?( self.TableOfVectors[indexNo].class )
-            raise ValueError, "Column #{indexNo} not configured for Data Processing."
+        ccount = self.getColumnCount()
+        if not 0 <= indexNo and indexNo < ccount:
+            raise ValueError( f"Index number '{indexNo}' provided is out of range {0,{self.TableOfVectors.size-1}}." )
+        if not VectorTable.isAllowedDataVectorClass( self.TableOfVectors[indexNo].__class__ ):
+            raise ValueError( f"Column {indexNo} not configured for Data Processing." )
         return self.TableOfVectors[indexNo]
 
-    def pushTableRow(self,arrayA,onBadData=VectorOfX::DefaultFillOnBadData):
-        raise ValueError if not arrayA.is_a? Array
-        raise ValueError if not arrayA.size == self.TableOfVectors.size
-        raise ValueError if onBadData == VectorOfX::SkipRowOnBadData
+    def pushTableRow(self,arrayA,onBadData=VectorOfX.DefaultFillOnBadData):
+        if not type(arrayA) is list:
+            raise ValueError
+        laa = len(arrayA)
+        lcc = self.getColumnCount()
+        if laa != lcc:
+            raise ValueError
+        if onBadData == VectorOfX.SkipRowOnBadData:
+            raise ValueError
         i = 0
-        self.TableOfVectors.each do |lvoe|
-            if lvoe.is_a? VectorOfX then
+        for lvoe in self.TableOfVectors:
+            if ( isinstance(lvoe,VectorOfX) ):
                 lvoe.pushX(arrayA[i],onBadData)
             i += 1
-    end
 
     def useArrayForColumnIdentifiers(self,hdrColumns):
-        raise ValueError if not hdrColumns.is_a? Array
-        if not hdrColumns.size == self.VectorOfHdrs.size
+        if not type(arrayA) is list:
+            raise ValueError
+        if not type(hdrColumns) is list:
+            raise ValueError
+        lhc = len(hdrColumns)
+        lcc = self.getColumnCount()
+        if lhc != lcc:
             m = "hdr columns passed has size #{hdrColumns.size}, but requires #{self.VectorOfHdrs.size}"
-            raise ValueError, m
+            raise ValueError( m )
         self.VectorOfHdrs = hdrColumns
-
-'''
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of SamesLib_native.py

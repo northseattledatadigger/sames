@@ -1300,13 +1300,15 @@ end
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # VectorTable for reading and processing contents of 2 dimentional matrices.
+# NOTE:  Indexing for columns and vectors in this class are reversed from normal
+# in accommodation of the way things are used.
 
 class VectorTable
 
     class << self
 
         def arrayOfChar2VectorOfClasses(aA)
-            oa = Hash.new
+            oa = Array.new
             aA.each do |lc|
                 case lc
                 when 'C'
