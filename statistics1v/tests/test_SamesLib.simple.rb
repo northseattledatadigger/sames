@@ -843,7 +843,6 @@ describe VectorOfContinuous do
         assert_equal 1.8476, k
 
         localo.UseDiffFromMeanCalculations = false
-        # NOTE:  These need to be implemented so the tests will change. TBD
         assert_raise ArgumentError do
             localo.requestExcessKurtosis(2)
         end

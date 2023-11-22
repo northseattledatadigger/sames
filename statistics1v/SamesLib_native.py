@@ -331,7 +331,7 @@ class SumsOfPowers:
             raise ValueError( "May NOT be used with Sum of Xs Data." )
 
         nf                  = float( self.N )
-        stddev              = generateStandardDeviation
+        stddev              = self.generateStandardDeviation()
         s4                  = stddev**4
 
         leftnumerator       = nf * ( nf + 1.0 )
@@ -557,7 +557,6 @@ class VectorOfX:
     ZeroFieldOnBadData      = 5
 
     def _assureSortedVectorOfX(self,forceSort=False):
-        #print(f"trace 0 {forceSort}, {self.VectorOfX}, {self.SortedVectorOfX}")
         if forceSort:
             self.SortedVectorOfX = sorted(self.VectorOfX)
             return
@@ -662,7 +661,12 @@ class VectorOfContinuous(VectorOfX):
     StddevSumxsSampleId         = 'StddevSumxsSample'
     SumId                       = 'Sum'
 
-    def __init__(self,vectorX=[]):
+    def __init__(self,vectorX=None):
+        if vectorX == None: # embedding the assignment in the argument definition yields a bug. 20231122xc
+            vectorX = []
+        #n = len(vectorX)
+        #t = type(vectorX)
+        #print(f"trace 0 constructor {n},{t}")
         if not type(vectorX) is list:
             raise ValueError
         self.InputDecimalPrecision          = 4
@@ -675,11 +679,11 @@ class VectorOfContinuous(VectorOfX):
         self.VectorOfX                      = vectorX
 
     def _addUpXsToSumsOfPowers(self,populationCalculation=False,sumOfDiffs=True):
-        sopo    = SumsOfPowers.new(populationCalculation)
+        sopo    = SumsOfPowers(populationCalculation)
         if sumOfDiffs:
             n       = self.getCount()
-            sum     = self.getSum()
-            sopo.setToDiffsFromMeanState(sum,n)
+            sumxs   = self.getSum()
+            sopo.setToDiffsFromMeanState(sumxs,n)
         if sumOfDiffs:
             amean   = self.calculateArithmeticMean()
             for lx in self.VectorOfX:
@@ -692,7 +696,7 @@ class VectorOfContinuous(VectorOfX):
 
     def _decideHistogramStartNumber(self,startNumber=None):
         startno = None
-        if startNumber:
+        if startNumber is not None:
             startno = float( startNumber )
         else:
             startno = self.getMin()
@@ -721,8 +725,9 @@ class VectorOfContinuous(VectorOfX):
         nf              = float( n )
         sumrecips       = 0.0
         for lx in self.VectorOfX:
+            if lx == 0:
+                raise ZeroDivisionError
             sumrecips   += 1.0 / lx
-            productxs   *= lx
         unrounded       = nf / sumrecips
         rounded         = round(unrounded,self.OutputDecimalPrecision)
         return rounded
@@ -755,23 +760,24 @@ class VectorOfContinuous(VectorOfX):
         cpf = None
         match centralPointType:
             case VectorOfContinuous.ArithmeticMeanId:
-                cpf = calculateArithmeticMean
+                cpf = self.calculateArithmeticMean()
             case VectorOfContinuous.GeometricMeanId:
-                cpf = calculateGeometricMean
+                cpf = self.calculateGeometricMean()
             case VectorOfContinuous.HarmonicMeanId:
-                cpf = calculateHarmonicMean
+                cpf = self.calculateHarmonicMean()
             case VectorOfContinuous.MaxId:
-                cpf = getMax
+                cpf = self.getMax()
             case VectorOfContinuous.MedianId:
-                cpf = requestMedian
+                cpf = self.requestMedian()
             case VectorOfContinuous.MinId:
-                cpf = generateMode
+                cpf = self.generateMode()
             case VectorOfContinuous.ModeId:
-                cpf = getMax
+                cpf = self.getMax()
             case _:
                 m = "This Average Absolute Mean formula has not implemented a statistic for central point '#{centralPointType}' at this time."
                 raise ValueError( m )
-        nf                      = float( self.VectorOfX.size )
+        n                       = len( self.VectorOfX )
+        nf                      = float( n )
         sumofabsolutediffs      = 0
         for lx in self.VectorOfX:
             previous            = sumofabsolutediffs
@@ -787,7 +793,7 @@ class VectorOfContinuous(VectorOfX):
         if not self.SOPo:
             self.SOPo   = _addUpXsToSumsOfPowers(self.Population,self.SumOfDiffs)
         amean           = self.SOPo.ArithmeticMean
-        stddev          = self.SOPo.generateStandardDeviation
+        stddev          = self.SOPo.generateStandardDeviation()
         unrounded       = stddev / amean
         rounded         = round(unrounded,self.OutputDecimalPrecision)
         return rounded
@@ -813,7 +819,7 @@ class VectorOfContinuous(VectorOfX):
         if startNumber:
             if not isinstance(startNumber,numbers.Number):
                 raise ValueError
-        maxx            = getMax
+        maxx            = self.getMax()
         startno         = self._decideHistogramStartNumber(startNumber)
         histo           = HistogramOfX.newFromUniformSegmentSize(startno,maxx,segmentSize)
         histo.validateRangesComplete()
@@ -843,7 +849,7 @@ class VectorOfContinuous(VectorOfX):
                 lfaa[lx]    += 1
             else:
                 lfaa[lx]    = 1
-        x               = self.generateModefromFrequencyAA(lfaa)
+        x                   = generateModefromFrequencyAA(lfaa)
         return x
 
     def getMax(self):
@@ -854,7 +860,7 @@ class VectorOfContinuous(VectorOfX):
         self._assureSortedVectorOfX()
         return self.SortedVectorOfX[0]
 
-    def genSum():
+    def getSum(self):
         sumxs = sum(self.VectorOfX)
         return sumxs
 
@@ -866,7 +872,7 @@ class VectorOfContinuous(VectorOfX):
 
     @classmethod
     def newAfterInvalidatedDropped(cls,arrayA,relayErrors=False):
-        localo = cls.new
+        localo = cls()
         if not type(arrayA) is list:
             raise ValueError
         v = []
@@ -874,12 +880,14 @@ class VectorOfContinuous(VectorOfX):
         for le in arrayA:
             sle = le
             if isinstance(le,str):
-                sle = le.strip
+                sle = le.strip()
             if not isUsableNumber(sle):
                 continue
             b = float( sle )
+            count = localo.getCount()
             localo.pushX(b)
             i += 1
+            count = localo.getCount()
         return localo
 
     def pushX(self,xFloat,onBadData=VectorOfX.FailOnBadData):
@@ -924,7 +932,7 @@ class VectorOfContinuous(VectorOfX):
     def requestKurtosis(self):
         if not self.SOPo:
             self.SOPo   = _addUpXsToSumsOfPowers(self.Population)
-        unrounded       = self.SOPo.requestKurtosis
+        unrounded       = self.SOPo.requestKurtosis()
         rounded         = round(unrounded,self.OutputDecimalPrecision)
         return rounded
 
@@ -1003,7 +1011,7 @@ class VectorOfContinuous(VectorOfX):
     def requestStandardDeviation(self):
         if not self.SOPo:
             self.SOPo   = self._addUpXsToSumsOfPowers(self.Population,self.UseDiffFromMeanCalculations)
-        unroundedstddev = self.SOPo.generateStandardDeviation
+        unroundedstddev = self.SOPo.generateStandardDeviation()
         if unroundedstddev == 0.0:
             raise IndexError( "Zero Result indicates squareroot error:  #{unroundedstddev}" )
         stddev = round(unroundedstddev,self.OutputDecimalPrecision)
@@ -1184,7 +1192,7 @@ class VectorTable:
 
     @classmethod
     def arrayOfChar2VectorOfClasses(cls,aA):
-        oa = Array.new
+        oa = []
         for lc in aA:
             match lc:
                 case 'C':
@@ -1200,7 +1208,7 @@ class VectorTable:
 
     @classmethod
     def arrayOfClassLabels2VectorOfClasses(cls,aA):
-        oa = Array.new
+        oa = []
         for llabel in aA:
             match llabel:
                 case 'VectorOfContinuous':
@@ -1221,7 +1229,7 @@ class VectorTable:
 
     @classmethod
     def newFromCSV(cls,vcSpec,fSpec,onBadData=VectorOfX.ExcludeRowOnBadData,seeFirstLineAsHdr=True):
-        localo = self.new(vcSpec)
+        localo = cls(vcSpec)
         with open(fSpec) as fp:
             i = 0
             for ll in fp:

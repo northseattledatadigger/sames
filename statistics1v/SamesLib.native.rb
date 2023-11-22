@@ -676,6 +676,7 @@ class VectorOfX
             return @SortedVectorOfX[indexA]
         else
             return @VectorOfX[indexA]
+        end
     end
 
     def pushX(xFloat,onBadData)
@@ -709,7 +710,6 @@ class VectorOfX
 
 end
 
-'''
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # VectorOfContinouos for floating point based distributions.  All Xs floats.
