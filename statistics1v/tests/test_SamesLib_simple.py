@@ -169,7 +169,7 @@ class Test_HistogramOfX_Class(unittest.TestCase):
 
 
     def test_Construction_by_Number_of_Segments(self):
-        localo = sames.HistogramOfX.newFromDesiredSegmentCount(1,5,2)
+        localo = sames.HistogramOfX.newFromDesiredSegmentCount(1,5,2,0)
         localo.addToCounts(1)
         localo.addToCounts(1)
         localo.addToCounts(2)
@@ -326,7 +326,7 @@ class Test_SumsOfPowers_Class(unittest.TestCase):
         localo.addToSums(4)
         localo.addToSums(5)
         localo.addToSums(6)
-        result = localo.requestSkewness()
+        result = localo.requestSkewness(3)
         self.assertEqual( 56.25011459381775, result )
 
     def test_Generating_standard_deviation(self):
@@ -370,7 +370,7 @@ class Test_VectorOfX_Class(unittest.TestCase):
         localo  = sames.VectorOfX(a)
         self.assertTrue( hasattr(localo,'_assureSortedVectorOfX') )
         self.assertTrue( callable(localo._assureSortedVectorOfX) )
-        localo._assureSortedVectorOfX()
+        localo._assureSortedVectorOfX(False)
         lsvx    = len(localo.SortedVectorOfX)
         self.assertEqual(lsvx, 3)
         self.assertEqual(localo.SortedVectorOfX[0], 1)
@@ -444,7 +444,7 @@ class Test_VectorOfContinuous_Class(unittest.TestCase):
     def test_Constructs_with_no_argument(self):
         localo = sames.VectorOfContinuous()
         self.assertIsInstance( localo, sames.VectorOfContinuous )
-        localo.pushX(5.333)
+        localo.pushX(5.333,sames.VectorOfX.FailOnBadData)
 
     def test_Constructs_with_an_Array(self):
         sames.VectorOfContinuous([1.5,99,5876.1234])
@@ -465,14 +465,14 @@ class Test_VectorOfContinuous_Class(unittest.TestCase):
         self.assertEqual( 3, localo.getCount() )
         self.assertTrue( hasattr(localo,'_addUpXsToSumsOfPowers') )
         self.assertTrue( callable(localo._addUpXsToSumsOfPowers) )
-        sopo    = localo._addUpXsToSumsOfPowers()
+        sopo    = localo._addUpXsToSumsOfPowers(False,True)
         self.assertIsInstance( sopo, sames.SumsOfPowers )
 
     def test_Has_internal_focused_method_to_decide_startno_value_for_histogram(self):
         a = [1,2,3]
         localo  = sames.VectorOfContinuous(a)
         self.assertEqual( 3, localo.getCount() )
-        startno = localo._decideHistogramStartNumber()
+        startno = localo._decideHistogramStartNumber(None)
         self.assertEqual( 1, startno )
         startno = localo._decideHistogramStartNumber(0)
         self.assertEqual( 0, startno )
@@ -481,7 +481,7 @@ class Test_VectorOfContinuous_Class(unittest.TestCase):
         a = [1,2,3]
         localo  = sames.VectorOfContinuous(a)
         vocoam  = localo.calculateArithmeticMean()
-        sopo    = localo._addUpXsToSumsOfPowers()
+        sopo    = localo._addUpXsToSumsOfPowers(False,True)
         self.assertIsInstance( sopo, sames.SumsOfPowers )
         sopoam  = sopo.ArithmeticMean
         self.assertEqual( vocoam, sopoam )
@@ -656,7 +656,7 @@ class Test_VectorOfContinuous_Class(unittest.TestCase):
         localo  = sames.VectorOfContinuous(a)
         ek      = localo.requestExcessKurtosis(2)
         self.assertEqual( -1.23, ek )
-        ek      = localo.requestExcessKurtosis()
+        ek      = localo.requestExcessKurtosis(3)
         self.assertEqual( -1.2, ek )
         k       = localo.requestKurtosis()
         self.assertEqual( 1.8476, k )
@@ -665,7 +665,7 @@ class Test_VectorOfContinuous_Class(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             localo.requestExcessKurtosis(2)
         with self.assertRaises(ValueError) as context:
-            localo.requestExcessKurtosis()
+            localo.requestExcessKurtosis(3)
         k       = localo.requestKurtosis()
         self.assertEqual( 1.8476, k )
 
@@ -703,7 +703,7 @@ class Test_VectorOfContinuous_Class(unittest.TestCase):
     def test_Can_request_a_calculation_of_skewness(self):
         a       = [1,2,3,4,5,6,7,8,9]
         localo  = sames.VectorOfContinuous(a)
-        sk      = localo.requestSkewness()
+        sk      = localo.requestSkewness(3)
         self.assertEqual( 0, sk )
         sk      = localo.requestSkewness(1)
         self.assertEqual( 0, sk )
@@ -713,7 +713,7 @@ class Test_VectorOfContinuous_Class(unittest.TestCase):
         self.assertEqual( 0, sk )
         a       = [1,2,2,3,3,3,4,4,4,4,4,4]
         localo  = sames.VectorOfContinuous(a)
-        sk      = localo.requestSkewness()
+        sk      = localo.requestSkewness(3)
         self.assertEqual( -0.9878, sk )
         sk1     = localo.requestSkewness(1)
         self.assertEqual( -0.7545, sk1 )

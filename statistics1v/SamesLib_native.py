@@ -5,6 +5,11 @@
 #   https://en.wikipedia.org/wiki/Standard_deviation
 #   https://www.calculatorsoup.com/calculators/statistics/mean-median-mode.php
 
+# NOTE:  2023/11/23 Reminded starkly of my inexperience with the None argument
+# problem, which anyone with a consistent amount of tim would be intimate with.
+# I commit therefore to keep an eye out for problems on this hereafter, and
+# review around it at least one more time.  
+
 import array
 import csv
 from decimal import Decimal
@@ -156,7 +161,9 @@ class HistogramOfX:
         return orderedlist
 
     @classmethod
-    def newFromDesiredSegmentCount(cls,startNo,maxNo,desiredSegmentCount,extraMargin=0):
+    def newFromDesiredSegmentCount(cls,startNo,maxNo,desiredSegmentCount,extraMargin=None):
+        if extraMargin is None:
+            extraMargin = 0
         if ( not isinstance(startNo,numbers.Number) ):
             raise ValueError(f"startNo argument '{startNo}' is not a number.")
         if ( not isinstance(maxNo,numbers.Number) ):
@@ -240,7 +247,7 @@ class SumsOfPowers:
     # tool to show the two parallel patterns.  Probably this is not a good way
     # to implement it in most or any production situations.
 
-    def __init__(self,populationDistribution=False):
+    def __init__(self,populationDistribution):
         self.ArithmeticMean         = 0.0
         self.N                      = 0
         self.DiffFromMeanInputsUsed = False
@@ -508,7 +515,7 @@ class SumsOfPowers:
         kurtosis = self.calculateKurtosis_Unbiased_DiffFromMeanCalculation()
         return kurtosis
 
-    def requestSkewness(self,formulaId=3):
+    def requestSkewness(self,formulaId):
         #NOTE:  There is NO POPULATION Skewness at this time.
         if self.Population:
             m = "There is no POPULATION skewness formula implemented at this time."
@@ -555,7 +562,7 @@ class VectorOfX:
     SkipRowOnBadData        = 4
     ZeroFieldOnBadData      = 5
 
-    def _assureSortedVectorOfX(self,forceSort=False):
+    def _assureSortedVectorOfX(self,forceSort):
         if forceSort:
             self.SortedVectorOfX = sorted(self.VectorOfX)
             return
@@ -574,7 +581,7 @@ class VectorOfX:
     def __init__(self,aA=None):
         # Each daughter must make its own constructor.
         # The following is ONLY for testing:
-        if aA:
+        if aA is not None:
             if type(aA) is list:
                 self.VectorOfX  = aA
             else:
@@ -587,13 +594,13 @@ class VectorOfX:
         l = len(self.VectorOfX)
         return l
 
-    def getX(self,indexA,sortedVector=False):
+    def getX(self,indexA,sortedVector=None):
         if type(indexA) != int:
             raise ValueError("Index Argument Missing:  Required.")     
         if not self.VectorOfX[indexA]:
             raise ValueError("Index Argument Not found in VectorOfX.") 
         if sortedVector and self.SortedVectorOfX[indexA]:
-            self._assureSortedVectorOfX() # in case update occurred from pushX.
+            self._assureSortedVectorOfX(False) # in case update occurred from pushX.
             return self.SortedVectorOfX[indexA]                       
         else:
             return self.VectorOfX[indexA]
@@ -661,13 +668,13 @@ class VectorOfContinuous(VectorOfX):
     SumId                       = 'Sum'
 
     def __init__(self,vectorX=None):
-        if vectorX == None: # embedding the assignment in the argument definition yields a bug. 20231122xc
-            vectorX = []
-        #n = len(vectorX)
-        #t = type(vectorX)
-        #print(f"trace 0 constructor {n},{t}")
-        if not type(vectorX) is list:
+        if vectorX is None: # embedding the assignment in the argument definition yields a bug. 20231122xc
+            self.VectorOfX          = []
+        elif type(vectorX) is list:
+            self.VectorOfX          = vectorX
+        else:
             raise ValueError
+        #print(f"trace 3 VectorOfContinuous constructor:  {vectorX},{self.VectorOfX}")
         self.InputDecimalPrecision          = 4
         self.OutputDecimalPrecision         = 4
         self.Population                     = False
@@ -675,9 +682,10 @@ class VectorOfContinuous(VectorOfX):
         self.SortedVectorOfX                = None
         self.UseDiffFromMeanCalculations    = True
         self.ValidateStringNumbers          = False
-        self.VectorOfX                      = vectorX
 
-    def _addUpXsToSumsOfPowers(self,populationCalculation=False,sumOfDiffs=True):
+    def _addUpXsToSumsOfPowers(self,populationCalculation,sumOfDiffs=None):
+        if sumOfDiffs is None:
+            sumOfDiffs = True
         sopo    = SumsOfPowers(populationCalculation)
         if sumOfDiffs:
             n       = self.getCount()
@@ -693,7 +701,7 @@ class VectorOfContinuous(VectorOfX):
                 sopo.addToSums(lx)
         return sopo
 
-    def _decideHistogramStartNumber(self,startNumber=None):
+    def _decideHistogramStartNumber(self,startNumber):
         startno = None
         if startNumber is not None:
             startno = float( startNumber )
@@ -741,7 +749,7 @@ class VectorOfContinuous(VectorOfX):
             raise ValueError
         if 5 <= qNo:
             raise ValueError
-        self._assureSortedVectorOfX()
+        self._assureSortedVectorOfX(False)
         n                       = self.getCount()
         nf                      = float( n )
         qindexfloat             = qNo * ( nf - 1.0 ) / 4.0
@@ -758,7 +766,10 @@ class VectorOfContinuous(VectorOfX):
             qvalue              = self.SortedVectorOfX[qi0] * portion0 + self.SortedVectorOfX[qi1] * portion1
         return qvalue
 
-    def generateAverageAbsoluteDeviation(self,centralPointType=ArithmeticMeanId):
+    def generateAverageAbsoluteDeviation(self,centralPointType=None):
+        if centralPointType is None:
+            centralPointType    = VectorOfContinuous.ArithmeticMeanId
+
         cpf = None
         match centralPointType:
             case VectorOfContinuous.ArithmeticMeanId:
@@ -815,7 +826,7 @@ class VectorOfContinuous(VectorOfX):
         resultvectors   = histo.generateCountCollection()
         return resultvectors
 
-    def generateHistogramAAbySegmentSize(self,segmentSize,startNumber=None):
+    def generateHistogramAAbySegmentSize(self,segmentSize,startNumber):
         if not isinstance(segmentSize,numbers.Number):
             raise ValueError
         if startNumber:
@@ -855,11 +866,11 @@ class VectorOfContinuous(VectorOfX):
         return x
 
     def getMax(self):
-        self._assureSortedVectorOfX()
+        self._assureSortedVectorOfX(False)
         return self.SortedVectorOfX[-1]
 
-    def getMin(self,sVoX=None):
-        self._assureSortedVectorOfX()
+    def getMin(self):
+        self._assureSortedVectorOfX(False)
         return self.SortedVectorOfX[0]
 
     def getSum(self):
@@ -873,7 +884,7 @@ class VectorOfContinuous(VectorOfX):
         return False
 
     @classmethod
-    def newAfterInvalidatedDropped(cls,arrayA,relayErrors=False):
+    def newAfterInvalidatedDropped(cls,arrayA,relayErrors):
         localo = cls()
         if not type(arrayA) is list:
             raise ValueError
@@ -892,7 +903,9 @@ class VectorOfContinuous(VectorOfX):
             count = localo.getCount()
         return localo
 
-    def pushX(self,xFloat,onBadData=VectorOfX.FailOnBadData):
+    def pushX(self,xFloat,onBadData=None):
+        if onBadData is None:
+            onBadData = VectorOfX.FailOnBadData
         if not isUsableNumber(xFloat):
             match onBadData:
                 case VectorOfX.BlankFieldOnBadData:
@@ -911,14 +924,14 @@ class VectorOfContinuous(VectorOfX):
             self.validateStringNumberRange(xFloat)
         lfn = float(xFloat)
         lrn = round(lfn,self.InputDecimalPrecision)
-        #print(f"trace 8 voco.pushX:  {xFloat},{lfn},{lrn},{self.getCount()}")
+        print(f"trace 8 voco.pushX:  {xFloat},{lfn},{lrn},{self.getCount()}")
         self.VectorOfX.append(lrn)
 
-    def requestExcessKurtosis(self,formulaId=3):
+    def requestExcessKurtosis(self,formulaId):
         if not self.UseDiffFromMeanCalculations:
             raise ValueError( "May NOT be used with Sum of Xs Data." )
         if not self.SOPo:
-            self.SOPo   = self._addUpXsToSumsOfPowers(self.Population)
+            self.SOPo   = self._addUpXsToSumsOfPowers(self.Population,True)
         unrounded       = None
         match formulaId:
             case 2:
@@ -952,7 +965,7 @@ class VectorOfContinuous(VectorOfX):
         return [qos0,qos1,qos2,qos3,qos4]
 
     def requestRange(self):
-        self._assureSortedVectorOfX()
+        self._assureSortedVectorOfX(False)
         return self.SortedVectorOfX[0], self.SortedVectorOfX[-1]
 
     def requestResultAACSV(self):
@@ -978,7 +991,7 @@ class VectorOfContinuous(VectorOfX):
         return content
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
-    def requestResultCSVLine(self,includeHdr=False):
+    def requestResultCSVLine(self,includeHdr=None):
         # NOTE: Mean Absolute Diffence is no longer featured here.
         scaa        = self.requestSummaryCollection()
         csvline     =   f"\"{scaa[VectorOfContinuous.ArithmeticMeanId]}\",\"{scaa[VectorOfContinuous.ArMeanAADId]}\","
@@ -1004,9 +1017,9 @@ class VectorOfContinuous(VectorOfX):
         jsonstr = json.dumps(self.VectorOfX)
         return jsonstr
 
-    def requestSkewness(self,formulaId=3):
+    def requestSkewness(self,formulaId):
         if not self.SOPo:
-            self.SOPo   = self._addUpXsToSumsOfPowers(self.Population)
+            self.SOPo   = self._addUpXsToSumsOfPowers(self.Population,True)
         unrounded       = self.SOPo.requestSkewness(formulaId)
         rounded         = round(unrounded,self.OutputDecimalPrecision)
         return rounded
@@ -1040,7 +1053,7 @@ class VectorOfContinuous(VectorOfX):
         xmin,xmax               = self.requestRange()
         mode                    = self.generateMode()
         n                       = self.getCount()
-        unrounded               = self.SOPo.requestSkewness()
+        unrounded               = self.SOPo.requestSkewness(3)
         skewness                = round(unrounded,self.OutputDecimalPrecision)
         unrounded               = self.SOPo.generateStandardDeviation()
         stddev                  = round(unrounded,self.OutputDecimalPrecision)
@@ -1065,13 +1078,17 @@ class VectorOfContinuous(VectorOfX):
             VectorOfContinuous.SumId:                      xsum
         }
 
-    def requestVarianceSumOfDifferencesFromMean(self,populationCalculation=False):
+    def requestVarianceSumOfDifferencesFromMean(self,populationCalculation=None):
+        if populationCalculation is None:
+            populationCalculation = False
         self.SOPo = self._addUpXsToSumsOfPowers(populationCalculation)
         v = self.SOPo.calculateVarianceUsingSubjectAsDiffs()
         # Note rounding is not done here, as it would be double rounded with stddev.
         return v
 
-    def requestVarianceXsSquaredMethod(self,populationCalculation=False):
+    def requestVarianceXsSquaredMethod(self,populationCalculation=None):
+        if populationCalculation is None:
+            populationCalculation = False
         self.SOPo = self._addUpXsToSumsOfPowers(populationCalculation,False)
         v = self.SOPo.calculateVarianceUsingSubjectAsSumXs()
         # Note rounding is not done here, as it would be double rounded with stddev.
@@ -1085,11 +1102,14 @@ class VectorOfContinuous(VectorOfX):
 class VectorOfDiscrete(VectorOfX):
 
     def __init__(self,vectorX=None):
-        if vectorX == None: # embedding the assignment in the argument definition yields a bug. 20231122xc
-            vectorX = []
+        if vectorX is None: # embedding the assignment in the argument definition yields a bug. 20231122xc
+            self.VectorOfX          = []
+        elif type(vectorX) is list:
+            self.VectorOfX          = vectorX
+        else:
+            raise ValueError
         self.FrequenciesAA          = {}
         self.OutputDecimalPrecision = 4.0
-        self.VectorOfX              = vectorX
         for lx in self.VectorOfX:
             if lx in self.FrequenciesAA:
                 self.FrequenciesAA[lx]  += 1   
@@ -1134,7 +1154,9 @@ class VectorOfDiscrete(VectorOfX):
             raise ValueError
         return self.FrequenciesAA[subjectValue]
 
-    def pushX(self,xItem,onBadData=VectorOfX.FailOnBadData):
+    def pushX(self,xItem,onBadData=None):
+        if onBadData is None:
+            onBadData = VectorOfX.FailOnBadData
         if not xItem and len(f"{xItem}") > 0:
             match onBadData:
                 case VectorOfX.BlankFieldOnBadData:
@@ -1233,7 +1255,7 @@ class VectorTable:
         return False
 
     @classmethod
-    def newFromCSV(cls,vcSpec,fSpec,onBadData=VectorOfX.ExcludeRowOnBadData,seeFirstLineAsHdr=True):
+    def newFromCSV(cls,vcSpec,fSpec,onBadData,seeFirstLineAsHdr):
         localo = cls(vcSpec)
         with open(fSpec) as fp:
             i = 0
@@ -1275,7 +1297,7 @@ class VectorTable:
         ccount = len( self.TableOfVectors )
         return ccount
 
-    def getRowCount(self,columnIndex=0):
+    def getRowCount(self,columnIndex):
         # As of 2023/11/14 I have put little thought into regular data, and hope simple
         # validations will keep it away for now.
         rcount = len( self.TableOfVectors[columnIndex] )
@@ -1289,7 +1311,10 @@ class VectorTable:
             raise ValueError( f"Column {indexNo} not configured for Data Processing." )
         return self.TableOfVectors[indexNo]
 
-    def pushTableRow(self,arrayA,onBadData=VectorOfX.DefaultFillOnBadData):
+    def pushTableRow(self,arrayA,onBadData=None):
+        if onBadData is None:
+            onBadData   = VectorOfX.DefaultFillOnBadData
+
         if not type(arrayA) is list:
             raise ValueError
         laa = len(arrayA)

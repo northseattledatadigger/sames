@@ -51,7 +51,6 @@ def _scanDataClasses(clArg):
         INSTRUCTIONS
         m="No column class input specification accompanies '#{clArg}'."
         raise ArgumentError, m
-    end
     csvstr      = File.read( positedclassfspec )
     ba          = csvstr.split(',')
     vcarray     = nil
@@ -59,7 +58,6 @@ def _scanDataClasses(clArg):
         vcarray = VectorTable.arrayOfChar2VectorOfClasses(ba)
     else
         vcarray = VectorTable.arrayOfClassLabels2VectorOfClasses(ba)
-    end
     return vcarray
 
 def _validateImplementationForThisFileType(fName)
@@ -109,8 +107,11 @@ if __name__ == '__main__':
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Init
 
-    if len(sys.argv) != 2:
-        raise ValueError("Must provide test subset id as sole argument.")
+    if len(sys.argv) < 2:
+        m = "Usage Error."
+        print(m, file=sys.stderr)
+        putsUsage()
+        sys.exit()
 
     SubType = sys.argv.pop()
 
@@ -171,6 +172,27 @@ if __name__ == '__main__':
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Main
 
+    tovo    = loadDataFile(ARGV[0])
+    if len(sys.argv) > 2:
+        columns,decimalprecision    = scanColumnsAndPrecisionFromParameters(sys.argv[2])
+        cmds    = ARGV.drop(2)
+        columns.each do |lcolumn|
+            lcv = tovo.getVectorObject(lcolumn)
+            lcv.OutputDecimalPrecision = decimalprecision if decimalprecision
+            lcv.InputDecimalPrecision = 30 if decimalprecision and lcv.class == VectorOfContinuous
+            parseCommands(lcv,cmds)
+    else:
+        print("Columns are as follows:"):
+        i = 0
+        for lcv in tovo.VectorOfX:
+        tovo.eachColumnVector do |lcv|
+            if lcv is None:
+                continue
+            print(f"Column[{i},{lcv.class}]:"):
+            result = lcv.requestResultAACSV()
+            print(result)
+            print("--------------------------\n")
+            i += 1
+
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of python3.main.py
-

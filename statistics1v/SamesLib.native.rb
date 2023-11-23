@@ -960,12 +960,12 @@ class VectorOfContinuous < VectorOfX
         return x
     end
 
-    def getMax
+    def getMax()
         _assureSortedVectorOfX
         return @SortedVectorOfX[-1]
     end
 
-    def getMin(sVoX=nil)
+    def getMin()
         _assureSortedVectorOfX
         return @SortedVectorOfX[0]
     end
