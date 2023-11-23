@@ -133,7 +133,7 @@ class HistogramOfX:
             raise ValueError(f"stopNo argument '{stopNo}' is not a number.")
         for lroo in self.FrequencyAA.values():
             if lroo.hasOverlap(startNo,stopNo):
-                m = "Range [#{startNo},#{stopNo}] overlaps with another range:  [#{lroo.StartNo},#{lroo.StopNo}]."
+                m = f"Range [{startNo},{stopNo}] overlaps with another range:  [{lroo.StartNo},{lroo.StopNo}]."
                 raise ValueError(m)
 
     def addToCounts(self,xFloat):
@@ -145,7 +145,7 @@ class HistogramOfX:
                 lroo.addToCount()
                 return
         m = "Programmer Error:  "
-        m += "No Frequency range found for xFloat:  '#{xFloat}'."
+        m += f"No Frequency range found for xFloat:  '{xFloat}'."
         raise ValueError( m )
 
     def generateCountCollection(self):
@@ -212,21 +212,21 @@ class HistogramOfX:
                 if lroo.StartNo > self.Min:# NOTE:  Start may be before the minimum,
                                            # but NOT after it, as minimum value must
                                            # be included in the first segment.
-                    m = "Range [#{lroo.StartNo},#{lroo.StopNo}] "
-                    m += " starts after the minimum designated value '#{self.Min}."
+                    m = f"Range [{lroo.StartNo},{lroo.StopNo}] "
+                    m += f" starts after the minimum designated value '{self.Min}."
                     raise IndexError( m )
             else:
                 if lroo.StartNo != previous_lroo.StopNo:
-                    m = "Range [#{previous_lroo.StartNo},#{previous_lroo.StopNo}]"
+                    m = f"Range [{previous_lroo.StartNo},{previous_lroo.StopNo}]"
                     m += " is not adjacent to the next range "
-                    m += "[#{lroo.StartNo},#{lroo.StopNo}]."
+                    m += f"[{lroo.StartNo},{lroo.StopNo}]."
                     raise IndexError( m )
             i += 1
             previous_lroo = lroo
 
         if self.Max > lroo.StopNo:
-            m = "Range [#{lroo.StartNo},#{lroo.StopNo}] "
-            m += " ends before the maximum value '#{self.Max}."
+            m = f"Range [{lroo.StartNo},{lroo.StopNo}] "
+            m += f" ends before the maximum value '{self.Max}."
             raise IndexError( m )
 
 
@@ -321,7 +321,7 @@ class SumsOfPowers:
         numerator   = self.SumPowerOf4 / nf
         denominator = ( self.SumPowerOf2 / nf ) ** 2 
         ek          = ( numerator / denominator ) - 3
-        #puts "trace genExcessKurtosis_2_JR_R:  #{nf}, #{self.SumPowerOf4}, #{numerator}, #{self.SumPowerOf2}, #{denominator}, #{ek}"
+        print(f"trace genExcessKurtosis_2_JR_R:  {nf}, {self.SumPowerOf4}, {numerator}, {self.SumPowerOf2}, {denominator}, {ek}")
         return ek
 
     def generateExcessKurtosis_3_365datascience(self):
@@ -389,7 +389,7 @@ class SumsOfPowers:
         #print(f"\ntrace 9 genKurtosis_Unbiased_DiffFromMeanCalculation:  {right}")
         sue_G2              = left * middle - right
         #print(f"\ntrace a genKurtosis_Unbiased_DiffFromMeanCalculation:  {sue_G2}")
-        #STDERR.puts "\nsue_G2              = left * middle * right: #{sue_G2}              = #{left} * #{middle} * #{right}"
+        #STDERR.puts "\nsue_G2              = left * middle * right: {sue_G2}              = {left} * {middle} * {right}"
 
         return sue_G2
 
@@ -450,7 +450,7 @@ class SumsOfPowers:
             v = self.SumPowerOf2 / nf
         else:
             v = self.SumPowerOf2 / ( nf - 1.0 )
-        #STDERR.puts "trace 8 #{self.class}.genVarianceUsingSubjectAsDiffs:  #{v}, #{nf}, #{self.Population}, #{self.SumPowerOf2}"
+        #STDERR.puts "trace 8 {self.class}.genVarianceUsingSubjectAsDiffs:  {v}, {nf}, {self.Population}, {self.SumPowerOf2}"
         return v
 
     def calculateVarianceUsingSubjectAsSumXs(self):
@@ -464,7 +464,7 @@ class SumsOfPowers:
         else:
             v = ( self.SumPowerOf2 - nf * ameansquared ) / ( nf - 1.0 )
 
-        #STDERR.puts "trace 8 #{self.class}.genVarianceUsingSubjectAsSumXs: #{v}, #{nf}, #{self.Population}, #{self.SumPowerOf2}, #{ameansquared}"
+        #STDERR.puts "trace 8 {self.class}.genVarianceUsingSubjectAsSumXs: {v}, {nf}, {self.Population}, {self.SumPowerOf2}, {ameansquared}"
         return v
 
     def generateNaturalEstimatorOfPopulationSkewness_b1(self):
@@ -522,7 +522,7 @@ class SumsOfPowers:
             case 3:
                 skewness = self.generateThirdDefinitionOfSampleSkewness_G1()
             case _:
-                m = "There is no skewness formula #{formulaId} implemented at this time."
+                m = f"There is no skewness formula {formulaId} implemented at this time."
                 raise ValueError( m )
 
         return skewness
@@ -533,8 +533,8 @@ class SumsOfPowers:
         if type(nA) != int:
             raise ValueError
         if self.N > 0:
-            m = "#{self.N} values have already been added to the sums."
-            m += " You must reinit the object before setting to the Diffs From Mean state."
+            m = f"{self.N} values have already been added to the sums."
+            m += f" You must reinit the object before setting to the Diffs From Mean state."
             raise ValueError( m )
         self.DiffFromMeanInputsUsed = True
         self.N                      = nA
@@ -720,13 +720,16 @@ class VectorOfContinuous(VectorOfX):
         return rounded
 
     def calculateHarmonicMean(self):
+        #print(f"trace 0 calculateHarmonicMean: {self.getCount()}")
         n               = self.getCount()
         nf              = float( n )
         sumrecips       = 0.0
+        i = 0
         for lx in self.VectorOfX:
             if lx == 0:
                 raise ZeroDivisionError
             sumrecips   += 1.0 / lx
+            i += 1
         unrounded       = nf / sumrecips
         rounded         = round(unrounded,self.OutputDecimalPrecision)
         return rounded
@@ -773,7 +776,7 @@ class VectorOfContinuous(VectorOfX):
             case VectorOfContinuous.ModeId:
                 cpf = self.getMax()
             case _:
-                m = "This Average Absolute Mean formula has not implemented a statistic for central point '#{centralPointType}' at this time."
+                m = f"This Average Absolute Mean formula has not implemented a statistic for central point '{centralPointType}' at this time."
                 raise ValueError( m )
         n                       = len( self.VectorOfX )
         nf                      = float( n )
@@ -783,7 +786,7 @@ class VectorOfContinuous(VectorOfX):
             sumofabsolutediffs  += abs( lx - cpf )
             if previous > sumofabsolutediffs:
                 # These need review.  
-                raise IndexError( "previous #{previous} > sumofdiffssquared #{sumofabsolutediffs}" )
+                raise IndexError( f"previous {previous} > sumofdiffssquared {sumofabsolutediffs}" )
         unrounded               = sumofabsolutediffs / nf
         rounded                 = round(unrounded,self.OutputDecimalPrecision)
         return rounded
@@ -897,17 +900,18 @@ class VectorOfContinuous(VectorOfX):
                 case VectorOfX.DefaultFillOnBadData:
                     xFloat=0.0
                 case VectorOfX.FailOnBadData:
-                    raise ValueError( "#{xFloat} not usable number." )
+                    raise ValueError( "{xFloat} not usable number." )
                 case VectorOfX.SkipRowOnBadData:
                     return
                 case VectorOfX.ZeroFieldOnBadData:
                     xFloat=0.0
                 case _:
-                    raise ValueError( "Unimplemented onBadData value:  #{onBadData}." )
+                    raise ValueError( "Unimplemented onBadData value:  {onBadData}." )
         if self.ValidateStringNumbers:
             self.validateStringNumberRange(xFloat)
         lfn = float(xFloat)
         lrn = round(lfn,self.InputDecimalPrecision)
+        #print(f"trace 8 voco.pushX:  {xFloat},{lfn},{lrn},{self.getCount()}")
         self.VectorOfX.append(lrn)
 
     def requestExcessKurtosis(self,formulaId=3):
@@ -922,7 +926,7 @@ class VectorOfContinuous(VectorOfX):
             case 3:
                 unrounded   = self.SOPo.generateExcessKurtosis_3_365datascience()
             case _:
-                m="There is no excess kurtosis formula #{formulaId} implemented at this time."
+                m="There is no excess kurtosis formula {formulaId} implemented at this time."
                 raise ValueError( m )
 
         rounded         = round(unrounded,self.OutputDecimalPrecision)
@@ -1012,7 +1016,7 @@ class VectorOfContinuous(VectorOfX):
             self.SOPo   = self._addUpXsToSumsOfPowers(self.Population,self.UseDiffFromMeanCalculations)
         unroundedstddev = self.SOPo.generateStandardDeviation()
         if unroundedstddev == 0.0:
-            raise IndexError( "Zero Result indicates squareroot error:  #{unroundedstddev}" )
+            raise IndexError( "Zero Result indicates squareroot error:  {unroundedstddev}" )
         stddev = round(unroundedstddev,self.OutputDecimalPrecision)
         return stddev
 
@@ -1080,7 +1084,9 @@ class VectorOfContinuous(VectorOfX):
 
 class VectorOfDiscrete(VectorOfX):
 
-    def __init__(self,vectorX=[]):
+    def __init__(self,vectorX=None):
+        if vectorX == None: # embedding the assignment in the argument definition yields a bug. 20231122xc
+            vectorX = []
         self.FrequenciesAA          = {}
         self.OutputDecimalPrecision = 4.0
         self.VectorOfX              = vectorX
@@ -1091,7 +1097,7 @@ class VectorOfDiscrete(VectorOfX):
                 self.FrequenciesAA[lx]  = 1
 
     def calculateBinomialProbability(self,subjectValue,nTrials,nSuccesses):
-        #STDERR.puts "\ntrace 0 calculateBinomialProbability(#{subjectValue},#{nTrials},#{nSuccesses})"
+        #STDERR.puts "\ntrace 0 calculateBinomialProbability({subjectValue},{nTrials},{nSuccesses})"
         if not subjectValue: # Re-assess this later, for here and Ruby.
             raise ValueError
         if type(nTrials) != int:
@@ -1108,11 +1114,11 @@ class VectorOfDiscrete(VectorOfX):
         psuccess1trial      = freqcountf / samplecountf # Probability of success in 1 trial.
 
         pfailure1trial      = 1.0 - psuccess1trial
-        #STDERR.puts "\ntrace 5 calculateBinomialProbability #{samplecountf},#{freqcountf},#{psuccess1trial},#{pfailure1trial}"
+        #STDERR.puts "\ntrace 5 calculateBinomialProbability {samplecountf},{freqcountf},{psuccess1trial},{pfailure1trial}"
 
         pfailurefactor      = pfailure1trial**n_failures
         psuccessfactor      = psuccess1trial**nSuccesses
-        #STDERR.puts "\ntrace 6 calculateBinomialProbability #{pfailurefactor},#{psuccessfactor}"
+        #STDERR.puts "\ntrace 6 calculateBinomialProbability {pfailurefactor},{psuccessfactor}"
 
         successpermutations = math.factorial(nSuccesses)
         failurepermutations = math.factorial(nTrials - nSuccesses)
@@ -1136,19 +1142,21 @@ class VectorOfDiscrete(VectorOfX):
                 case VectorOfX.DefaultFillOnBadData:
                     xFloat=" "
                 case VectorOfX.FailOnBadData:
-                    raise ValueError( "#{xItem} not usable value." )
+                    raise ValueError( f"{xItem} not usable value." )
                 case VectorOfX.SkipRowOnBadData:
                     return
                 case VectorOfX.ZeroFieldOnBadData:
                     xItem=0.0
                 case _:
-                    raise ValueError( "Unimplemented onBadData value:  #{onBadData}." )
+                    raise ValueError( f"Unimplemented onBadData value:  {onBadData}." )
 
         if xItem in self.FrequenciesAA:
             self.FrequenciesAA[xItem] += 1
         else:
             self.FrequenciesAA[xItem] = 1
+        #print(f"trace 7 voco.pushX:  {xItem},{self.getCount()}")
         self.VectorOfX.append(xItem)
+        #print(f"trace 8 voco.pushX:  {xItem},{self.getCount()}")
         return True
 
     def requestMode(self):
@@ -1230,7 +1238,7 @@ class VectorTable:
         with open(fSpec) as fp:
             i = 0
             for ll in fp:
-                if skipIndicated(onBadData,ll):
+                if cls._skipIndicated(onBadData,ll):
                     continue
                 sll = ll.strip()
                 if i == 0:
@@ -1260,7 +1268,7 @@ class VectorTable:
                 self.TableOfVectors.append(b)
             else:
                 self.TableOfVectors.append(None)
-            self.VectorOfHdrs.append(f"Column #{i}") # Use offset index as column numbers, NOT traditional.
+            self.VectorOfHdrs.append(f"Column {i}") # Use offset index as column numbers, NOT traditional.
             i += 1
 
     def getColumnCount(self):
@@ -1297,14 +1305,12 @@ class VectorTable:
             i += 1
 
     def useArrayForColumnIdentifiers(self,hdrColumns):
-        if not type(arrayA) is list:
-            raise ValueError
         if not type(hdrColumns) is list:
             raise ValueError
         lhc = len(hdrColumns)
         lcc = self.getColumnCount()
         if lhc != lcc:
-            m = "hdr columns passed has size #{hdrColumns.size}, but requires #{self.VectorOfHdrs.size}"
+            m = f"hdr columns passed has size {hdrColumns.size}, but requires {self.VectorOfHdrs.size}"
             raise ValueError( m )
         self.VectorOfHdrs = hdrColumns
 

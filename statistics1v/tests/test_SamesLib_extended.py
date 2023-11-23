@@ -1,9 +1,11 @@
-#!/usr/bin/ruby
+#!/usr/bin/python3
 # test_SamesLib_extended.py
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Constants and Includes
 
+import numbers
 import os
+import random
 import sys 
 import unittest
 
@@ -12,22 +14,21 @@ import unittest
 
 class Test_generateModeFromFrequencyAA(unittest.TestCase):
 
-    def test_returns takes a frequency Associative Array, and returns a mode point statistic(self):
+    def test_returns_takes_a_frequency_Associative_Array_and_returns_a_mode_point_statistic(self):
         h = {}
         key = None
-        128.times do
-            key = rand
-            h[key] = rand(1024)
-        assert_nothing_raised do
-            result = generateModefromFrequencyAA(h)
-        assert h[key] >= 0
-        assert h[key] <= 1024
+        for _ in range(128):
+            key = random.random()
+            h[key] = random.randint(1,1024)
+            result = sames.generateModefromFrequencyAA(h)
+        self.assertTrue( h[key] >= 0 )
+        self.assertTrue( h[key] <= 1024 )
 
 
 class Test_isUsableNumberVector(unittest.TestCase):
 
     def test_It_discerns_whether_all_elements_of_a_vector_are_good_numbers_for_data(self):
-        self.assertTrue( isUsableNumberVector?([1,2,3,4,5]) )
+        self.assertTrue( sames.isUsableNumberVector([1,2,3,4,5]) )
 
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -36,22 +37,19 @@ class Test_isUsableNumberVector(unittest.TestCase):
 class Test_HistogramOfX(unittest.TestCase):
 
     def test_Construction_with_large_number_of_ranges(self):
-        localo = HistogramOfX.new(1,5)
-        assert_instance_of HistogramOfX, localo
-        i = 0
-        2048.times do
-            assert_nothing_raised do
-                localo.setOccurrenceRange(i,i+1)
-            i += 1
+        localo  = sames.HistogramOfX(1,5)
+        self.assertIsInstance( localo, sames.HistogramOfX )
+        i       = 0
+        for _ in range(2048):
+            localo.setOccurrenceRange(i,i+1)
+            i   += 1
         localo.setOccurrenceRange(i,i+1)
-        2048.times do
-            assert_nothing_raised do
-                localo.addToCounts(rand(2048))
-        result = nil
-        assert_nothing_raised do
-            result = localo.generateCountCollection
-        self.assertEqual(  2049, result.size # This is large enough for my purposes,
-                                        # I think.
+        for _ in range(2048):
+            localo.addToCounts(random.randint(1,2048))
+        result  = localo.generateCountCollection()
+        rsize   = len(result)
+        self.assertEqual(  2049, rsize ) # This is large enough for my purposes,
+                                                # I think.
 
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -59,18 +57,14 @@ class Test_HistogramOfX(unittest.TestCase):
 
 class Test_SumsOfPowers(unittest.TestCase):
 
-    def test_Handles large N(self):
-        localo = SumsOfPowers.new
-        2048.times do
-            assert_nothing_raised do
-                localo.addToSums(rand)
-        result = nil
-        assert_nothing_raised do
-            result = localo.generateStandardDeviation
-       assert result > 0
-        assert_nothing_raised do
-            result = localo.requestSkewness
-        assert result > 0
+    def test_Handles_large_N(self):
+        localo = sames.SumsOfPowers()
+        for _ in range(2048):
+            localo.addToSums(random.random())
+        result = localo.generateStandardDeviation()
+        self.assertGreater( result, 0 )
+        result = localo.requestSkewness()
+        self.assertGreater( result, 0 )
        
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -82,15 +76,13 @@ class Test_SumsOfPowers(unittest.TestCase):
 
 class Test_VectorOfX(unittest.TestCase):
 
-    def test_Methods do not fail with large N(self):
-        a = Array.new
-        2048.times do
-            2048.times do
-                a.push(rand)
-        localo = nil
-        assert_nothing_raised do
-            localo = VectorOfX.new(a)
-        self.assertEqual(  4194304, localo.getCount
+    def test_Methods_do_not_fail_with_large_N(self):
+        a = []
+        for _ in range(2048):
+            for _ in range(2048):
+                a.append(random.random())
+        localo = sames.VectorOfX(a)
+        self.assertEqual( 4194304, localo.getCount() )
 
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -98,32 +90,28 @@ class Test_VectorOfX(unittest.TestCase):
 
 class Test_VectorOfContinuous(unittest.TestCase):
 
-    def test_Methods do not fail with large N(self):
-        localo = VectorOfContinuous.new
-        2048.times do
-            2048.times do
-                assert_nothing_raised do
-                    localo.pushX(rand)
-        self.assertEqual(  4194304, localo.getCount
-        assert_nothing_raised do
-            localo.calculateArithmeticMean
-        assert_nothing_raised do
-            localo.calculateGeometricMean
-        assert_nothing_raised do
-            localo.calculateHarmonicMean
-        assert localo.requestStandardDeviation > 0
-        qa = nil
-        assert_nothing_raised do
-            qa = localo.requestQuartileCollection
-        assert qa[0].is_a? Numeric
-        assert qa[1].is_a? Numeric
-        assert qa[0] < qa[1]
-        assert qa[2].is_a? Numeric
-        assert qa[1] < qa[2]
-        assert qa[3].is_a? Numeric
-        assert qa[2] < qa[3]
-        assert qa[4].is_a? Numeric
-        assert qa[3] < qa[4]
+    def test_Methods_do_not_fail_with_large_N(self):
+        localo = sames.VectorOfContinuous()
+        for _ in range(2048):
+            for _ in range(2048):
+                xc = random.random() + 1.0
+                #print(f"trace 5 test_Methods_do_not_fail_with_large_N{xc}")
+                localo.pushX(xc)
+        self.assertEqual( 4194304, localo.getCount() )
+        localo.calculateArithmeticMean()
+        localo.calculateGeometricMean()
+        localo.calculateHarmonicMean()
+        self.assertGreater( localo.requestStandardDeviation(), 0 )
+        qa = localo.requestQuartileCollection()
+        self.assertTrue( isinstance(qa[0],numbers.Number) )
+        self.assertTrue( isinstance(qa[1],numbers.Number) )
+        self.assertTrue( isinstance(qa[2],numbers.Number) )
+        self.assertTrue( isinstance(qa[3],numbers.Number) )
+        self.assertTrue( isinstance(qa[4],numbers.Number) )
+        self.assertLess( qa[0],qa[1] )
+        self.assertLess( qa[1],qa[2] )
+        self.assertLess( qa[2],qa[3] )
+        self.assertLess( qa[3],qa[4] )
 
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -131,15 +119,12 @@ class Test_VectorOfContinuous(unittest.TestCase):
 
 class Test_VectorOfDiscrete(unittest.TestCase):
 
-    def test_Methods do not fail with large N(self):
-        localo = VectorOfDiscrete.new
-        2048.times do
-            2048.times do
-                assert_nothing_raised do
-                    localo.pushX(rand(100))
-        mode = nil
-        assert_nothing_raised do
-            mode = localo.requestMode
+    def test_Methods_do_not_fail_with_large_N(self):
+        localo = sames.VectorOfDiscrete()
+        for _ in range(2048):
+            for _ in range(2048):
+                localo.pushX(random.randint(1,100))
+        mode = localo.requestMode()
 
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -147,54 +132,53 @@ class Test_VectorOfDiscrete(unittest.TestCase):
 
 class Test_VectorTable(unittest.TestCase):
 
-    def test_Methods do not fail with large N(self):
-        vcsa    = [VectorOfContinuous,VectorOfContinuous,VectorOfDiscrete]
-        localo  = VectorTable.new(vcsa)
+    def test_Methods_do_not_fail_with_large_N(self):
+        vcsa    = [sames.VectorOfContinuous,sames.VectorOfContinuous,sames.VectorOfDiscrete]
+        localo  = sames.VectorTable(vcsa)
         localv0 = localo.getVectorObject(0)
         localv1 = localo.getVectorObject(1)
         localv2 = localo.getVectorObject(2)
-        2048.times do
-            2048.times do
-                assert_nothing_raised do
-                    localv0.pushX(rand)
-                assert_nothing_raised do
-                    localv1.pushX(rand)
-                assert_nothing_raised do
-                    localv2.pushX("#{rand(32)}")
-                assert_nothing_raised do
-                    localo.pushTableRow([rand,rand,"#{rand(32)}"])
-        self.assertEqual(  8388608, localv0.getCount
-        assert localv0.calculateArithmeticMean.is_a? Numeric
-        assert localv0.requestSkewness.is_a? Numeric
-        assert localv0.requestStandardDeviation.is_a? Numeric
-        self.assertEqual(  8388608, localv1.getCount
-        assert localv1.calculateArithmeticMean.is_a? Numeric
-        self.assertEqual(  8388608, localv2.getCount
-        assert localv2.requestMode.is_a? String
+        #print(f"trace 3 test_Methods_do_not_fail_with_large_N {localv0.getCount()}, {localv1.getCount()}, {localv2.getCount()}")
+        for _ in range(2048):
+            #print(f"trace 3a test_Methods_do_not_fail_with_large_N {localv0.getCount()}, {localv1.getCount()}, {localv2.getCount()}")
+            for _ in range(2048):
+                #print(f"trace 3b test_Methods_do_not_fail_with_large_N {localv0.getCount()}, {localv1.getCount()}, {localv2.getCount()}")
+                localv0.pushX(random.random())
+                localv1.pushX(random.random())
+                localv2.pushX(f"{random.randint(1,32)}")
+                #print(f"trace 3e test_Methods_do_not_fail_with_large_N {localv0.getCount()}, {localv1.getCount()}, {localv2.getCount()}")
+                localo.pushTableRow([random.random(),random.random(),f"{random.randint(1,32)}"])
+                #print(f"trace 3f test_Methods_do_not_fail_with_large_N {localv0.getCount()}, {localv1.getCount()}, {localv2.getCount()}")
+        #print(f"trace 4 test_Methods_do_not_fail_with_large_N {localv0.getCount()}, {localv1.getCount()}, {localv2.getCount()}")
+        self.assertEqual( 8388608, localv0.getCount() )
+        self.assertTrue( isinstance(localv0.calculateArithmeticMean(),numbers.Number) )
+        self.assertTrue( isinstance(localv0.requestSkewness(),numbers.Number) )
+        self.assertTrue( isinstance(localv0.requestStandardDeviation(),numbers.Number) )
+        self.assertEqual( 8388608, localv1.getCount() )
+        self.assertTrue( isinstance( localv1.calculateArithmeticMean(),numbers.Number) )
+        # AssertionError: 8388608 != 12582912 was a failure I got at 2023/11/22 16:30. xc
+        self.assertEqual( 8388608, localv2.getCount() )
+        self.assertTrue( isinstance(localv2.requestMode(),str) )
         result = localv2.calculateBinomialProbability("16",29,1)
-        assert result > 0.3 # Pretty sure it will be.
+        self.assertGreater( result, 0.3 ) # Pretty sure it will be.
         # This should always be pretty close to the same with such a large n.
         # Using p of success 0.03110527992248535, I confirmed this at:  https://stattrek.com/online-calculator/binomial 
 
-    def test_Allows a user to load column values from a CSV file (and make all the calculations on vectors filled)(self):
-        vcsa    = [VectorOfDiscrete,VectorOfDiscrete,VectorOfContinuous,VectorOfContinuous,VectorOfContinuous]
-        localo  = VectorTable.newFromCSV(vcsa,FirstTestFileFs,VectorOfX::DefaultFillOnBadData)
+    def test_Allows_a_user_to_load_column_values_from_a_CSV_file_and_make_all_the_calculations_on_vectors_filled(self):
+        vcsa    = [sames.VectorOfDiscrete,sames.VectorOfDiscrete,sames.VectorOfContinuous,sames.VectorOfContinuous,sames.VectorOfContinuous]
+        localo  = sames.VectorTable.newFromCSV(vcsa,FirstTestFileFs,sames.VectorOfX.DefaultFillOnBadData)
         lvi0o   = localo.getVectorObject(0)
-        n       = lvi0o.getCount
-        mode    = lvi0o.requestMode
-        #STDERR.puts "trace n:  #{n}"
-        #STDERR.puts "trace mode:  #{mode}"
-        self.assertEqual(  2103, n
-        self.assertEqual(  "420030103001", mode
+        n       = lvi0o.getCount()
+        mode    = lvi0o.requestMode()
+        self.assertEqual(  2103, n )
+        self.assertEqual(  "420030103001", mode )
         lvi1o   = localo.getVectorObject(1)
         lvi2o   = localo.getVectorObject(2)
         lvi3o   = localo.getVectorObject(3)
-        amean   = lvi3o.calculateArithmeticMean
-        ssd     = lvi3o.requestStandardDeviation
-        #STDERR.puts "trace amean:  #{amean}"
-        #STDERR.puts "trace ssd:  #{ssd}"
-        self.assertEqual(  17134.3322, amean
-        self.assertEqual(  29010.7171, ssd
+        amean   = lvi3o.calculateArithmeticMean()
+        ssd     = lvi3o.requestStandardDeviation()
+        self.assertEqual( 17134.3322, amean )
+        self.assertEqual( 29010.7171, ssd )
 
 
 if __name__ == '__main__':
@@ -214,9 +198,16 @@ if __name__ == '__main__':
     #print(f"trace 3 {SAMESHOME}")
     sys.path.append(SAMESHOME) # Not sure this is necessary.
 
+    TestDataDs      = f"{SAMESHOME}/testdata"
+
+    SAMESSLIB       = os.path.abspath(os.path.join(SAMESHOME, 'slib'))
+    sys.path.append(SAMESSLIB)
+
+    import SBinLib as sbl
+
     SamesProjectDs  = os.path.abspath(os.path.join(HERE, '..'))
     #print(f"trace 4 {SamesProjectDs}")
-    sys.path.append(SamesProjectDs) # Not sure this is necessary.
+    sys.path.append(SamesProjectDs)
     Python3LibFs    = f"{SamesProjectDs}/SamesLib_{SubType}.py"
 
     if os.path.isfile(Python3LibFs):
@@ -248,6 +239,8 @@ if __name__ == '__main__':
                 raise ValueError(m)
                 m = f"Library Under Test {Python3LibFs} NOT found."
                 raise ValueError(m)
+
+    FirstTestFileFs = sbl.returnIfThere(f"{TestDataDs}/sidewalkstreetratioupload.csv")
 
     unittest.main()
 
