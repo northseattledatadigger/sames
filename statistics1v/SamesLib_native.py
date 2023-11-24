@@ -328,7 +328,7 @@ class SumsOfPowers:
         numerator   = self.SumPowerOf4 / nf
         denominator = ( self.SumPowerOf2 / nf ) ** 2 
         ek          = ( numerator / denominator ) - 3
-        print(f"trace genExcessKurtosis_2_JR_R:  {nf}, {self.SumPowerOf4}, {numerator}, {self.SumPowerOf2}, {denominator}, {ek}")
+        #print(f"trace genExcessKurtosis_2_JR_R:  {nf}, {self.SumPowerOf4}, {numerator}, {self.SumPowerOf2}, {denominator}, {ek}")
         return ek
 
     def generateExcessKurtosis_3_365datascience(self):
@@ -924,7 +924,7 @@ class VectorOfContinuous(VectorOfX):
             self.validateStringNumberRange(xFloat)
         lfn = float(xFloat)
         lrn = round(lfn,self.InputDecimalPrecision)
-        print(f"trace 8 voco.pushX:  {xFloat},{lfn},{lrn},{self.getCount()}")
+        #print(f"trace 8 voco.pushX:  {xFloat},{lfn},{lrn},{self.getCount()}")
         self.VectorOfX.append(lrn)
 
     def requestExcessKurtosis(self,formulaId):
