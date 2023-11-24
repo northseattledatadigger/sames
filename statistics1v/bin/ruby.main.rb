@@ -50,8 +50,6 @@
 
 require 'getoptlong'
 
-DataFormatFileExtension = "scdf" # For "Sames CSV Data Format"
-
 SAMESHOME=File.expand_path("../..", __dir__)
 SamesProjectDs=File.expand_path("..", __dir__)
 
@@ -176,7 +174,7 @@ def _displayCommands(labelStr,cmdHash,cmdArguments)
     end
 end
 
-def _generateHistogram(genType=SegmentCountHistogramGeneration,segmentSpecNo,startNumber)
+def _generateHistogram(genType,segmentSpecNo,startNumber)
     generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber=nil)
     generateHistogramAAbySegmentSize(segmentSize,startNumber=nil)
 end
@@ -242,7 +240,7 @@ end
 
 def putsUsage
     puts <<-EOUsage
-USAGE:  #{$0} <inputfile> [columns] [cmd] [precision]
+USAGE:  #{$0} <inputfile> [column[,...][:precision]] [cmd[,...]]
     inputfile:  For now, a csv file, but with a corresponding class columns
     file in the folder #{SamesClassColumnsDs}, with one of two syntaxes,
     indicating the vector type to use for each column in its corresponding
