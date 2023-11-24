@@ -1332,7 +1332,7 @@ class VectorTable
                 when /VectorOfDiscrete/
                     oa.push(VectorOfDiscrete)
                 else
-                    oa = "Identifier '#{llabel}' is not recognized as a class of X in this context."
+                    m = "Identifier '#{llabel}' is not recognized as a class of X in this context."
                     raise ArgumentError, m
                 end
             end

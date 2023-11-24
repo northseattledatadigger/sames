@@ -61,7 +61,7 @@ if AppVersion == 'rb' then
     the ruby.main.rb version is designed to know the App Version intended by
     the last node of the symbolic link evoked, so it will not run directly.
     EOERROR
-    exit 0
+    exit 1
 end
 
 SamesProjectLibraryInUse="#{SamesProjectDs}/SamesLib.#{AppVersion}.rb"
@@ -73,6 +73,7 @@ require SamesProjectLibraryInUse
 # Constant Identifiers
 
 SamesClassColumnsDs = "#{SamesProjectDs}/classcolumns"
+SamesTmpDataDs      = "#{SAMESHOME}/tmpdata"
 
 SegmentCountHistogramGeneration = 1
 SegmentSizeHistogramGeneration = 2
@@ -138,22 +139,27 @@ ArgumentsVoD = {
 }
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
+# Lowest Level Procedures
+
+def __validateImplementationForThisFileType(fName)
+    return true if fName =~ /\.csv$/
+    return false
+end
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Lower Level Procedures
 
 def _determineDataInputFile(fName)
-    unless _validateImplementationForThisFileType(fName)
+    unless __validateImplementationForThisFileType(fName)
         m = "No implementation in this application for file type of '#{fName}'."
         raise ArgumentError, m
     end
     return fName    if File.exist?(fName)
-    ds      = nil
-    fn      = nil
+    ds  = SamesTmpDataDs
+    fn  = fName
     if fName =~ /^(.*)\/(.*)$/ then
         ds  = $1
         fn  = $2
-    else
-        ds  = SamesTmpData
-        fn  = fName
     end
     fs = "#{ds}/#{fn}"
     return fs       if File.exist?(fs)
@@ -175,17 +181,8 @@ def _displayCommands(labelStr,cmdHash,cmdArguments)
 end
 
 def _generateHistogram(genType,segmentSpecNo,startNumber)
-    generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber=nil)
-    generateHistogramAAbySegmentSize(segmentSize,startNumber=nil)
-end
-
-def _parseSamesLibVectorOfContinuousCommand(vocO,aList)
-end
-
-def _parseSamesLibVectorOfDiscreteCommand(vodO,aList)
-end
-
-def _readSamesLibStdIn
+    #generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber)
+    generateHistogramAAbySegmentSize(segmentSize,startNumber)
 end
 
 def _requestResultSummary
@@ -196,8 +193,8 @@ def _requestResultSummary
 end
 
 def _requestVariance
-    requestVarianceSumOfDifferencesFromMean(populationCalculation=false)
-    requestVarianceXsSquaredMethod(populationCalculation=false)
+    requestVarianceSumOfDifferencesFromMean(populationCalculation)
+    requestVarianceXsSquaredMethod(populationCalculation)
 end
 
 def _scanDataClasses(clArg)
@@ -228,11 +225,6 @@ def _scanDataClasses(clArg)
         vcarray = VectorTable.arrayOfClassLabels2VectorOfClasses(ba)
     end
     return vcarray
-end
-
-def _validateImplementationForThisFileType(fName)
-    return true if fName =~ /\.csv$/
-    return false
 end
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -266,7 +258,7 @@ def loadDataFile(clArg)
         localo = VectorTable.newFromCSV(vcarray,fspec)
         return localo
     else
-        m = "This file type (#{fSpec}) is not presently supported."
+        m = "This file type (#{fspec}) is not presently supported."
         raise ArgumentError, m
     end
 end

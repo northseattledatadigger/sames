@@ -1223,9 +1223,9 @@ class VectorTable:
         for lc in aA:
             match lc:
                 case 'C':
-                    oa.push(VectorOfContinuous)
+                    oa.append(VectorOfContinuous)
                 case 'D':
-                    oa.push(VectorOfDiscrete)
+                    oa.append(VectorOfDiscrete)
                 case _:
                     m = "Allowed class identifier characters are {C,D} in this context."
                     m +=  f"\nIdentifier '{lc}' is not recognized."
@@ -1237,13 +1237,14 @@ class VectorTable:
     def arrayOfClassLabels2VectorOfClasses(cls,aA):
         oa = []
         for llabel in aA:
-            match llabel:
+            llas = llabel.strip()
+            match llas:
                 case 'VectorOfContinuous':
-                    oa.push(VectorOfContinuous)
+                    oa.append(VectorOfContinuous)
                 case 'VectorOfDiscrete':
-                    oa.push(VectorOfDiscrete)
+                    oa.append(VectorOfDiscrete)
                 case _:
-                    oa = f"Identifier '{llabel}' is not recognized as a class of X in this context."
+                    m = f"Identifier '{llas}' is not recognized as a class of X in this context."
                     raise ValueError( m )
 
         return oa
@@ -1255,7 +1256,11 @@ class VectorTable:
         return False
 
     @classmethod
-    def newFromCSV(cls,vcSpec,fSpec,onBadData,seeFirstLineAsHdr):
+    def newFromCSV(cls,vcSpec,fSpec,onBadData=None,seeFirstLineAsHdr=None):
+        if onBadData is None:
+            onBadData   = VectorOfX.ExcludeRowOnBadData
+        if seeFirstLineAsHdr is None:
+            seeFirstLineAsHdr = True
         localo = cls(vcSpec)
         with open(fSpec) as fp:
             i = 0
