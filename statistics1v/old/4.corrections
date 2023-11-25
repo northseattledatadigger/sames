@@ -1,2 +1,0 @@
-1.      Reassess ALL the libraries to .native.ext or _native.ext to work with Python3's problem.  Consider generally, especially for Rust, what problems might be.
-2.      Perhaps put index offset in app levels, as not all will have offset from zero, and apps like pspp and datamash do.
