@@ -515,7 +515,9 @@ class SumsOfPowers:
         kurtosis = self.calculateKurtosis_Unbiased_DiffFromMeanCalculation()
         return kurtosis
 
-    def requestSkewness(self,formulaId):
+    def requestSkewness(self,formulaId=None):
+        if formulaId is None:
+            formulaId = 3
         #NOTE:  There is NO POPULATION Skewness at this time.
         if self.Population:
             m = "There is no POPULATION skewness formula implemented at this time."
@@ -874,8 +876,9 @@ class VectorOfContinuous(VectorOfX):
         return self.SortedVectorOfX[0]
 
     def getSum(self):
-        sumxs = sum(self.VectorOfX)
-        return sumxs
+        unrounded   = sum(self.VectorOfX)
+        rounded     = round(unrounded,self.OutputDecimalPrecision)
+        return rounded
 
     def isEvenN(self):
         n = self.getCount()
@@ -947,7 +950,7 @@ class VectorOfContinuous(VectorOfX):
 
     def requestKurtosis(self):
         if not self.SOPo:
-            self.SOPo   = _addUpXsToSumsOfPowers(self.Population)
+            self.SOPo   = self._addUpXsToSumsOfPowers(self.Population)
         unrounded       = self.SOPo.requestKurtosis()
         rounded         = round(unrounded,self.OutputDecimalPrecision)
         return rounded
@@ -1017,7 +1020,9 @@ class VectorOfContinuous(VectorOfX):
         jsonstr = json.dumps(self.VectorOfX)
         return jsonstr
 
-    def requestSkewness(self,formulaId):
+    def requestSkewness(self,formulaId=None):
+        if formulaId is None:
+            formulaId = 3
         if not self.SOPo:
             self.SOPo   = self._addUpXsToSumsOfPowers(self.Population,True)
         unrounded       = self.SOPo.requestSkewness(formulaId)

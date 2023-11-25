@@ -63,36 +63,78 @@ USAGE:  $0 <options>
 EOU
 }
 
-getLanguageExtensionForId() {
-    case "$1" in
+getAppPath() {
+    local _languageType="$1"
+    local _subType="$2"
+
+    local fn
+    case "$_languageType" in
     c)
-        echo -n "c"
+        fn=c.main.$_subType
         ;;
     c++)
-        echo -n "cpp"
+        fn=cpp.main.$_subType
         ;;
     go)
-        echo -n "go"
+        fn=go.main.$_subType
         ;;
     javascript)
-        echo -n "js"
+        fn=javascript.main.$_subType
         ;;
     perl)
-        echo -n "pl"
+        fn=perl.main.$_subType
         ;;
     python3)
-        echo -n "py"
+        fn=python3.main.$_subType
         ;;
     ruby)
-        echo -n "rb"
+        fn=ruby.main.$_subType
         ;;
     rust)
-        echo -n "rs"
+        fn=rust.main.$_subType
         ;;
     *)
         echoError 2 "Library Version Id '$1' is NOT recognized."
         exit 2
     esac
+    echo "$SAMESPROJECTHOME/bin/$fn"
+}
+
+getLibraryUnderTestSourceFs() {
+    local _languageType="$1"
+    local _subType="$2"
+
+    local fn
+    case "$_languageType" in
+    c)
+        fn=SamesLib.$_subType.c
+        ;;
+    c++)
+        fn=SamesLib.$_subType.cpp
+        ;;
+    go)
+        fn=SamesLib.$_subType.go
+        ;;
+    javascript)
+        fn=SamesLib.$_subType.js
+        ;;
+    perl)
+        fn=SamesLib.$_subType.pl
+        ;;
+    python3)
+        fn=SamesLib_${_subType}.py
+        ;;
+    ruby)
+        fn=SamesLib.$_subType.rb
+        ;;
+    rust)
+        fn=SamesLib.$_subType.rs
+        ;;
+    *)
+        echoError 2 "Library Version Id '$1' is NOT recognized."
+        exit 2
+    esac
+    echo "$SAMESPROJECTHOME/$fn"
 }
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -109,14 +151,7 @@ do
         exit 0
         ;;
     l)
-        if [[ -f $OPTARG ]]
-        then
-            LibraryLanguageUnderTest="$OPTARG"
-        else
-            echoError 1 "Library Language Id '$OPTARG' is NOT recognized."
-            catUsage
-            exit 2
-        fi
+        export LibraryLanguageUnderTest="$OPTARG"
         ;;
     O)
         OutputFSpec=/dev/null
@@ -145,14 +180,13 @@ do
     esac
 done
 
-readonly LanguageExtension=$(getLanguageExtensionForId $LibraryLanguageUnderTest)
 
 ## Begin Required Exports
 ## Note these 4 'exports' are required to provide access to these
 ## identifiers IN THE BATS TEST SCRIPT:
 export AppUnderTest=$LibraryLanguageUnderTest.main.$LibraryVersionUnderTest
-export AppUnderTestFs=$SamesProjectBin/$AppUnderTest
-export LibraryUnderTestFs=$SAMESPROJECTHOME/$StdLibName.$LibraryVersionUnderTest.$LanguageExtension
+export AppUnderTestFs=$(getAppPath $LibraryLanguageUnderTest $LibraryVersionUnderTest)
+export LibraryUnderTestFs=$(getLibraryUnderTestSourceFs $LibraryLanguageUnderTest $LibraryVersionUnderTest)
 export PrimaryOutputFSpec
 export FirstTestDataSubjectFs
 ## End of Required Exports

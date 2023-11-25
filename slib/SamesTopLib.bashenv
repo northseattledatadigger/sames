@@ -10,7 +10,7 @@ fi
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Constants and Environment
 
-readonly DataFormatFileExtension = "scdf" # For "Sames CSV Data Format"
+readonly DataFormatFileExtension="scdf" # For "Sames CSV Data Format"
 
 readonly SamesBin=$SAMESHOME/bin
 readonly SamesSBin=$SAMESHOME/sbin

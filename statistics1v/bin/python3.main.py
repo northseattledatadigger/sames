@@ -92,6 +92,7 @@ def __validateImplementationForThisFileType(fName):
 # Lower Level Procedures
 
 def _determineDataInputFile(fName):
+    #print(f"trace 0 _determineDataInputFile({fName}):")
     if not __validateImplementationForThisFileType(fName):
         m = f"No implementation in this application for file type of '{fName}'."
         raise ValueError( m )
@@ -301,7 +302,7 @@ if __name__ == '__main__':
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Init
-    #print(f"trace 0 Init:  {sys.argv[0]},{len(sys.argv)}")
+    #print(f"trace 0 Init:  {sys.argv[0]},{sys.argv[1]},{sys.argv[2]}, {len(sys.argv)}")
 
     ScriptPath      = os.path.realpath(__file__)
     HERE            = os.path.dirname(__file__)
@@ -327,7 +328,7 @@ if __name__ == '__main__':
         m = "Usage Error."
         print(m, file=sys.stderr)
         putsUsage(sys.argv[0],SamesClassColumnsDs)
-        sys.exit()
+        sys.exit(1)
 
     #print(f"trace 4 Init:  {sys.argv[0]},{len(sys.argv)}")
     AppNodes = sys.argv[0].split('/')
@@ -385,11 +386,11 @@ if __name__ == '__main__':
 
     #print(f"trace 0 Main:  {sys.argv[0]},{len(sys.argv)}")
     #if len(sys.argv) > 1:
-        #print(f"trace 0a Main:  {sys.argv[1]}")
+    #    print(f"trace 0a Main:  {sys.argv[1]}")
     tovo    = loadDataFile(sys.argv[1])
     #print(f"trace 1 Main:  {sys.argv[0]},{len(sys.argv)}, {tovo.__class__}")
     if len(sys.argv) > 2:
-        #print(f"trace 2 Main:  {sys.argv[0]},{len(sys.argv)}")
+        #print(f"trace 2 Main:  {sys.argv[2]},{len(sys.argv)}")
         columns,decimalprecision    = scanColumnsAndPrecisionFromParameters(sys.argv[2])
         cmds    = sys.argv[3:]
         for lcolumn in columns:
