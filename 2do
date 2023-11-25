@@ -1,24 +1,15 @@
-    2.  Re-organize both Python3 and Ruby versions:
-        i.      Main routines need clean up and a little reorganizing.
-        ii.     Acceptance driver over all apps.
-        iii.    Assess next version steps for:
-            a.  Polars
-            b.  Pandas
-            c.  amateur versus native
-            d.  naive versus native
-            e.  perhaps also use draftn versions, at least temporarily.
-    3.  Begin to plan and code Rust version.
-    4.  Perhaps intermittently re-visit 2/iii. and do one of these as a side project when Rust gets hard.
-    5.  Study other apps:
+    2.  Begin to plan and code Rust version.
+    3.  Perhaps intermittently re-visit 2/iii. and do one of these as a side project when Rust gets hard.
+    4.  Study other apps:
         i.      R.
         ii.     PSPP.
         iii.    Datamash.
         iv.     Gnuplot.
         v.      Octave.
-    6.  Re-visit doc files.
-    7.  When some things have progressed, make a clean version locally and check Sames in that form into the more known github account.
-    8.  On 7 being done, make a new static resume in HTML.
-    9.  On 8 being done, make limited announcement of draft and begin to use in job applications
+    5.  Re-visit doc files.
+    6.  When some things have progressed, make a clean version locally and check Sames in that form into the more known github account.
+    7.  On 7 being done, make a new static resume in HTML.
+    8.  On 8 being done, make limited announcement of draft and begin to use in job applications
     
 Done:
     1.  Finish app and make it comply with acceptance tests.

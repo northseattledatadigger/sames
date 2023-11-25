@@ -102,13 +102,19 @@ fi
 # for yourself:
 apt-get install bats
 apt-get install build-essential
+apt-get install datamash
 apt-get install golang
+apt-get install gnuplot
 # Note Julia does not presently have an apt package.  Perhaps make procedure.
 apt-get install perl
 apt-get install python3
+# Pandas
 apt-get install nodejs
+apt-get install r-base
 apt-get install ruby-all-dev
 apt-get install rust-all
+apt-get install texlive-latex-extra -y
+apt-get install texmaker
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of author_installs.ubuntu.bash
