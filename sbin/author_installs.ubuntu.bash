@@ -105,7 +105,8 @@ apt-get install build-essential
 apt-get install datamash
 apt-get install golang
 apt-get install gnuplot
-# Note Julia does not presently have an apt package.  Perhaps make procedure.
+apt-get install jq
+apt-get install nodejs
 apt-get install perl
 apt-get install python3
 # Pandas
