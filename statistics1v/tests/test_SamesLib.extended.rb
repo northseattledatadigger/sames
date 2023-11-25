@@ -160,7 +160,8 @@ describe VectorOfContinuous do
         2048.times do
             2048.times do
                 assert_nothing_raised do
-                    localo.pushX(rand)
+                    xc = rand + 1.0
+                    localo.pushX(xc)
                 end
             end
         end
