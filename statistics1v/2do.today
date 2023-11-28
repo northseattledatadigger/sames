@@ -1,0 +1,9 @@
+    1.  First thing:  
+        a) Now that I am in Rust, I realize the more sane thing is make frequency cells all strings both to homogenize for best comparison, and as an easier step for all languages,
+        as even though some make it easy to both have 5555 and '5555', doing so is not helpful.  So refactor generateModefromFrequencyAA(faaA) and put present versions in
+        "disfavored".  So:
+            i.      Put single type version up in Rust with tests.
+            ii.     Make disfavored copies of Python3 and Ruby libraries.
+            iii.    Correct in Ruby and Python3 to just use strings alone in Discrete and frequency AAs.
+
+    2.  Try to get all the global routines done today in Rust.

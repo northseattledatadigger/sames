@@ -43,5 +43,52 @@ getKeptFileURL() {
     return 9
 }
 
+validateSubtype() {
+    local libSubtype="$1"
+
+    case "$libSubtype" in
+    alternate)
+        return 0
+        ;;
+    amateur)
+        return 0
+        ;;
+    disfavored)
+        return 0
+        ;;
+    naive)
+        return 0
+        ;;
+    native)
+        return 0
+        ;;
+    neophyte)
+        return 0
+        ;;
+    numpy)
+        return 0
+        ;;
+    old)
+        return 0
+        ;;
+    older)
+        return 0
+        ;;
+    oldereven)
+        return 0
+        ;;
+    pandas)
+        return 0
+        ;;
+    polars)
+        return 0
+        ;;
+    spark)
+        return 0
+        ;;
+    esac
+    return 1
+}
+
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of SamesTopLib.bashenv

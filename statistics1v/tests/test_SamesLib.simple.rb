@@ -78,7 +78,8 @@ describe 'generateModefromFrequencyAA(faaA)' do
     end
 
     it "returns takes a frequency Associative Array, and returns a mode point statistic." do
-        h = {'1234' => 528, 528 => 3, "A longer string" => 0, "x" => 55555 }
+        #h = {'1234' => 528, 528 => 3, "A longer string" => 0, "x" => 55555 } # Original.  Now moving to expectation, across languages, that all keys will be strings.
+        h = {"1234" => 528, "528" => 3, "A longer string" => 0, "x" => 55555 }
         result = generateModefromFrequencyAA(h)
         assert_equal "x", result
     end

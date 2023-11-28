@@ -10,46 +10,23 @@ readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pw
 readonly SAMESHOME="$( cd $SCRIPT_DIR/../.. &> /dev/null && pwd )"
 readonly SAMESPROJECTHOME="$( cd $SCRIPT_DIR/.. &> /dev/null && pwd )"
 
+if [[ $HERE != $SAMESPROJECTHOME ]]
+then
+    m="Please ONLY execute this script from this folder: $SAMESPROJECTHOME"
+    echo "ERROR:  $m, at this time."
+    exit 8
+fi
+
 source $SAMESPROJECTHOME/ProjectSpecs.bashenv
 source $SAMESHOME/slib/RustXCLib.bashenv
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Procedures
 
-catUsage() {
-    cat <<EOU
-USAGE:  $0 <options>
-    -h This help text, without errors nor error exit.
-EOU
-}
-
-setEnvironment() {
-    local libSubtype="$1"
-
-    # Crates always Used:
-    cargo add csv
-    cargo add regex
-
-    # Crates specific to LibSubtype:
-
-    case "$libSubtype" in
-    native)
-        return 0
-        ;;
-    polars)
-        return 0
-        ;;
-    spark)
-        return 0
-        ;;
-    esac
-    return 1
-}
-
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Init
 
-CheckSetupOnly=build
+DumpRustBuildEnvOnly=false
 
 export CargoCmd=build
 export LibSubtype=native
@@ -65,8 +42,9 @@ OptChars="$PrimaryOptChars$SubProjectOptChars"
 
 if (( $# > 0 ))
 then
-    while getopts "?CcDFhKLPRNnprs" option
+    while getopts "?CcDdFhmrs:tX" option
     do
+        iC "if setInitOptions \"$option\" \"$OPTARG\""
         if setInitOptions "$option" "$OPTARG"
         then
             continue
@@ -76,8 +54,8 @@ then
     done
 fi
 
-readonly ProjectLibFs=$HERE/$SameProjectName.$LibSubtype.rs
-if $CheckSetupOnly
+readonly ProjectLibFs=$HERE/SamesLib.$LibSubtype.rs
+if $DumpRustBuildEnvOnly
 then
     dumpRustBuildEnv
     exit 0
@@ -98,6 +76,9 @@ then
     reInitWorkingTreeFromExhibitSource
     runCargoCmd $CargoCmd $Release
     cd $HERE
+else
+    echoFatal "$ProjectLibFs not found."
+    exit 99
 fi
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890

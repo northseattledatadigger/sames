@@ -13,7 +13,7 @@ rm -rf .pytest_cache
 rm -rf ctree
 rm -rf cpptree
 rm -rf __pycache__
-rm -rf rusttree
+rm -rf extras/rusttree
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of clean.bash

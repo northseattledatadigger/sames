@@ -29,7 +29,8 @@ class Test_generateModefromFrequencyAA(unittest.TestCase):
         self.assertTrue("Only argument must be frequency dictionary." in str(context.exception))
 
     def test_anecdote_expected_results(self):
-        d = {'1234': 528, 528: 3, "A longer string": 0, "x": 55555 }
+        #d = {'1234': 528, 528: 3, "A longer string": 0, "x": 55555 } # Original.  Now moving to expectation, across languages, that all keys will be strings.
+        d = {"1234": 528, "528": 3, "A longer string": 0, "x": 55555 }
         result = sames.generateModefromFrequencyAA(d)
         self.assertEqual("x", result)
 

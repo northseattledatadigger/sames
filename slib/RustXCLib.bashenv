@@ -10,12 +10,12 @@ then
     >&2 echo "FATAL:  SAMESHOME not found.  It must be properly defined."
     exit 99
 fi
-source $SAMESHOME/slib/SamesTopLib.bashenv
 
-readonly RustBuildName=$SameProjectName
+readonly RustBuildName=$SamesProjectName
 
-readonly RustMainSrcFs=$HERE/rustmain.rs
-readonly RustTree=$HERE/rusttree
+#readonly RustMainSrcFs=$SamesProjectExtrasDs/rust.main.rs # Preferred usage.  Try this at some point:  NOTE:TBD
+readonly RustMainSrcFs=$SamesProjectExtrasDs/rust_main.rs
+readonly RustTree=$SamesProjectExtrasDs/rusttree
 
 readonly MainBuildTreeDs=$RustTree/$RustBuildName
 
@@ -42,7 +42,8 @@ _DeployIfSuccessAndConfigured() {
     local _SubType="$4"
 
     local lofs=$SamesBin/rust.main.$_SubType
-    if (( $_BuildResult == 0 ) {
+    if (( $_BuildResult == 0 ))
+    then
 
         if $_Deploy
         then
@@ -55,10 +56,12 @@ _DeployIfSuccessAndConfigured() {
                 ln -s $lofs.debugversion    $lofs
             fi
         fi
-    }
+
+    fi
 }
 
 _PickSubTypeFromMenu() {
+    return
 }
 
 _PlopRunSource() {
@@ -101,23 +104,42 @@ _SetEnvironment() {
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Interface Procedures
 
+catUsage() {
+    cat <<EOU
+USAGE:  $0 <options>
+    -C Set Cargo Command "clippy".
+    -c Set Cargo Command "check".
+    -D Dump Setup Configuration to stdout.
+    -d Set Deploy to true.
+    -c Set Cargo Command "fmt".
+    -h This help text, without errors nor error exit.
+    -c Set Cargo Command "run".
+    -s Validate library sub-type by checking existince of a Rust file for that
+    sub-type.
+    -X Clean rust specific buffer files and folders from the project tree.
+    -? This help text, without errors nor error exit.
+EOU
+}
+
 dumpRustBuildEnv() {
-    iC "CargoCmd:       $CargoCmd"
-    iC "LibSubType:     $LibSubtype"
-    iC "OnlyCleanTree:  $OnlyCleanTree"
-    iC "ProjectLibFs:   $ProjectLibFs"
-    iC "Release:        $Release"
+    cat <<EODUMP
+CargoCmd:       $CargoCmd
+LibSubType:     $LibSubtype
+OnlyCleanTree:  $OnlyCleanTree
+ProjectLibFs:   $ProjectLibFs
+Release:        $Release
+EODUMP
 }
 
 cpResultToSamesBin() {
     local _release=$1
 
-    mkdir -p $SameBin
+    mkdir -p $SamesBin
     if [[ -n $_release ]]
     then
-        cp $MainBuildTreeTargetDs/release/$RustBuildName  $SameBin
+        cp $MainBuildTreeTargetDs/release/$RustBuildName  $SamesBin
     else
-        cp $MainBuildTreeTargetDs/debug/$RustBuildName    $SameBin
+        cp $MainBuildTreeTargetDs/debug/$RustBuildName    $SamesBin
     fi
 }
 
@@ -165,6 +187,10 @@ runCargoCmd() {
         cargo run $CargoCmdQualifiers
         _DeployIfSuccessAndConfigured $? $_Deploy $_Release $_SubType
         ;;
+    test)
+        cargo test $CargoCmdQualifiers
+        _DeployIfSuccessAndConfigured $? $_Deploy $_Release $_SubType
+        ;;
     esac
 }
 
@@ -179,29 +205,39 @@ setInitOptions() {
     c)
         CargoCmd=check
         ;;
+    D)
+        DumpRustBuildEnvOnly=true
+        ;;
     d)
         Deploy=true
         ;;
     f)
         CargoCmd=fmt
         ;;
-    r)
-        CargoCmd=run
+    h)
+        catUsage
+        return 1
         ;;
     m)
         # TBD Menu of LibSubtype:
         export LibSubtype=native # for now.
         export LibSubtype=$(pickSubTypeFromMenu) # for now.
         ;;
+    r)
+        CargoCmd=run
+        ;;
     s)
-        if sl_ValidateSubtype $_optArg
+        if validateSubtype "$_optArg"
         then
-            export Subtype=$_optArg
+            export LibSubtype=$_optArg
         else
-            _Error "Invalid Lib SubType '$_optArg'."
+            echoError "Invalid Library Subtype '$_optArg'."
             catUsage
             return 1
         fi
+        ;;
+    t)
+        CargoCmd=test
         ;;
     X)
         OnlyCleanTree=true
