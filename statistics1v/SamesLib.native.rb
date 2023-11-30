@@ -253,7 +253,9 @@ class HistogramOfX
             i += 1
             previous_lroo = lroo
         end
-        unless @Max <= lroo.StopNo
+        # I think this should be < not <= :
+        #unless @Max <= lroo.StopNo
+        unless @Max < lroo.StopNo
             m = "Range [#{lroo.StartNo},#{lroo.StopNo}] "
             m += " ends before the maximum value '#{@Max}."
             raise RangeError, m

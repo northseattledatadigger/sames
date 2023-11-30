@@ -1,0 +1,97 @@
+Trace: if setInitOptions "s" "neophyte" | Thu Nov 30 02:28:30 PM PST 2023
+Trace: if setInitOptions "t" "" | Thu Nov 30 02:28:30 PM PST 2023
+     Created library `statistics1v` package
+    Updating crates.io index
+      Adding regex v1.10.2 to dependencies.
+             Features:
+             + perf
+             + perf-backtrack
+             + perf-cache
+             + perf-dfa
+             + perf-inline
+             + perf-literal
+             + perf-onepass
+             + std
+             + unicode
+             + unicode-age
+             + unicode-bool
+             + unicode-case
+             + unicode-gencat
+             + unicode-perl
+             + unicode-script
+             + unicode-segment
+             - logging
+             - pattern
+             - perf-dfa-full
+             - unstable
+             - use_std
+    Updating crates.io index
+    Updating crates.io index
+      Adding thiserror v1.0.50 to dependencies.
+    Updating crates.io index
+   Compiling proc-macro2 v1.0.70
+   Compiling unicode-ident v1.0.12
+   Compiling memchr v2.6.4
+   Compiling regex-syntax v0.8.2
+   Compiling thiserror v1.0.50
+   Compiling aho-corasick v1.1.2
+   Compiling quote v1.0.33
+   Compiling syn v2.0.39
+   Compiling regex-automata v0.4.3
+   Compiling thiserror-impl v1.0.50
+   Compiling regex v1.10.2
+   Compiling statistics1v v0.1.0 (/home/nsdd/shop/sames/statistics1v/extras/rusttree/statistics1v)
+error: struct fields are separated by `,`
+   --> src/lib.rs:170:50
+    |
+168 | pub struct HistogramOfX {
+    |            ------------ while parsing this struct
+169 |         //self.FrequencyAA[startNo] = RangeOccurrence(startNo,stopNo)
+170 |     frequency__aa:  HashMap<f16, RangeOccurrence>;
+    |                                                  ^ help: replace `;` with `,`
+
+warning: unused import: `thiserror::Error`
+ --> src/lib.rs:8:5
+  |
+8 | use thiserror::Error;
+  |     ^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+error[E0046]: not all trait items implemented, missing: `add_to_counts`, `generate_count_collection`, `is_in_range`, `validate_no_overlap`, `set_occurrence_range`, `validate_ranges_complete`
+   --> src/lib.rs:185:1
+    |
+157 |     fn add_to_counts(&mut self, x_float: f64);
+    |     ------------------------------------------ `add_to_counts` from trait
+158 |     fn generate_count_collection(&self) -> Vec<f64>;
+    |     ------------------------------------------------ `generate_count_collection` from trait
+159 |     fn is_in_range(&self, x_float: f64) -> bool;
+    |     -------------------------------------------- `is_in_range` from trait
+160 |     fn new(lowest_value: f64, highest_value: f64) -> Self;
+161 |     fn validate_no_overlap(&self,start_no: f64, stop_no: f64) -> Result<(), ValidationError>;
+    |     ----------------------------------------------------------------------------------------- `validate_no_overlap` from trait
+...
+164 |     fn set_occurrence_range(&self,start_no: f64,stop_no: f64);
+    |     ---------------------------------------------------------- `set_occurrence_range` from trait
+165 |     fn validate_ranges_complete(&self) -> Result<(), ValidationError>;
+    |     ------------------------------------------------------------------ `validate_ranges_complete` from trait
+...
+185 | impl HistogramMethods for HistogramOfX {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ missing `add_to_counts`, `generate_count_collection`, `is_in_range`, `validate_no_overlap`, `set_occurrence_range`, `validate_ranges_complete` in implementation
+
+error[E0609]: no field `max` on type `HistogramOfX`
+   --> src/lib.rs:189:16
+    |
+189 |         buffer.max              = highest_value;
+    |                ^^^ unknown field
+
+error[E0609]: no field `min` on type `HistogramOfX`
+   --> src/lib.rs:190:16
+    |
+190 |         buffer.min              = lowest_value;
+    |                ^^^ unknown field
+
+Some errors have detailed explanations: E0046, E0609.
+For more information about an error, try `rustc --explain E0046`.
+warning: `statistics1v` (lib test) generated 1 warning
+error: could not compile `statistics1v` (lib test) due to 4 previous errors; 1 warning emitted

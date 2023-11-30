@@ -1,13 +1,45 @@
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
-// WPMS2023.naive.rs
+// SamesLib.neophyte.rs
 
 use regex::Regex;
 use std::collections::*;
+//use std::{error::Error, fmt};
+//use std::process::{ExitCode, Termination};
+use thiserror::Error;
 //use std::collections::HashMap;
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
+// Validation Errors
+/*  My notes here:  Because the documentation of rust Errors is so higgledy-
+    piggledy, and so inconsistent, and so incomplete at any given point, and
+    because those doing the documentation, many whom have very good intentions
+    and good energies, are NOT complete that I could find, I am throwing
+    together what I see as a shockingly bad implementation of Errors for now,
+    which I hope to correct later.  If I do happen on something good, and
+    complete, that leaves me with confidence to do it in a way I see as well,
+    I will likely stop right then and come back to refactor this, as I'd like
+    to have it better, but for now, piss in and piss out.  xc 2023/11/30 15:21.
+ */
 
-pub fn generate_mode_from_frequency_aa<'a>(faa_a: &'a HashMap<&'a str, u16>) -> &'a str {
+// This is partly stolen from:  https://kerkour.com/rust-error-handling
+#[derive(thiserror::Error, Debug, Clone)]
+pub enum ValidationError {
+    #[error("String number exceeds float capacity")]
+    FloatCapacityExceeded,
+    #[error("Index out of bounds")]
+    RangeError,
+    #[error("Permission Denied.")]
+    PermissionDenied,
+    #[error("Invalid argument: {0}")]
+    InvalidArgument(String),
+}
+/*
+ */
+
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+// Global Procedures
+
+pub fn generate_mode_from_frequency_aa<'a>(faa_a: &'a HashMap<&'a str, u32>) -> &'a str {
     let mut x = "";
     let mut m = 0;
     for (key, &value) in faa_a.iter() {
@@ -36,7 +68,17 @@ pub fn is_whitespace_only(str_a: &str) -> bool {
     return true;
 }
 
-pub fn is_usable_number_vector(v_a: &[&str]) -> bool {
+pub fn is_usable_number_string_array(a_a: &[&str]) -> bool {
+    for element in a_a.iter() {
+        if is_a_num_str(element) {
+            continue;
+        }
+        return false;
+    }
+    return true;
+}
+
+pub fn is_usable_number_string_vector(v_a: &Vec<&str>) -> bool {
     for element in v_a.iter() {
         if is_a_num_str(element) {
             continue;
@@ -52,6 +94,261 @@ pub fn round_to_f64_precision(subject_float: f64, precision_digits: usize) -> f6
     let buffer: f64 = ( subject_float * precision_base ).round();
     let newfloat: f64 = buffer / precision_base;
     return newfloat;
+}
+
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+// HistogramOfX and RangeOccurrence
+// NOTE:  Because Python3, unlike Ruby, is such a hodgepodge of inconsistent
+// constructs and confusing extra decorations, I decided to pull RangeOccurrence
+// out into indepencent space instead of having it as a nested class, for the
+// Python3 version.  This makes it simpler and clearer, and I will need to do
+// similar things in other non-class oriented languages anyway.
+
+pub trait RangeAccess {
+    fn add_to_count(&mut self);
+    fn has_overlap(&self,start_no: f64, stop_no: f64) -> bool;
+    fn is_in_range(&self, x_float: f64) -> bool;
+    fn new(start_no: f64, stop_no: f64) -> Self;
+}
+
+pub struct RangeOccurrence {
+    count: usize,
+    start_no: f64,
+    stop_no: f64,
+}
+
+impl Default for RangeOccurrence {
+    fn default() -> Self {
+        RangeOccurrence {
+            count: 0,
+            start_no: 0.0,
+            stop_no: 0.0,
+        }
+    }
+}
+
+impl RangeAccess for RangeOccurrence {
+
+    fn add_to_count(&mut self) {
+        self.count += 1;
+    }
+
+    fn has_overlap(&self,start_no: f64, stop_no: f64) -> bool {
+        if ( self.start_no <= start_no ) && ( start_no < self.stop_no ) {
+            return true;
+        }
+        if ( self.start_no < stop_no ) && ( stop_no <= self.stop_no ) {
+            return true;
+        }
+        return false;
+    }
+
+    fn is_in_range(&self, x_float: f64) -> bool {
+        if x_float < self.start_no {
+            return false;
+        }
+        if self.stop_no <= x_float {
+            return false;
+        }
+        return true;
+    }
+
+    fn new(start_no: f64, stop_no: f64) -> Self {
+        let mut buffer: RangeOccurrence = Default::default();
+        buffer.start_no = start_no;
+        buffer.stop_no = stop_no;
+        return buffer;
+    }
+
+}
+
+pub trait HistogramMethods {
+    fn _validate_no_overlap(&self,start_no: f64, stop_no: f64) -> Result<(), ValidationError>;
+    fn add_to_counts(&mut self, x_float: f64);
+    fn generate_count_collection(&self) -> Vec<f64>;
+    fn is_in_range(&self, x_float: f64) -> bool;
+    fn new(lowest_value: f64, highest_value: f64) -> Self;
+    //fn new_from_desired_segment_count(cls,startNo,maxNo,desiredSegmentCount,extraMargin=None):
+    //fn new_from_uniform_segment_size(cls,startNo,maxNo,segmentSize):
+    fn set_occurrence_range(&self,start_no: f64,stop_no: f64);
+    fn validate_ranges_complete(&self) -> Result<(), ValidationError>;
+}
+
+pub struct HistogramOfX {
+        //self.FrequencyAA[startNo] = RangeOccurrence(startNo,stopNo)
+    frequency_aa:  HashMap<f16, RangeOccurrence>,
+    max: f64,
+    min: f64,
+}
+
+impl Default for HistogramOfX {
+    fn default() -> Self {
+        HistogramOfX {
+            frequency_aa:  (),
+            max: 0.0,
+            min: 0.0,
+        }
+    }
+}
+
+impl HistogramMethods for HistogramOfX {
+
+    fn add_to_counts(&mut self, x_float: f64) -> Result<(), ValidationError> {
+        for lstartno in self.frequency_aa.iter() {
+            lroo = self.frequency_aa[lstartno];
+            if x_float < lroo.stop_no {
+                lroo.addToCount();
+                return Ok(_);
+            }
+        eprintln!("No Frequency range found for xFloat:  '{x_float}'.");
+        return Err(ValidationError::RangeError);
+    }
+
+    fn _validate_no_overlap(&self,start_no: f64, stop_no: f64) -> Result<(), ValidationError>;
+        for lstartno in self.frequency_aa.iter() {
+            lroo = self.frequency_aa[lstartno];
+            if lroo.has_overlap(start_no,stop_no):
+                m = "Range [{startNo},{stopNo}] overlaps with another range:";
+                m +="  [{lroo.start_no},{lroo.stop_no}].";
+                eprintln!(m);
+                return Err(ValidationError::RangeError);
+
+    fn new(lowest_value: f64, highest_value: f64) -> Self {
+        let mut buffer: HistogramOfX = Default::default();
+        buffer.max              = highest_value;
+        buffer.min              = lowest_value;
+        return buffer;
+    }
+
+}
+
+/*
+
+class HistogramOfX:
+
+    def __init__(self,lowestValue,highestValue):
+        if ( not isinstance(lowestValue,numbers.Number) ):
+            raise ValueError(f"lowestValue argument '{lowestValue}' is not a number.")
+        if ( not isinstance(highestValue,numbers.Number) ):
+            raise ValueError(f"highestValue argument '{highestValue}' is not a number.")
+        self.FrequencyAA    = {}
+        self.Max            = highestValue
+        self.Min            = lowestValue
+
+    def _validateNoOverlap(self,startNo,stopNo):
+        if ( not isinstance(startNo,numbers.Number) ):
+            raise ValueError(f"startNo argument '{startNo}' is not a number.")
+        if ( not isinstance(stopNo,numbers.Number) ):
+            raise ValueError(f"stopNo argument '{stopNo}' is not a number.")
+        for lroo in self.FrequencyAA.values():
+            if lroo.hasOverlap(startNo,stopNo):
+                m = f"Range [{startNo},{stopNo}] overlaps with another range:  [{lroo.StartNo},{lroo.StopNo}]."
+                raise ValueError(m)
+
+    def addToCounts(self,xFloat):
+        if ( not isinstance(xFloat,numbers.Number) ):
+            raise ValueError(f"xFloat argument '{xFloat}' is not a number.")
+        for lstartno in sorted(self.FrequencyAA):
+            lroo = self.FrequencyAA[lstartno]
+            if xFloat < lroo.StopNo:
+                lroo.addToCount()
+                return
+        m = "Programmer Error:  "
+        m += f"No Frequency range found for xFloat:  '{xFloat}'."
+        raise ValueError( m )
+
+    def generateCountCollection(self):
+        orderedlist = []
+        for lstartno in sorted(self.FrequencyAA):
+            lroo = self.FrequencyAA[lstartno]
+            orderedlist.append([lstartno,lroo.StopNo,lroo.Count])
+        return orderedlist
+
+    @classmethod
+    def newFromDesiredSegmentCount(cls,startNo,maxNo,desiredSegmentCount,extraMargin=None):
+        if extraMargin is None:
+            extraMargin = 0
+        if ( not isinstance(startNo,numbers.Number) ):
+            raise ValueError(f"startNo argument '{startNo}' is not a number.")
+        if ( not isinstance(maxNo,numbers.Number) ):
+            raise ValueError(f"maxNo argument '{maxNo}' is not a number.")
+        if ( type(desiredSegmentCount) != int ):
+            raise ValueError(f"desiredSegmentCount argument '{desiredSegmentCount}' is not an integer.")
+        if ( not isinstance(extraMargin,numbers.Number) ):
+            raise ValueError(f"extraMargin argument '{extraMargin}' is not a number.")
+        # xc 20231106:  Don't worry about cost of passing the AA around until efficiency passes later.
+        totalbreadth    = float( maxNo - startNo + 1 + extraMargin )
+        dscf            = float(desiredSegmentCount)
+        segmentsize     = totalbreadth / dscf
+        localo          = cls.newFromUniformSegmentSize(startNo,maxNo,segmentsize)
+        return localo
+
+    @classmethod
+    def newFromUniformSegmentSize(cls,startNo,maxNo,segmentSize):
+        if ( not isinstance(startNo,numbers.Number) ):
+            raise ValueError(f"startNo argument '{startNo}' is not a number.")
+        if ( not isinstance(maxNo,numbers.Number) ):
+            raise ValueError(f"maxNo argument '{maxNo}' is not a number.")
+        if ( not isinstance(segmentSize,numbers.Number) ):
+            raise ValueError(f"segmentSize argument '{segmentSize}' is not a number.")
+        # xc 20231106:  Don't worry about cost of passing the AA around until efficiency passes later.
+        localo          = HistogramOfX(startNo,maxNo)
+        bottomno        = startNo
+        topno           = bottomno + segmentSize
+        while bottomno <= maxNo:
+            localo.setOccurrenceRange(bottomno,topno)
+            bottomno    = topno
+            topno       += segmentSize
+        return localo
+
+    def setOccurrenceRange(self,startNo,stopNo):
+        if ( not isinstance(startNo,numbers.Number) ):
+            raise ValueError(f"startNo argument '{startNo}' is not a number.")
+        if ( not isinstance(stopNo,numbers.Number) ):
+            raise ValueError(f"stopNo argument '{stopNo}' is not a number.")
+        if stopNo <= startNo:
+            raise ValueError(f"stopNo must be larger than startNo.")
+        self._validateNoOverlap(startNo,stopNo)
+        self.FrequencyAA[startNo] = RangeOccurrence(startNo,stopNo)
+
+    fn validateRangesComplete(&self) -> Result<(), ValidationError> {
+        i = 0
+        lroo = None
+        previous_lroo = None
+        for lstartno in sorted(self.FrequencyAA):
+            lroo = self.FrequencyAA[lstartno]
+            if lstartno != lroo.StartNo:
+                raise IndexError( "Programmer Error on startno assignments." )
+            if i == 0:
+                if lroo.StartNo > self.Min:# NOTE:  Start may be before the minimum,
+                                           # but NOT after it, as minimum value must
+                                           # be included in the first segment.
+                    m = f"Range [{lroo.StartNo},{lroo.StopNo}] "
+                    m += f" starts after the minimum designated value '{self.Min}."
+                    raise IndexError( m )
+            else:
+                if lroo.StartNo != previous_lroo.StopNo:
+                    m = f"Range [{previous_lroo.StartNo},{previous_lroo.StopNo}]"
+                    m += " is not adjacent to the next range "
+                    m += f"[{lroo.StartNo},{lroo.StopNo}]."
+                    raise IndexError( m )
+            i += 1
+            previous_lroo = lroo
+
+        if self.Max > lroo.StopNo:
+            m = f"Range [{lroo.StartNo},{lroo.StopNo}] "
+            m += f" ends before the maximum value '{self.Max}."
+            raise IndexError( m )
+
+
+enum BadDataAction {
+    BlankField,
+    DefaultFill,
+    ExcludeRow,
+    Fail,
+    SkipRow,
+    ZeroField,
 }
 
 pub trait VectorOfX {
@@ -167,12 +464,8 @@ impl VectorOfContinuous {
 
 }
 
-/*
-
-*/
-/*
 struct VectorOfDiscrete {
-    vector_of_x: Vec<String>;
+    vector_of_x: Vec<&str>;
     map_of_values: Map<String>;
 }
 
@@ -402,11 +695,11 @@ mod tests {
     use std::collections::*;
     use super::*;
 
-// Tests for generate_mode_from_frequency_aa(faa_a):
+    // Global Procedures
 
     #[test]
     fn test_anecdote_expected_results() {
-        let d: HashMap<&str, u16> = HashMap::from([("1234", 528), ("528", 3), ("A longer string", 0), ("x", 55555)]);
+        let d: HashMap<&str, u32> = HashMap::from([("1234", 528), ("528", 3), ("A longer string", 0), ("x", 55555)]);
         let result = generate_mode_from_frequency_aa(&d);
         assert_eq!("x", result);
     }
@@ -432,7 +725,57 @@ mod tests {
         assert!(!is_whitespace_only("1234"));
         assert!(!is_whitespace_only("0x32"));
     }
+
+    #[test]
+    fn test_is_usable_number_string_array() {
+        assert!(is_usable_number_string_array(&["1","33.33","4"]));
+        assert!(!is_usable_number_string_array(&["1"," 2 3 5 "]));
+        assert!(!is_usable_number_string_array(&["1s","235"]));
+        assert!(!is_usable_number_string_array(&[".","235"]));
+        assert!(!is_usable_number_string_array(&["","235"]));
+        assert!(is_usable_number_string_array(&["235"]));
+    }
+
+    #[test]
+    fn test_is_usable_number_string_vector() {
+        assert!(is_usable_number_string_vector(&vec!["1","33.33","4"]));
+        assert!(!is_usable_number_string_vector(&vec!["1"," 2 3 5 "]));
+        assert!(!is_usable_number_string_vector(&vec!["1s","235"]));
+        assert!(!is_usable_number_string_vector(&vec![".","235"]));
+        assert!(!is_usable_number_string_vector(&vec!["","235"]));
+        assert!(is_usable_number_string_vector(&vec!["235"]));
+    }
+
+    #[test]
+    fn test_round_to_f64_precision() {
+        assert_eq!(round_to_f64_precision(1234.56789123457890, 4),1234.5679);
+        assert_eq!(round_to_f64_precision(1234.0, 4),1234.0);
+    }
+
+    // Object Groups of Procedures, defined by traits, structs and
+    // "impl" implementation groups.
+
+    // HistogramOfX and RangeOccurrence
+
+    #[test]
+    fn test_construct_rangeoccurrence() {
+        let mut roo = RangeOccurrence::new(0.0,1.1);
+        assert_eq!(roo.count,0);
+        assert_eq!(roo.start_no,0.0);
+        assert_eq!(roo.stop_no,1.1);
+        assert!(!roo.has_overlap(1.1,2.2));
+        assert!(roo.is_in_range(1.0));
+        roo.add_to_count();
+        assert_eq!(roo.count,1);
+    }
+
+    // SumsOfPowers
+
+    // VectorOfX, VectorOfContinuous, VectorOfDiscrete
+
+    // VectorTable
+
 }
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
-// End of WPMS2023.naive.rs
+// End of SamesLib.neophyte.rs

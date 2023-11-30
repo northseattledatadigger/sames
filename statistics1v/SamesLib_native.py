@@ -231,7 +231,7 @@ class HistogramOfX:
             i += 1
             previous_lroo = lroo
 
-        if self.Max > lroo.StopNo:
+        if self.Max >= lroo.StopNo:
             m = f"Range [{lroo.StartNo},{lroo.StopNo}] "
             m += f" ends before the maximum value '{self.Max}."
             raise IndexError( m )

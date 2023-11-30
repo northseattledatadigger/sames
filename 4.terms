@@ -1,0 +1,15 @@
+    1) I like all of the terms "procedures", "subroutines", "functions", "calls", "branches", "methods", "operations", "routine", "subprogram", and apparantly most or all of these
+have been used to denote a "procedure" in some programming language.  I don't know if anyone has ever thought about shaking these out to be a more precise vocabulary, but in my
+dreams I have.  For instance, could we, I posit, define:
+
+    procedure as any of these; the most general term.
+    routine is less used and hardly around anymore, and perhaps is ready to be retired, along with "subroutine".  I do not have strong feelings here.
+    calls are always actual evocation of a procedure by name, and no longer an actual procedure.
+    methods, as already recognized, are procedures associated with an object.
+    functions are ONLY procedures that return a value, or modify a value in an effective return value operation, but preferably only the former.
+    operations are what goes on inside a procedure.
+    Init and Main sections are implicit procedures.
+    branching is a go to is a way to jump to a named location external of other structures.  raising an exception is a form of branching, if a highly formalized one.  "return" is
+    effectively also branching, thougha very formalized one, and thus so is exiting.
+
+My professional training was in undergraduate math and economics, so I may easily be ripe for correction here, despite my long experience, and do invite well educated feedback.

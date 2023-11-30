@@ -79,6 +79,7 @@ _SetEnvironment() {
 
     # Crates always Used:
     cargo add regex
+    cargo add thiserror
 
     # Crates specific to LibSubtype:
     case "$libSubtype" in
