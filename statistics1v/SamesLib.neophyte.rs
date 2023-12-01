@@ -10,31 +10,58 @@ use thiserror::Error;
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Validation Errors
-/*  My notes here:  Because the documentation of rust Errors is so higgledy-
-    piggledy, and so inconsistent, and so incomplete at any given point, and
-    because those doing the documentation, many whom have very good intentions
-    and good energies, are NOT complete that I could find, I am throwing
-    together what I see as a shockingly bad implementation of Errors for now,
-    which I hope to correct later.  If I do happen on something good, and
-    complete, that leaves me with confidence to do it in a way I see as well,
-    I will likely stop right then and come back to refactor this, as I'd like
-    to have it better, but for now, piss in and piss out.  xc 2023/11/30 15:21.
+/*
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum DataStoreError {
+    #[error("data store disconnected")]
+    Disconnect(#[from] io::Error),
+    #[error("the data for key `{0}` is not available")]
+    Redaction(String),
+    #[error("invalid header (expected {expected:?}, found {found:?})")]
+    InvalidHeader {
+        expected: String,
+        found: String,
+    },
+    #[error("unknown data store error")]
+    Unknown,
+}
  */
 
 // This is partly stolen from:  https://kerkour.com/rust-error-handling
+// Also:  https://crates.io/crates/thiserror
+
 #[derive(thiserror::Error, Debug, Clone)]
+pub enum ProcessingError {
+    #[error(transparent)]
+    FailedToOpenFile(#[from] anyhow::Error),
+    #[error(transparent)]
+    FailedToReadFile(#[from] anyhow::Error),
+    #[error(transparent)]
+    FailedToParseString(#[from] anyhow::Error),
+}
+
 pub enum ValidationError {
-    #[error("String number exceeds float capacity")]
-    FloatCapacityExceeded,
-    #[error("Index out of bounds")]
-    RangeError,
-    #[error("Permission Denied.")]
-    PermissionDenied,
+    #[error("Adjacent Endpoints {0}, {1} unequal")]
+    AdjacentRangeEndpointsUnequal(f64,f64),
+    #[error("String number {0} exceeds float capacity")]
+    FloatCapacityExceeded(String),
+    #[error("Value Range Conflict [{0},{1}] overlaps [{2},{3}]")]
+    ValueRangeConflict(f64,f64,f64,f64),
     #[error("Invalid argument: {0}")]
     InvalidArgument(String),
+    #[error("No range found for value: '{0}'")]
+    NoRangeFoundForValue(f64),
+    #[error("Range key {0} not equal to start no {1}")]
+    RangeKeyNotEqualStartNo(f64,f64),
+    #[error("Value {0} at or above high stop point {1}")]
+    ValueAtOrAboveHighStop(f64,f64),
+    #[error("Value {0} below low limit {1}")]
+    ValueBelowLowLimit(f64,f64),
+    #[error("Low value {0} NOT below high value {1}")]
+    ValueOrderWrong(f64,f64),
 }
-/*
- */
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Global Procedures
@@ -168,15 +195,14 @@ pub trait HistogramMethods {
     fn add_to_counts(&mut self, x_float: f64);
     fn generate_count_collection(&self) -> Vec<f64>;
     fn is_in_range(&self, x_float: f64) -> bool;
-    fn new(lowest_value: f64, highest_value: f64) -> Self;
-    //fn new_from_desired_segment_count(cls,startNo,maxNo,desiredSegmentCount,extraMargin=None):
-    //fn new_from_uniform_segment_size(cls,startNo,maxNo,segmentSize):
+    fn new(lowest_value: f64, highest_value: f64) -> Result<Self,ValidationError>
+    fn newFromDesiredSegmentCount(start_no,max_no,desired_segment_count,extra_margin=None) -> Result<Self,ValidationError>
+    fn newFromUniformSegmentSize(start_no,max_no,segment_size) -> Result<Self,ValidationError>
     fn set_occurrence_range(&self,start_no: f64,stop_no: f64);
     fn validate_ranges_complete(&self) -> Result<(), ValidationError>;
 }
 
 pub struct HistogramOfX {
-        //self.FrequencyAA[startNo] = RangeOccurrence(startNo,stopNo)
     frequency_aa:  HashMap<f16, RangeOccurrence>,
     max: f64,
     min: f64,
@@ -196,34 +222,124 @@ impl HistogramMethods for HistogramOfX {
 
     fn add_to_counts(&mut self, x_float: f64) -> Result<(), ValidationError> {
         for lstartno in self.frequency_aa.iter() {
-            lroo = self.frequency_aa[lstartno];
+            let lroo = self.frequency_aa[lstartno];
             if x_float < lroo.stop_no {
                 lroo.addToCount();
                 return Ok(_);
             }
-        eprintln!("No Frequency range found for xFloat:  '{x_float}'.");
-        return Err(ValidationError::RangeError);
+        //eprintln!("No Frequency range found for xFloat:  '{x_float}'.");
+        return Err(ValidationError::NoRangeFoundForValue(x_float));
     }
 
     fn _validate_no_overlap(&self,start_no: f64, stop_no: f64) -> Result<(), ValidationError>;
+        if start_no >= stop_no {
+            return Err(ValidationError::ValueOrderWrong(start_no,stop_no));
+        }
         for lstartno in self.frequency_aa.iter() {
-            lroo = self.frequency_aa[lstartno];
+            let lroo = self.frequency_aa[lstartno];
             if lroo.has_overlap(start_no,stop_no):
-                m = "Range [{startNo},{stopNo}] overlaps with another range:";
-                m +="  [{lroo.start_no},{lroo.stop_no}].";
-                eprintln!(m);
-                return Err(ValidationError::RangeError);
+                //m = "Range [{startNo},{stopNo}] overlaps with another range:";
+                //m +="  [{lroo.start_no},{lroo.stop_no}].";
+                //eprintln!(m);
+                return Err(ValidationError::ValueRangeConflict(start_no,stop_no,lroo.start_no,lroo.stop_no));
 
-    fn new(lowest_value: f64, highest_value: f64) -> Self {
+    fn generate_count_collection(&self) -> Vec<(f64,f64,u32)> {
+        let mut orderedlist = Vec<(f64,f64,u32)>;
+        for lstartno in self.frequency_aa.iter() {
+            let lroo = self.frequency_aa[lstartno];
+            let tuplebuffer = (lstartno,lroo.StopNo,lroo.Count);
+            orderedlist.push(tuplebuffer);
+        return orderedlist;
+    }
+
+    fn new(lowest_value: f64, highest_value: f64) -> Result<Self,ValidationError> {
+        if lowest_value >= highest_value {
+            return Err(ValidationError::ValueOrderWrong(lowest_value,highest_value));
+        }
         let mut buffer: HistogramOfX = Default::default();
         buffer.max              = highest_value;
         buffer.min              = lowest_value;
-        return buffer;
+        return Ok(buffer);
+    }
+
+    fn newFromDesiredSegmentCount(start_no: f64,max_no: f64,desired_segment_count: u8,extra_margin=0) -> Result<Self,ValidationError> {
+        let totalbreadth    = max_no - start_no + 1.0 + extra_margin;
+        let dscf: f64       = desired_segment_count as f64;
+        let segmentsize     = totalbreadth / dscf;
+        let localo          = try!( HistogramOfX::newFromUniformSegmentSize(start_no,max_no,segmentsize) );
+        return Ok(localo);
+    }
+
+    fn newFromUniformSegmentSize(start_no,max_no,segment_size) -> Result<Self,ValidationError> {
+        if start_no >= max_no {
+            return Err(ValidationError::ValueOrderWrong(start_no,max_no));
+        }
+        let mut localo: HistogramOfX    = try!( HistogramOfX::new(start_no,max_no) );
+        let bottomno                    = start_no;
+        let topno                       = bottomno + segment_size;
+        while bottomno <= max_no {
+            localo.set_occurrence_range(bottomno,topno);
+            bottomno    = topno;
+            topno       += segment_size;
+        }
+        return Ok(localo);
+    }
+
+    fn setOccurrenceRange(&mut self,start_no,stop_no) -> Result<(), ValidationError> {
+        if start_no >= stop_no {
+            return Err(ValidationError::ValueOrderWrong(start_no,stop_no));
+        }
+        self._validate_no_overlap(start_no,stop_no);
+        self.frequency_aa.insert(start_no, RangeOccurrence::new(start_no,stop_no));
+    }
+
+    fn validate_ranges_complete(&self) -> Result<(), ValidationError> {
+        let i = 0
+        let lroo = None
+        let previous_lroo = None
+        for lstartno in self.frequency_aa.iter() {
+            let lroo = self.frequency_aa[lstartno];
+            if lstartno != lroo.start_no {
+                return Err(ValidationError::RangeKeyNotEqualStartNo(lstartno,lroo.start_no));
+            }
+            if i == 0 {
+                if lroo.start_no > self.min {        # NOTE:  Start may be before the minimum,
+                                                    # but NOT after it, as minimum value must
+                                                    # be included in the first segment.
+                    return Err(ValidationError::ValueBelowLowLimit(self.min,lroo.start_no));
+                }
+            } else {
+                if lroo.start_no != previous_lroo.stop_no {
+                    return Err(ValidationError::AdjacentRangeEndpointsUnequal(previous_lroo.stop_no,lroo.start_no));
+                }
+            }
+            i += 1
+            let previous_lroo = lroo
+        }
+
+        if self.max > lroo.stop_no {
+            return Err(ValidationError::ValueAtOrAboveHighStop(self.max,lroo.stop_no));
+        }
     }
 
 }
 
 /*
+
+pub enum ValidationError {
+    #[error("String number {0} exceeds float capacity")]
+    FloatCapacityExceeded(String),
+    #[error("Value Range Conflict {0} out of range [{1},{2}]")]
+    ValueRangeConflict(f64,f64,f64,f64),
+    #[error("Invalid argument: {0}")]
+    InvalidArgument(String),
+    #[error("No range found for value: '{0}'")]
+    NoRangeFoundForValue(f64),
+    #[error("Value {0} below low limit {1}")]
+    ValueBelowLowLimit(f64,f64),
+    #[error("Value {0} at or above high stop point {1}")]
+    ValueAtOrAboveHighStop(f64,f64),
+}
 
 class HistogramOfX:
 
