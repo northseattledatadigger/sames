@@ -24,7 +24,7 @@ pub enum ValidationError {
     #[error("No range found for value: '{0}'")]
     NoRangeFoundForValue(f64),
     #[error("Range key {0} not equal to start no {1}")]
-    RangeKeyNotEqualStartNo(u64,u64),
+    RangeKeyNotEqualStartNo(i64,i64),
     #[error("Value {0} at or above high stop point {1}")]
     ValueAtOrAboveHighStop(f64,f64),
     #[error("Value {0} below low limit {1}")]
@@ -165,6 +165,8 @@ impl RangeAccess for RangeOccurrence {
     }
 
     fn new(start_no: f64, stop_no: f64) -> Self {
+        // Probably need to make this check start_no is lt stop_no, and
+        // return Result.  TBD.
         let mut buffer: RangeOccurrence = Default::default();
         buffer.start_no = start_no;
         buffer.stop_no = stop_no;
@@ -174,15 +176,15 @@ impl RangeAccess for RangeOccurrence {
 }
 
 pub struct HistogramOfX {
-    frequency_aa: BTreeMap<u64, RangeOccurrence>,
+    frequency_aa: BTreeMap<i64, RangeOccurrence>,
     max: f64,
     min: f64,
-    sentinal_multiplier: u64,
+    sentinal_multiplier: i64,
 }
 
 pub trait HistogramMethods {
-    fn _float_to_sentinal(&self,start_no: f64) -> u64;
-    //fn _sentinal_to_float(sentinal_no: u64) -> f64;
+    fn _float_to_sentinal(&self,start_no: f64) -> i64;
+    //fn _sentinal_to_float(sentinal_no: i64) -> f64;
     fn _validate_no_overlap(&self,start_no: f64, stop_no: f64) -> Result<(), ValidationError>;
     fn add_to_counts(&mut self, x_float: f64) -> Result<(), ValidationError>;
     fn generate_count_collection(&self) -> Vec<(f64,f64,usize)>;
@@ -196,7 +198,7 @@ pub trait HistogramMethods {
 impl Default for HistogramOfX {
     fn default() -> Self {
         HistogramOfX {
-            //frequency_aa: BTreeMap<u64, RangeOccurrence>::new(),
+            //frequency_aa: BTreeMap<i64, RangeOccurrence>::new(),
             frequency_aa: BTreeMap::new(),
             max: 0.0,
             min: 0.0,
@@ -207,13 +209,13 @@ impl Default for HistogramOfX {
 
 impl HistogramMethods for HistogramOfX {
 
-    fn _float_to_sentinal(&self,start_no: f64) -> u64 {
+    fn _float_to_sentinal(&self,start_no: f64) -> i64 {
         let fbuffer = start_no * self.sentinal_multiplier as f64;
-        return fbuffer as u64
+        return fbuffer as i64
     }
 
     /*
-    fn _sentinal_to_float(&self,sentinal: u64) -> f64 {
+    fn _sentinal_to_float(&self,sentinal: i64) -> f64 {
         let fbuffer = sentinal as f64 / self.sentinal_multiplier as f64;
         return fbuffer
     }
@@ -238,13 +240,13 @@ impl HistogramMethods for HistogramOfX {
                 return Ok(());
             }
         }
-        //eprintln!("No Frequency range found for xFloat:  '{x_float}'.");
         return Err(ValidationError::NoRangeFoundForValue(x_float));
     }
 
     fn generate_count_collection(&self) -> Vec<(f64,f64,usize)> {
         let mut orderedlist: Vec<(f64,f64,usize)> = Vec::new();
         for (_lsentinal, lroo) in &self.frequency_aa {
+            println!("trace 5 generate_count_collection {_lsentinal}");
             let tuplebuffer = (lroo.start_no,lroo.stop_no,lroo.count);
             orderedlist.push(tuplebuffer);
         }
@@ -753,6 +755,218 @@ mod tests {
         assert_eq!(roo.count,1);
     }
 
+    #[test]
+    fn test_construct_histogramofx_basic_construction() {
+        let hoxo: HistogramOfX = Default::default();
+        assert_eq!(hoxo.max,0.0);
+        assert_eq!(hoxo.min,0.0);
+        let resulto: Result<HistogramOfX,ValidationError> = HistogramOfX::new(0.0,99.99);
+        let hoxo: HistogramOfX = match resulto {
+            Ok(hoxo) => hoxo,
+            Err(_err) => panic!("PASSing test will not get here."),
+        };
+        assert_eq!(hoxo.max,99.99);
+        assert_eq!(hoxo.min,0.0);
+    }
+
+    #[test]
+    fn test_construct_histogramofx_construction_by_segment_count() {
+    
+        let resulto: Result<HistogramOfX,ValidationError> = HistogramOfX::new_from_uniform_segment_size(0.0,999.0,256.0);
+        let hoxo: HistogramOfX = match resulto {
+            Ok(hoxo) => hoxo,
+            Err(_err) => panic!("PASSing test will not get here."),
+        };
+        assert_eq!(hoxo.max,999.0);
+        assert_eq!(hoxo.min,0.0);
+    }
+
+    #[test]
+    fn test_construct_histogramofx_construction_by_segment_size() {
+        let resulto: Result<HistogramOfX,ValidationError> = HistogramOfX::new_from_desired_segment_count(0.0,999.0,6,5.999);
+        let hoxo: HistogramOfX = match resulto {
+            Ok(hoxo) => hoxo,
+            Err(_err) => panic!("PASSing test will not get here."),
+        };
+        assert_eq!(hoxo.max,999.0);
+        assert_eq!(hoxo.min,0.0);
+    }
+
+    #[test]
+    fn test_construct_a_histogram_dataset_and_return_data() {
+        let resulto: Result<HistogramOfX,ValidationError> = HistogramOfX::new_from_desired_segment_count(0.0,999.0,3,0.0);
+        let mut hoxo: HistogramOfX = match resulto {
+            Ok(hoxo) => hoxo,
+            Err(_err) => panic!("PASSing test will not get here."),
+        };
+        hoxo.add_to_counts(125.6).unwrap();
+        hoxo.add_to_counts(250.7).unwrap();
+        hoxo.add_to_counts(375.8).unwrap();
+        hoxo.add_to_counts(500.9).unwrap();
+        hoxo.add_to_counts(626.0).unwrap();
+        hoxo.add_to_counts(751.1).unwrap();
+        hoxo.add_to_counts(876.2).unwrap();
+        hoxo.add_to_counts(909.09).unwrap();
+        hoxo.add_to_counts(808.08).unwrap();
+        hoxo.add_to_counts(707.07).unwrap();
+        hoxo.add_to_counts(606.06).unwrap();
+        hoxo.add_to_counts(505.05).unwrap();
+        hoxo.add_to_counts(404.04).unwrap();
+        hoxo.add_to_counts(303.03).unwrap();
+        hoxo.add_to_counts(202.02).unwrap();
+        hoxo.add_to_counts(101.01).unwrap();
+        hoxo.add_to_counts(0.00).unwrap();
+        let dataset: Vec<(f64,f64,usize)> = hoxo.generate_count_collection();
+        assert_eq!(dataset.len(), 3);
+    }
+
+    #[test]
+    fn test_simple_construction() {
+        let resulto: Result<HistogramOfX,ValidationError> = HistogramOfX::new(1.0,3.0);
+        let mut localo: HistogramOfX = match resulto {
+            Ok(localo) => localo,
+            Err(_err) => panic!("PASSing test will not get here."),
+        };
+        localo.set_occurrence_range(1.0,3.0).unwrap();
+        localo.set_occurrence_range(3.0,6.0).unwrap();
+        localo.add_to_counts(1.0).unwrap();
+        localo.add_to_counts(1.0).unwrap();
+        localo.add_to_counts(2.0).unwrap();
+        localo.add_to_counts(3.0).unwrap();
+        localo.add_to_counts(3.0).unwrap();
+        localo.add_to_counts(3.0).unwrap();
+        let result = localo.generate_count_collection();
+        let rtuple = result[0];
+        assert_eq!(rtuple.0, 1.0);
+        assert_eq!(rtuple.1, 3.0);
+        assert_eq!(rtuple.2, 3);
+        let rtuple = result[1];
+        assert_eq!(rtuple.0, 3.0);
+        assert_eq!(rtuple.1, 6.0);
+        assert_eq!(rtuple.2, 3);
+    }
+
+    #[test]
+    fn test_construction_by_segment_size() {
+        let mut localo = HistogramOfX::new_from_uniform_segment_size(1.0,5.0,3.0).unwrap();
+        localo.add_to_counts(1.0).unwrap();
+        localo.add_to_counts(1.0).unwrap();
+        localo.add_to_counts(2.0).unwrap();
+        localo.add_to_counts(3.0).unwrap();
+        localo.add_to_counts(3.0).unwrap();
+        localo.add_to_counts(3.0).unwrap();
+        let result = localo.generate_count_collection();
+        assert_eq!(result[0].0, 1.0);
+        assert_eq!(result[0].1, 4.0);
+        assert_eq!(result[0].2, 6);
+        assert_eq!(result[1].0, 4.0);
+        assert_eq!(result[1].1, 7.0);
+        assert_eq!(result[1].2, 0);
+    }
+
+    #[test]
+    fn test_construction_by_number_of_segments() {
+        let mut localo = HistogramOfX::new_from_desired_segment_count(1.0,5.0,2,0.0).unwrap();
+        localo.add_to_counts(1.0).unwrap();
+        localo.add_to_counts(1.0).unwrap();
+        localo.add_to_counts(2.0).unwrap();
+        localo.add_to_counts(3.0).unwrap();
+        localo.add_to_counts(3.0).unwrap();
+        localo.add_to_counts(3.0).unwrap();
+        let result = localo.generate_count_collection();
+        assert_eq!(result[0].0, 1.0);
+        assert_eq!(result[0].1, 3.5);
+        assert_eq!(result[0].2, 6);
+        assert_eq!(result[1].0, 3.5);
+        assert_eq!(result[1].1, 6.0);
+        assert_eq!(result[1].2, 0);
+    }
+
+    #[test]
+    fn test_internal_class_rangeoccurrence() {
+        // Note, this is out of theme in "sames" compliance to the fact that
+        // in other implementations it is a sub-class to HistogramOfX.
+        let mut localo = RangeOccurrence::new(1.0,2.0);
+        assert!( localo.has_overlap(1.0,2.0) );
+        assert!( ! localo.has_overlap(2.0,3.0) );
+        assert_eq!(0, localo.count);
+        assert_eq!(1.0, localo.start_no);
+        assert_eq!(2.0, localo.stop_no);
+        localo.add_to_count();
+        assert_eq!(1, localo.count);
+        assert!( localo.is_in_range(1.0) );
+        assert!( localo.is_in_range(1.5) );
+        assert!( ! localo.is_in_range(2.0));
+    }
+
+    #[test]
+    fn test_internal_validation_against_overlapping_ranges() {
+        let mut localo = HistogramOfX::new(-128.0,128.0).unwrap();
+        localo.set_occurrence_range(-128.0,-64.0).unwrap();
+        localo.set_occurrence_range(-64.0,0.0).unwrap();
+        localo.set_occurrence_range(0.0,64.0).unwrap();
+        localo.set_occurrence_range(64.0,129.0).unwrap();
+        let resulto: Result<(),ValidationError> = localo.set_occurrence_range(25.0,99.0);
+        match resulto {
+            Ok(()) =>panic!("Ok should not occur, so it fails this test."), 
+            Err(_err) => true,
+        };
+    }
+
+    #[test]
+    fn test_adding_to_counts() {
+        let mut localo = HistogramOfX::new(-5.0,0.0).unwrap();
+        localo.set_occurrence_range(0.0,5.0).unwrap();
+        localo.add_to_counts(1.0).unwrap();
+        localo.add_to_counts(2.0).unwrap();
+        localo.add_to_counts(-3.0).unwrap();
+        let resulto: Result<(),ValidationError> = localo.add_to_counts(8.0);
+        match resulto {
+            Ok(()) =>panic!("Ok should not occur, so it fails this test."), 
+            Err(_err) => true,
+        };
+    }
+
+    #[test]
+    fn test_generating_an_ordered_list_of_vectors_of_counts() {
+        let mut localo = HistogramOfX::new(-128.0,128.0).unwrap();
+        localo.set_occurrence_range(-128.0,-64.0).unwrap();
+        localo.set_occurrence_range(-64.0,0.0).unwrap();
+        localo.set_occurrence_range(0.0,64.0).unwrap();
+        localo.set_occurrence_range(64.0,129.0).unwrap();
+        localo.add_to_counts(-99.0).unwrap();
+        localo.add_to_counts(12.0).unwrap();
+        localo.add_to_counts(53.0).unwrap();
+        localo.add_to_counts(64.0).unwrap();
+        localo.add_to_counts(3.0).unwrap();
+        localo.add_to_counts(2.0).unwrap();
+        localo.add_to_counts(22.0).unwrap();
+        localo.add_to_counts(-22.0).unwrap();
+        let result = localo.generate_count_collection();
+        assert_eq!(result[1].0, -64.0);
+        assert_eq!(result[1].1, 0.0);
+        assert_eq!(result[1].2, 1);
+        assert_eq!(result[3].0, 64.0);
+        assert_eq!(result[3].1, 129.0);
+        assert_eq!(result[3].2, 1);
+    }
+
+    #[test]
+    fn test_validation_that_the_range_is_complete() {
+        let mut localo = HistogramOfX::new(-128.0,128.0).unwrap();
+        localo.set_occurrence_range(-128.0,-64.0).unwrap();
+        localo.set_occurrence_range(-64.0,0.0).unwrap();
+        localo.set_occurrence_range(0.0,64.0).unwrap();
+        localo.set_occurrence_range(64.0,129.0).unwrap();
+        localo.validate_ranges_complete().unwrap();
+        localo.set_occurrence_range(244.0,256.0).unwrap();
+        let resulto: Result<(),ValidationError> = localo.validate_ranges_complete();
+        match resulto {
+            Ok(()) =>panic!("Ok should not occur, so it fails this test."), 
+            Err(_err) => true,
+        };
+    }
+       
     // SumsOfPowers
 
     // VectorOfX, VectorOfContinuous, VectorOfDiscrete

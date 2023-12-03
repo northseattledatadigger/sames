@@ -44,7 +44,7 @@ if (( $# > 0 ))
 then
     while getopts "?CcDdFhmrs:tX" option
     do
-        iC "if setInitOptions \"$option\" \"$OPTARG\""
+        #iC "if setInitOptions \"$option\" \"$OPTARG\""
         if setInitOptions "$option" "$OPTARG"
         then
             continue
@@ -54,6 +54,8 @@ then
     done
 fi
 
+#export RUST_BACKTRACE=1
+export RUST_BACKTRACE=full
 readonly ProjectLibFs=$HERE/SamesLib.$LibSubtype.rs
 if $DumpRustBuildEnvOnly
 then
