@@ -1394,140 +1394,154 @@ mod tests {
        
     // SumsOfPowers
 
-/*
     #[test]
     fn test_has_just_one_native_constructor() {
         let mut localo = SumsOfPowers::new(false);
-        assert_instance_of SumsOfPowers, localo
+        assert_eq!(localo.n,0);
+        localo.add_to_sums(1234.56789);
+        assert_eq!(localo.n,1);
     }
 
     #[test]
-    fn test_Generation_of_Pearson_s_First_Skewness_Coefficient_with_class_method() {
-        # Need data here for better knowledge.  For now just make sure a number comes out.
-        a = SumsOfPowers.calculatePearsonsFirstSkewnessCoefficient(25,3,1.57)
-        assert_equal 14.012738853503183, a
+    fn test_generation_of_pearson_s_first_skewness_coefficient_with_class_method() {
+        // Need data here for better knowledge.  For now just make sure a number comes out.
+        let a = SumsOfPowers::calculate_pearsons_first_skewness_coefficient(25.0,3.0,1.57).unwrap();
+        assert_eq!(14.012738853503183, a);
     }
        
     #[test]
-    fn test_Generation_of_Pearson_s_Second_Skewness_Coefficient_with_class_method() {
-        # Need data here for better knowledge.  For now just make sure a number comes out.
-        a = SumsOfPowers.calculatePearsonsSecondSkewnessCoefficient(25,3,1.57)
-        assert_equal 14.012738853503183, a
-        #STDERR.puts "trace a:  #{a}"
+    fn test_generation_of_pearson_s_second_skewness_coefficient_with_class_method() {
+        // Need data here for better knowledge.  For now just make sure a number comes out.
+        let a = SumsOfPowers::calculate_pearsons_second_skewness_coefficient(25.0,3.0,1.57).unwrap();
+        assert_eq!(14.012738853503183, a);
     }
        
     #[test]
-    fn test_Generate_second_moment_Subject_Xs_sum() {
-        localo = SumsOfPowers.new(false)
-        assert_respond_to localo, :_calculateSecondMomentSubjectXs
-        assert_raise ZeroDivisionError do
-            localo._calculateSecondMomentSubjectXs
-        }
-        localo.addToSums(3)
-        localo.addToSums(4)
-        localo.addToSums(5)
-        a = localo._calculateSecondMomentSubjectXs
-        assert_equal 44.666666666666664, a
+    fn test_generate_second_moment_subject_xs_sum() {
+        let mut localo = SumsOfPowers::new(false);
+        assert_eq!(localo.n,0);
+        let resulto = localo._calculate_second_moment_subject_xs();
+        match resulto {
+            Ok(_floatthing) => panic!("Ok should not occur, so it fails this test:  {_floatthing}"), 
+            Err(_err)       => true,
+        };
+        localo.add_to_sums(3.0);
+        localo.add_to_sums(4.0);
+        localo.add_to_sums(5.0);
+        assert_eq!(localo.n,3);
+        let a = localo._calculate_second_moment_subject_xs().unwrap();
+        assert_eq!(44.666666666666664, a);
     }
 
     #[test]
-    fn test_Generate_third_moment_Subject_Xs_sum() {
-        localo = SumsOfPowers.new(false)
-        assert_respond_to localo, :_calculate_thirdMomentSubjectXs
-        a = localo._calculate_thirdMomentSubjectXs
-        localo.addToSums(3)
-        localo.addToSums(4)
-        localo.addToSums(5)
-        a = localo._calculate_thirdMomentSubjectXs
-        assert_equal 128.0, a
+    fn test_generate_third_moment_subject_xs_sum() {
+        let mut localo = SumsOfPowers::new(false);
+        assert_eq!(localo.n,0);
+        let a = localo._calculate_third_moment_subject_xs().unwrap();
+        assert_eq!(0.0,a);
+        localo.add_to_sums(3.0);
+        localo.add_to_sums(4.0);
+        localo.add_to_sums(5.0);
+        assert_eq!(localo.n,3);
+        let a = localo._calculate_third_moment_subject_xs().unwrap();
+        assert_eq!(128.0,a);
     }
 
     #[test]
-    fn test_Generate_fourth_moment_Subject_Xs_sum() {
-        localo = SumsOfPowers.new(false)
-        assert_respond_to localo, :_calculateFourthMomentSubjectXs
-        a = localo._calculateFourthMomentSubjectXs
-        localo.addToSums(3)
-        localo.addToSums(4)
-        localo.addToSums(5)
-        a = localo._calculateFourthMomentSubjectXs
-        assert_equal -510.0, a
+    fn test_generate_fourth_moment_subject_xs_sum() {
+        let mut localo = SumsOfPowers::new(false);
+        assert_eq!(localo.n,0);
+        let a = localo._calculate_fourth_moment_subject_xs().unwrap();
+        assert_eq!(0.0,a);
+        localo.add_to_sums(3.0);
+        localo.add_to_sums(4.0);
+        localo.add_to_sums(5.0);
+        let a = localo._calculate_fourth_moment_subject_xs().unwrap();
+        assert_eq!(-510.0,a);
     }
 
     #[test]
-    fn test_Adding_to_the_sums() {
-        localo = SumsOfPowers.new(false)
-        localo.addToSums(3)
-        assert_equal 1, localo.N
-        localo.addToSums(3)
-        localo.addToSums(4)
-        localo.addToSums(5)
+    fn test_adding_to_the_sums() {
+        let mut localo = SumsOfPowers::new(false);
+        assert_eq!(localo.n,0);
+        localo.add_to_sums(3.0);
+        assert_eq!(1,localo.n);
+        localo.add_to_sums(3.0);
+        localo.add_to_sums(4.0);
+        localo.add_to_sums(5.0);
+        assert_eq!(4,localo.n);
     }
 
     #[test]
-    fn test_Generating_kurtosis() {
-        a = [3,3,4,5]
-        localo = SumsOfPowers.new(false)
-        localo.setToDiffsFromMeanState(a.sum,a.size)
-        localo.addToSums(a[0])
-        assert_equal a.size, localo.N
-        assert_equal 4, localo.N
-        localo.addToSums(a[1])
-        localo.addToSums(a[2])
-        localo.addToSums(a[3])
-        assert_equal 4, localo.N
-        result = localo.requestKurtosis
-        #STDERR.puts "trace Generating kurtosis:  #{result}"
-        assert_equal 4.48879632289572, result
+    fn test_generating_kurtosis() {
+        let a           = [3.0,3.0,4.0,5.0];
+        let llen        = a.len();
+        let mut localo  = SumsOfPowers::new(false);
+        assert_eq!(localo.n,0);
+        let lsum        = a.iter().sum();
+        localo.set_to_diffs_from_mean_state(lsum,llen).unwrap();
+        assert_eq!(localo.n,llen);
+        assert_eq!(localo.n,4);
+        localo.add_to_sums(a[0]);
+        assert_eq!(localo.n,4);
+        localo.add_to_sums(a[1]);
+        localo.add_to_sums(a[2]);
+        localo.add_to_sums(a[3]);
+        assert_eq!(localo.n,4);
+        let result = localo.request_kurtosis().unwrap();
+        assert_eq!(4.48879632289572,result);
     }
 
     #[test]
-    fn test_Generating_skewness() {
-        localo = SumsOfPowers.new(false)
-        localo.addToSums(3)
-        assert_equal 1, localo.N
-        localo.addToSums(3)
-        localo.addToSums(4)
-        localo.addToSums(5)
-        localo.addToSums(6)
-        result = localo.requestSkewness
-        assert_equal 56.25011459381775, result
+    fn test_generating_skewness() {
+        let mut localo  = SumsOfPowers::new(false);
+        assert_eq!(localo.n,0);
+        localo.add_to_sums(3.0);
+        assert_eq!( 1, localo.n );
+        localo.add_to_sums(3.0);
+        localo.add_to_sums(4.0);
+        localo.add_to_sums(5.0);
+        localo.add_to_sums(6.0);
+        assert_eq!(localo.n,5);
+        let result = localo.request_skewness(3).unwrap();
+        assert_eq!(56.25011459381775,result);
     }
 
     #[test]
-    fn test_Generating_standard_deviation() {
-        localo = SumsOfPowers.new(false)
-        localo.addToSums(3)
-        assert_equal 1, localo.N
-        localo.addToSums(3)
-        localo.addToSums(4)
-        localo.addToSums(4)
-        result = localo.generateStandardDeviation
-        assert_equal 0.5773502691896257, result
+    fn test_generating_standard_deviation() {
+        let mut localo  = SumsOfPowers::new(false);
+        assert_eq!(localo.n,0);
+        localo.add_to_sums(3.0);
+        assert_eq!( 1, localo.n );
+        localo.add_to_sums(3.0);
+        localo.add_to_sums(4.0);
+        localo.add_to_sums(4.0);
+        let result = localo.generate_standard_deviation().unwrap();
+        assert_eq!( 0.5773502691896257, result)
     }
 
     #[test]
-    fn test_Generating_variance() {
-        localo = SumsOfPowers.new(false)
-        localo.setToDiffsFromMeanState(15,4)
-        localo.addToSums(3)
-        localo.addToSums(3)
-        localo.addToSums(4)
-        localo.addToSums(5)
-        result = localo.calculateVarianceUsingSubjectAsDiffs
-        assert_equal 19.666666666666668, result
-        localo = SumsOfPowers.new(false)
-        localo.addToSums(3)
-        localo.addToSums(3)
-        localo.addToSums(4)
-        localo.addToSums(5)
-        result = localo.calculateVarianceUsingSubjectAsSumXs
-        assert_equal 0.9166666666666666, result
-        #assert_equal 19.666666666666668, result
+    fn test_generating_variance() {
+        let mut localo  = SumsOfPowers::new(false);
+        localo.set_to_diffs_from_mean_state(15.0,4).unwrap();
+        localo.add_to_sums(3.0);
+        localo.add_to_sums(3.0);
+        localo.add_to_sums(4.0);
+        localo.add_to_sums(5.0);
+        // This way of doing it is badly confusing.  Better that they either be:
+        // 1.  Independent methods running only off argument inputs.
+        // 2.  Validate for state, so they cannot run if calcualtions were done under wrong state.
+        let result = localo.calculate_variance_using_subject_as_diffs().unwrap();
+        assert_eq!( 19.666666666666668, result );
+        let mut localo  = SumsOfPowers::new(false);
+        localo.add_to_sums(3.0);
+        localo.add_to_sums(3.0);
+        localo.add_to_sums(4.0);
+        localo.add_to_sums(5.0);
+        let result = localo.calculate_variance_using_subject_as_sum_xs().unwrap();
+        assert_eq!( 0.9166666666666666, result );
     }
 
-//### Example:::  assert_eq!(8i32.checked_pow(2), Some(64));
- */
     // VectorOfX, VectorOfContinuous, VectorOfDiscrete
 
     // VectorTable

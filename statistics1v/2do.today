@@ -1,9 +1,18 @@
-    1.  First thing:  
-        a) Now that I am in Rust, I realize the more sane thing is make frequency cells all strings both to homogenize for best comparison, and as an easier step for all languages,
-        as even though some make it easy to both have 5555 and '5555', doing so is not helpful.  So refactor generateModefromFrequencyAA(faaA) and put present versions in
-        "disfavored".  So:
-            i.      Put single type version up in Rust with tests.
-            ii.     Make disfavored copies of Python3 and Ruby libraries.
-            iii.    Correct in Ruby and Python3 to just use strings alone in Discrete and frequency AAs.
+A. Remaining sections:
+    a.  Sums Of Powers simple tests.
+    b.  All of VectorOfX, VectorOfContinuous, VectorOfDiscrete.
+    c.  VectorTable.
+    d.  Extended tests, probably using integration tests facility.
+    e.  bin/rust.main.neophyte
+    f.  Compliance with acceptance tests.
+    g.  Check in with tag.  Mention to folks.
+B. Tasks:
+    2.  Look at cross tests between sums of diffs and sums of xs, and try to maximize, then revisit Python and Ruby.
+    3.  ???
+    4.  Begin to look at A.b. above.
+    5.  Begin to look at bin/rust.main.neophyte, and figure out the stuff needed in lrust... to make sure the subtype is recognized.
+C.  Node/Javascript next.
 
-    2.  Try to get all the global routines done today in Rust.
+Done:
+    B. Tasks:
+    1.  Get as many tests passing for Sums of Powers as possible.
