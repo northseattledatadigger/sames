@@ -15,22 +15,36 @@ use std::collections::*;
 pub enum ValidationError {
     #[error("Adjacent Endpoints {0}, {1} unequal")]
     AdjacentRangeEndpointsUnequal(f64,f64),
+    #[error("Argument error:  {0}")]
+    ArgumentError(String),
+    #[error("Calculation overflow for field {0}")]
+    CalculationOverflow(String),
     #[error("String number {0} exceeds float capacity")]
     FloatCapacityExceeded(String),
-    #[error("Value Range Conflict [{0},{1}] overlaps [{2},{3}]")]
-    ValueRangeConflict(f64,f64,f64,f64),
     #[error("Invalid argument: {0}")]
     InvalidArgument(String),
+    #[error("Method may only be used with Differences from Mean Data.")]
+    MethodOnlyForDiffFromMeanData(),
+    #[error("Method may only be used with Sums of Xs Data.")]
+    MethodOnlyForSumOfXsData(),
     #[error("No range found for value: '{0}'")]
     NoRangeFoundForValue(f64),
     #[error("Range key {0} not equal to start no {1}")]
     RangeKeyNotEqualStartNo(i64,i64),
+    #[error("Summations Have Already Been Made.")]
+    SummationsHaveAlreadyBeenMade(usize),
     #[error("Value {0} at or above high stop point {1}")]
     ValueAtOrAboveHighStop(f64,f64),
     #[error("Value {0} below low limit {1}")]
     ValueBelowLowLimit(f64,f64),
+    #[error("Value {0} may not be negative.")]
+    ValueMayNotBeNegative(f64),
+    #[error("Value {0} may not be zero.")]
+    ValueMayNotBeZero(f64),
     #[error("Low value {0} NOT below high value {1}")]
     ValueOrderWrong(f64,f64),
+    #[error("Value Range Conflict [{0},{1}] overlaps [{2},{3}]")]
+    ValueRangeConflict(f64,f64,f64,f64),
 }
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -326,6 +340,423 @@ impl HistogramMethods for HistogramOfX {
 
 }
 
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+// SumsOfPowers
+
+pub trait SumsOfPowersAccess {
+    fn calculate_pearsons_first_skewness_coefficient(a_mean: f64,mode_float: f64,std_dev: f64) -> Result<f64, ValidationError>;
+    fn calculate_pearsons_second_skewness_coefficient(a_mean: f64,median_float: f64,std_dev: f64) -> Result<f64, ValidationError>;
+    fn new(population_distribution: bool) -> Self;
+    fn _calculate_second_moment_subject_xs(&self) -> Result<f64, ValidationError>;
+    fn _calculate_third_moment_subject_xs(&self) -> Result<f64, ValidationError>;
+    fn _calculate_fourth_moment_subject_xs(&self) -> Result<f64, ValidationError>;
+    fn add_to_sums(&mut self,s_float: f64);
+    fn calculate_excess_kurtosis_2_jr_r(&self) -> Result<f64, ValidationError>;
+    fn generate_excess_kurtosis_3_365datascience(&self) -> Result<f64, ValidationError>;
+    fn calculate_kurtosis_biased_diff_from_mean_calculation(&self) -> Result<f64, ValidationError>;
+    fn calculate_kurtosis_unbiased_diff_from_mean_calculation(&self) -> Result<f64, ValidationError>;
+    fn calculate_natural_estimator_of_population_skewness_g1(&self) -> Result<f64, ValidationError>;
+    fn calculate_variance_using_subject_as_diffs(&self) -> Result<f64, ValidationError>;
+    fn calculate_variance_using_subject_as_sum_xs(&self) -> Result<f64, ValidationError>;
+    fn generate_natural_estimator_of_population_skewness_b1(&self) -> Result<f64, ValidationError>;
+    fn generate_standard_deviation(&self) -> Result<f64, ValidationError>;
+    fn generate_third_definition_of_sample_skewness_g1(&self) -> Result<f64, ValidationError>;
+    fn request_kurtosis(&self) -> Result<f64, ValidationError>;
+    fn request_skewness(&self,formula_id: u8) -> Result<f64, ValidationError>;
+    fn set_to_diffs_from_mean_state(&mut self,sum_xs: f64,n_a: usize) -> Result<(), ValidationError>;
+}
+
+pub struct SumsOfPowers {
+    arithmetic_mean:            f64,
+    diff_from_mean_inputs_used: bool,
+    n:                          usize,
+    population:                 bool,
+    sum_of_xs:                  f64,
+    sum_power_of_2:             f64,
+    sum_power_of_3:             f64,
+    sum_power_of_4:             f64,
+}
+
+impl Default for SumsOfPowers {
+    fn default() -> Self {
+        SumsOfPowers {
+            arithmetic_mean:            0.0,
+            diff_from_mean_inputs_used: false,
+            n:                          0,
+            population:                 false,
+            sum_of_xs:                  0.0,
+            sum_power_of_2:             0.0,
+            sum_power_of_3:             0.0,
+            sum_power_of_4:             0.0,
+        }
+    }
+}
+
+impl SumsOfPowersAccess for SumsOfPowers {
+
+    // NOTE:  The main merit to doing it this way is as a teaching or illustration
+    // tool to show the two parallel patterns.  Probably this is not a good way
+    // to implement it in most or any production situations.
+
+    fn calculate_pearsons_first_skewness_coefficient(a_mean: f64,mode_float: f64,std_dev: f64) -> Result<f64, ValidationError> {
+        // See 2023/11/05 "Pearson's first skewness coefficient" in:
+        //   https://en.wikipedia.org/wiki/Skewness
+        if std_dev == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(std_dev));
+        }
+        let sc  = ( a_mean - mode_float ) / std_dev;
+        return Ok( sc );
+    }
+
+    fn calculate_pearsons_second_skewness_coefficient(a_mean: f64,median_float: f64,std_dev: f64) -> Result<f64, ValidationError> {
+        // See 2023/11/05 "Pearson's second skewness coefficient" in:
+        //   https://en.wikipedia.org/wiki/Skewness
+        if std_dev == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(std_dev));
+        }
+        let sc  = ( a_mean - median_float ) / std_dev;
+        return Ok( sc );
+    }
+
+    fn _calculate_second_moment_subject_xs(&self) -> Result<f64, ValidationError> {
+        //   Sum( xi - mu )**2 == Sum(xi**2) - (1/n)(amean**2)
+        // Note I checked this one at:
+        //   https://math.stackexchange.com/questions/2569510/proof-for-sum-of-squares-formula-statistics-related
+        //
+        if self.diff_from_mean_inputs_used {
+            return Err(ValidationError::MethodOnlyForSumOfXsData());
+        }
+        if self.n == 0 {
+            return Err(ValidationError::ValueMayNotBeZero(self.n as f64));
+        }
+        let nf              = self.n as f64;
+        let nreciprocal     = 1.0 / nf;
+        let first           = self.sum_power_of_2;
+        let meansquared     = self.arithmetic_mean.powi(2);
+        let second          = nreciprocal * meansquared;
+        let ssx             = first - second;
+        return Ok(ssx);
+    }
+
+    fn _calculate_third_moment_subject_xs(&self) -> Result<f64, ValidationError> {
+        // My algegra, using unreduced arithmetic mean parts because that becomes complicated
+        // when going to sample means, leads to a simple Pascal Triangle pattern:
+        // My algegra: Sum( xi - mu )**3 ==
+        //   Sum(xi**3) - 3*Sum(xi**2)*amean + 3*Sum(xi)*(amean**2) - amean**3
+        if self.diff_from_mean_inputs_used {
+            return Err(ValidationError::MethodOnlyForSumOfXsData());
+        }
+        let first       = self.sum_power_of_3;
+        let second      = 3.0 * self.sum_power_of_2 * self.arithmetic_mean;
+        let meansquared = self.arithmetic_mean.powi(2);
+        let third       = 3.0 * self.sum_of_xs * meansquared;
+        let fourth      = self.arithmetic_mean.powi(3);
+        let result      = first - second + third - fourth;
+        return Ok(result);
+    }
+
+    fn _calculate_fourth_moment_subject_xs(&self) -> Result<f64, ValidationError> {
+        // My algegra, using unreduced arithmetic mean parts because that becomes complicated
+        // when going to sample means, leads to a simple Pascal Triangle pattern:
+        // My algegra: Sum( xi - mu )**4 ==
+        //   Sum(xi**4) - 4*Sum(xi**3)*amean + 6*Sum(xi**2)(amean**2) - 4**Sum(xi)*(amean**3) + amean**4
+        if self.diff_from_mean_inputs_used {
+            return Err(ValidationError::MethodOnlyForSumOfXsData());
+        }
+        let first       = self.sum_power_of_4;
+        let second      = 4.0 * self.sum_power_of_3 * self.arithmetic_mean;
+        let meansquared = self.arithmetic_mean.powi(2);
+        let third       = 6.0 * self.sum_power_of_2 * meansquared;
+        let meancubed   = self.arithmetic_mean.powi(3);
+        let fourth      = 4.0 * self.sum_of_xs * meancubed;
+        let fifth       = self.arithmetic_mean.powi(4);
+        let result      = first - second + third - fourth + fifth;
+        return Ok(result);
+    }
+
+    fn new(population_distribution: bool) -> Self {
+        let mut buffer: SumsOfPowers    = Default::default();
+        buffer.population               = population_distribution;
+        return buffer;
+    }
+
+    fn add_to_sums(&mut self,s_float: f64) {
+        if ! self.diff_from_mean_inputs_used {
+            self.n += 1;
+            self.sum_of_xs  += s_float;
+
+            self.arithmetic_mean = self.sum_of_xs / self.n as f64;
+        }
+        self.sum_power_of_2 += s_float * s_float;
+        self.sum_power_of_3 += s_float * s_float * s_float;
+        self.sum_power_of_4 += s_float * s_float * s_float * s_float;
+    }
+
+    fn calculate_excess_kurtosis_2_jr_r(&self) -> Result<f64, ValidationError> {
+        //  2018-01-04 by Jonathan Regenstein https://rviews.rstudio.com/2018/01/04/introduction-to-kurtosis/
+        if ! self.diff_from_mean_inputs_used {
+            return Err(ValidationError::MethodOnlyForDiffFromMeanData());
+        }
+        if self.n == 0 {
+            return Err(ValidationError::ValueMayNotBeZero(self.n as f64));
+        }
+        if self.sum_power_of_2 == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(self.sum_power_of_2));
+        }
+        let nf          = self.n as f64;
+        let numerator   = self.sum_power_of_4 / nf;
+        let denominator = ( self.sum_power_of_2 / nf ).powi(2);
+        let ek          = ( numerator / denominator ) - 3.0;
+        return Ok(ek);
+    }
+
+    fn generate_excess_kurtosis_3_365datascience(&self) -> Result<f64, ValidationError> {
+        //  https://365datascience.com/calculators/kurtosis-calculator/
+        if ! self.diff_from_mean_inputs_used {
+            return Err(ValidationError::MethodOnlyForDiffFromMeanData());
+        }
+        let nf                  = self.n as f64;
+        let stddev              = self.generate_standard_deviation()?;
+        let s4                  = stddev.powi(4);
+        if s4 == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(s4));
+        }
+
+        let leftnumerator       = nf * ( nf + 1.0 );
+        let leftdenominator     = ( nf - 1.0 ) * ( nf - 2.0 ) * ( nf - 3.0 );
+        if leftdenominator == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(leftdenominator));
+        }
+        let left                = leftnumerator / leftdenominator;
+
+        let middle              = self.sum_power_of_4 / s4;
+
+        let rightnumerator      = 3.0 * ( ( nf - 1.0 ).powi(2) );
+        let rightdenominator    = ( nf - 2.0 ) * ( nf - 3.0 );
+        if rightdenominator == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(rightdenominator));
+        }
+        let right               = rightnumerator / rightdenominator;
+        let ek                  = left * middle - right;
+        return Ok(ek);
+    }
+
+    fn calculate_kurtosis_biased_diff_from_mean_calculation(&self) -> Result<f64, ValidationError> {
+        // See 2023/11/05 "Standard biased estimator" in:
+        //   https://en.wikipedia.org/wiki/Kurtosis
+        if ! self.diff_from_mean_inputs_used {
+            return Err(ValidationError::MethodOnlyForDiffFromMeanData());
+        }
+        let nreciprocal     = 1.0 / self.n as f64;
+        let numerator       = nreciprocal * self.sum_power_of_4;
+        let denominternal   = nreciprocal * self.sum_power_of_2;
+        let denominator     = denominternal * denominternal;
+        if denominator == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(denominator));
+        }
+        let g2              = numerator / denominator;
+        return Ok(g2);
+    }
+
+    fn calculate_kurtosis_unbiased_diff_from_mean_calculation(&self) -> Result<f64, ValidationError> {
+        // See 2023/11/05 "Standard unbiased estimator" in:
+        //   https://en.wikipedia.org/wiki/Kurtosis
+        if self.n <= 3 {
+            let m = "This formula wll not be executed for N <= 3.";
+            return Err(ValidationError::ArgumentError(m.to_string()));
+        }
+        if ! self.diff_from_mean_inputs_used {
+            return Err(ValidationError::MethodOnlyForDiffFromMeanData());
+        }
+        let nf                  = self.n as f64;
+
+        let leftnumerator       = ( nf + 1.0 ) * nf * ( nf - 1.0 );
+        let leftdenominator     = ( nf - 2.0 ) * ( nf - 3.0 );
+        if leftdenominator == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(leftdenominator));
+        }
+        let left                = leftnumerator / leftdenominator;
+
+        let middle              = self.sum_power_of_4 / ( self.sum_power_of_2.powi(2) );
+
+        let rightnumerator      = ( nf - 1.0 ).powi(2);
+        let rightdenominator    = ( nf - 2.0 ) * ( nf - 3.0 );
+        if rightdenominator == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(rightdenominator));
+        }
+        let right               = rightnumerator / rightdenominator;
+        let sue_g2              = left * middle - right;
+
+        return Ok(sue_g2);
+    }
+
+    // https://en.wikipedia.org/wiki/IEEE_754#Exception_handling
+
+    fn calculate_natural_estimator_of_population_skewness_g1(&self) -> Result<f64, ValidationError> {
+        // See 2023/11/05 "Sample Skewness" in:
+        //   https://en.wikipedia.org/wiki/Skewness
+        let inside_den: f64;
+        let nreciprocal = 1.0 / self.n as f64;
+        let numerator: f64;
+        if self.diff_from_mean_inputs_used {
+            inside_den  = nreciprocal * self.sum_power_of_2;
+            numerator   = nreciprocal * self.sum_power_of_3;
+        } else {
+            let second  = self._calculate_second_moment_subject_xs()?;
+            let third   = self._calculate_third_moment_subject_xs()?;
+
+            inside_den  = nreciprocal * second;
+            numerator   = nreciprocal * third;
+        }
+        if inside_den < 0.0 {
+            return Err(ValidationError::ValueMayNotBeNegative(inside_den));
+        }
+        let denominator = ( inside_den.sqrt() ).powi(3);
+        if denominator == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(denominator));
+        }
+        let g1          = numerator / denominator;
+        return Ok(g1);
+    }
+
+    fn calculate_variance_using_subject_as_diffs(&self) -> Result<f64, ValidationError> {
+        if ! self.diff_from_mean_inputs_used {
+            return Err(ValidationError::MethodOnlyForDiffFromMeanData());
+        }
+        let nf          = self.n as f64;
+        let v: f64;
+        if self.population {
+            if nf == 0.0 {
+                return Err(ValidationError::ValueMayNotBeZero(nf));
+            }
+            v           = self.sum_power_of_2 / nf;
+        } else {
+            let denominator = nf - 1.0;
+            if denominator == 0.0 {
+                return Err(ValidationError::ValueMayNotBeZero(denominator));
+            }
+            v           = self.sum_power_of_2 / denominator;
+        }
+        return Ok(v);
+    }
+
+    fn calculate_variance_using_subject_as_sum_xs(&self) -> Result<f64, ValidationError> {
+        if self.diff_from_mean_inputs_used {
+            return Err(ValidationError::MethodOnlyForSumOfXsData());
+        }
+        let ameansquared    = self.arithmetic_mean * self.arithmetic_mean;
+        let nf              = self.n as f64;
+        let numerator       = self.sum_power_of_2 - nf * ameansquared;
+        let v: f64;
+        if self.population {
+            if nf == 0.0 {
+                return Err(ValidationError::ValueMayNotBeZero(nf));
+            }
+            v               = numerator / nf;
+        } else {
+            let denominator     = nf - 1.0;
+            if denominator == 0.0 {
+                return Err(ValidationError::ValueMayNotBeZero(denominator));
+            }
+            v               = numerator / denominator;
+        }
+        return Ok(v);
+    }
+
+    fn generate_natural_estimator_of_population_skewness_b1(&self) -> Result<f64, ValidationError> {
+        // See 2023/11/05 "Sample Skewness" in:
+        //   https://en.wikipedia.org/wiki/Skewness
+        if self.n == 0 {
+            return Err(ValidationError::ValueMayNotBeZero(self.n as f64));
+        }
+        let nf              = self.n as f64;
+        let nreciprocal     = 1.0 / nf;
+        let numerator: f64;
+        if self.diff_from_mean_inputs_used {
+            numerator       = nreciprocal * self.sum_power_of_3;
+        } else {
+            let thirdmoment = self._calculate_third_moment_subject_xs()?;
+            numerator   = nreciprocal * thirdmoment;
+        }
+        let stddev          = self.generate_standard_deviation()?;
+        let denominator     = stddev.powi(3);
+        if denominator == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(denominator));
+        }
+        let b1              = numerator / denominator;
+        return Ok(b1);
+    }
+
+    fn generate_standard_deviation(&self) -> Result<f64, ValidationError> {
+        let v: f64;
+        if self.diff_from_mean_inputs_used {
+            v = self.calculate_variance_using_subject_as_diffs()?;
+        } else {
+            v = self.calculate_variance_using_subject_as_sum_xs()?;
+        }
+        if v < 0.0 {
+            return Err(ValidationError::ValueMayNotBeNegative(v));
+        }
+        let stddev = v.sqrt();
+        return Ok(stddev);
+    }
+
+    fn generate_third_definition_of_sample_skewness_g1(&self) -> Result<f64, ValidationError> {
+        // See 2023/11/05 "Sample Skewness" in:
+        //   https://en.wikipedia.org/wiki/Skewness
+        let b1              = self.generate_natural_estimator_of_population_skewness_b1()?;
+        let nf              = self.n as f64;
+        let nfsquared       = nf.powi(2);
+        let k3              = nfsquared * b1;
+        let k2_3s2          = ( nf - 1.0 ) * ( nf - 2.0 );
+        if k2_3s2 == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(k2_3s2));
+        }
+        let ss_g1           = k3 / k2_3s2;
+        return Ok(ss_g1);
+    }
+
+    fn request_kurtosis(&self) -> Result<f64, ValidationError> {
+        // This of course needs to be expanded to use both diffs from mean ANd sum of Xs calculation.
+        let kurtosis = self.calculate_kurtosis_unbiased_diff_from_mean_calculation()?;
+        return Ok(kurtosis);
+    }
+
+    fn request_skewness(&self,formula_id: u8) -> Result<f64, ValidationError> {
+        /* NOTE:  Ruby and Python3 code are misdocumented regarding population skewnesss in that they fail
+            prematurely.  See called functions below.
+         */
+        let skewness: f64;
+        match formula_id {
+            1 => skewness = self.generate_natural_estimator_of_population_skewness_b1()?,
+            2 => skewness = self.calculate_natural_estimator_of_population_skewness_g1()?,
+            3 => skewness = self.generate_third_definition_of_sample_skewness_g1()?,
+            _ => {
+                let m = "There is no such skewness formula {formulaId} implemented at this time.";
+                return Err(ValidationError::ArgumentError(m.to_string()));
+            }
+        }
+        return Ok(skewness);
+    }
+
+    fn set_to_diffs_from_mean_state(&mut self,sum_xs: f64,n_a: usize) -> Result<(), ValidationError> {
+        if self.n > 0 {
+            return Err(ValidationError::SummationsHaveAlreadyBeenMade(self.n));
+        }
+        self.diff_from_mean_inputs_used = true;
+        self.n                          = n_a;
+        self.sum_of_xs                  = sum_xs;
+
+        if self.n == 0 {
+            return Err(ValidationError::ValueMayNotBeZero(self.n as f64));
+        }
+        self.arithmetic_mean            = sum_xs / self.n as f64;
+        return Ok(());
+    }
+
+}
+
 /*
 
 enum BadDataAction {
@@ -363,12 +794,6 @@ impl Default for VectorOfContinuous {
 }
 
 impl VectorOfX for VectorOfContinuous {
-
-/*
-    fn flail_unused_field(&self) -> (usize, bool) {
-        return ( self.out_precision, self.use_sum_of_xs );
-    }
- */
 
     fn gen_count(&self) -> usize {
         let n = self.vector_of_x.len();
@@ -498,8 +923,8 @@ impl VectorOfX for VectorOfContinuous {
 
     fn genInterQuartileRange
         n = @VectorOfContinuous.size
-                                # Subtract one here
-                                # to get the offset.
+                                // Subtract one here
+                                // to get the offset.
         q1os    = 1                 - 1
         q2os    = ( n + 1 ) / 4     - 1
         q3os    = ( n / 2 )         - 1
@@ -553,7 +978,7 @@ Some(&self[n-1])
     }
 
     fn genMode
-        # This is broken.  Do NOT debug until later.  TBD
+        // This is broken.  Do NOT debug until later.  TBD
         h = Hash.new
         @VectorOfContinuous.each do |lx|
             h[lx] = 1   unless h.has_key?(lx)
@@ -602,7 +1027,7 @@ Some(&self[n-1])
 }
 
 class VectorOfDiscrete < VectorOfX
-    # TBD for use with columns having discrete values.
+    // TBD for use with columns having discrete values.
 }
 
 class VectorTable
@@ -969,6 +1394,140 @@ mod tests {
        
     // SumsOfPowers
 
+/*
+    #[test]
+    fn test_has_just_one_native_constructor() {
+        let mut localo = SumsOfPowers::new(false);
+        assert_instance_of SumsOfPowers, localo
+    }
+
+    #[test]
+    fn test_Generation_of_Pearson_s_First_Skewness_Coefficient_with_class_method() {
+        # Need data here for better knowledge.  For now just make sure a number comes out.
+        a = SumsOfPowers.calculatePearsonsFirstSkewnessCoefficient(25,3,1.57)
+        assert_equal 14.012738853503183, a
+    }
+       
+    #[test]
+    fn test_Generation_of_Pearson_s_Second_Skewness_Coefficient_with_class_method() {
+        # Need data here for better knowledge.  For now just make sure a number comes out.
+        a = SumsOfPowers.calculatePearsonsSecondSkewnessCoefficient(25,3,1.57)
+        assert_equal 14.012738853503183, a
+        #STDERR.puts "trace a:  #{a}"
+    }
+       
+    #[test]
+    fn test_Generate_second_moment_Subject_Xs_sum() {
+        localo = SumsOfPowers.new(false)
+        assert_respond_to localo, :_calculateSecondMomentSubjectXs
+        assert_raise ZeroDivisionError do
+            localo._calculateSecondMomentSubjectXs
+        }
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        a = localo._calculateSecondMomentSubjectXs
+        assert_equal 44.666666666666664, a
+    }
+
+    #[test]
+    fn test_Generate_third_moment_Subject_Xs_sum() {
+        localo = SumsOfPowers.new(false)
+        assert_respond_to localo, :_calculate_thirdMomentSubjectXs
+        a = localo._calculate_thirdMomentSubjectXs
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        a = localo._calculate_thirdMomentSubjectXs
+        assert_equal 128.0, a
+    }
+
+    #[test]
+    fn test_Generate_fourth_moment_Subject_Xs_sum() {
+        localo = SumsOfPowers.new(false)
+        assert_respond_to localo, :_calculateFourthMomentSubjectXs
+        a = localo._calculateFourthMomentSubjectXs
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        a = localo._calculateFourthMomentSubjectXs
+        assert_equal -510.0, a
+    }
+
+    #[test]
+    fn test_Adding_to_the_sums() {
+        localo = SumsOfPowers.new(false)
+        localo.addToSums(3)
+        assert_equal 1, localo.N
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+    }
+
+    #[test]
+    fn test_Generating_kurtosis() {
+        a = [3,3,4,5]
+        localo = SumsOfPowers.new(false)
+        localo.setToDiffsFromMeanState(a.sum,a.size)
+        localo.addToSums(a[0])
+        assert_equal a.size, localo.N
+        assert_equal 4, localo.N
+        localo.addToSums(a[1])
+        localo.addToSums(a[2])
+        localo.addToSums(a[3])
+        assert_equal 4, localo.N
+        result = localo.requestKurtosis
+        #STDERR.puts "trace Generating kurtosis:  #{result}"
+        assert_equal 4.48879632289572, result
+    }
+
+    #[test]
+    fn test_Generating_skewness() {
+        localo = SumsOfPowers.new(false)
+        localo.addToSums(3)
+        assert_equal 1, localo.N
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        localo.addToSums(6)
+        result = localo.requestSkewness
+        assert_equal 56.25011459381775, result
+    }
+
+    #[test]
+    fn test_Generating_standard_deviation() {
+        localo = SumsOfPowers.new(false)
+        localo.addToSums(3)
+        assert_equal 1, localo.N
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(4)
+        result = localo.generateStandardDeviation
+        assert_equal 0.5773502691896257, result
+    }
+
+    #[test]
+    fn test_Generating_variance() {
+        localo = SumsOfPowers.new(false)
+        localo.setToDiffsFromMeanState(15,4)
+        localo.addToSums(3)
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        result = localo.calculateVarianceUsingSubjectAsDiffs
+        assert_equal 19.666666666666668, result
+        localo = SumsOfPowers.new(false)
+        localo.addToSums(3)
+        localo.addToSums(3)
+        localo.addToSums(4)
+        localo.addToSums(5)
+        result = localo.calculateVarianceUsingSubjectAsSumXs
+        assert_equal 0.9166666666666666, result
+        #assert_equal 19.666666666666668, result
+    }
+
+//### Example:::  assert_eq!(8i32.checked_pow(2), Some(64));
+ */
     // VectorOfX, VectorOfContinuous, VectorOfDiscrete
 
     // VectorTable
