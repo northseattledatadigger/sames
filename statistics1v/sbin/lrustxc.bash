@@ -28,6 +28,7 @@ source $SAMESHOME/slib/RustXCLib.bashenv
 
 DumpRustBuildEnvOnly=false
 
+export AlternateBuildId=
 export CargoCmd=build
 export LibSubtype=native
 export Deploy=true
@@ -75,7 +76,12 @@ then
     then
         exit 0
     fi
-    reInitWorkingTreeFromExhibitSource
+    if [[ -n $AlternateBuildId ]]
+    then
+        reInitWorkingTreeForAlternateBuild
+    else
+        reInitWorkingTreeFromExhibitSource
+    fi
     runCargoCmd $CargoCmd $Release
     cd $HERE
 else

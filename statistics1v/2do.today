@@ -8,9 +8,8 @@ A. Remaining sections:
     g.  Check in with tag.  Mention to folks.
 B. Tasks:
     2.  Look at cross tests between sums of diffs and sums of xs, and try to maximize, then revisit Python and Ruby.
-    3.  ???
-    4.  Begin to look at A.b. above.
-    5.  Begin to look at bin/rust.main.neophyte, and figure out the stuff needed in lrust... to make sure the subtype is recognized.
+    3.  Begin to look at A.b. above.
+    4.  Begin to look at bin/rust.main.neophyte, and figure out the stuff needed in lrust... to make sure the subtype is recognized.
 C.  Node/Javascript next.
 
 Done:

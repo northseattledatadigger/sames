@@ -5,6 +5,8 @@
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # Constants and Includes
 
+readonly GETOPS_OPTFLAGS="?A:CcDdFhmrs:tX"
+
 if [[ -z $SAMESHOME ]]
 then
     >&2 echo "FATAL:  SAMESHOME not found.  It must be properly defined."
@@ -15,6 +17,7 @@ readonly RustBuildName=$SamesProjectName
 
 #readonly RustMainSrcFs=$SamesProjectExtrasDs/rust.main.rs # Preferred usage.  Try this at some point:  NOTE:TBD
 readonly RustMainSrcFs=$SamesProjectExtrasDs/rust_main.rs
+#readonly RustTree=$SamesProjectTmpDs/rusttree
 readonly RustTree=$SamesProjectExtrasDs/rusttree
 
 readonly MainBuildTreeDs=$RustTree/$RustBuildName
@@ -70,14 +73,17 @@ _PlopRunSource() {
 }
 
 _reCopySourceBackOut() {
+# Not debugged:  Dangerous. NOTE:TBD
     cp $ProjectLibFs $ProjectLibFs.backup.$(date +%Y%m%d%H%M%S)
-    cp $LibSrcFs $ProjectLibFs
+    #cp $LibSrcFs $ProjectLibFs
 }
 
 _SetEnvironment() {
     local libSubtype="$1"
 
     # Crates always Used:
+    cargo add phf
+    cargo add phf_macros
     cargo add regex
     cargo add thiserror
 
@@ -150,6 +156,21 @@ initTree() {
     mkdir -p $RustTree
 }
 
+reInitWorkingTreeForAlternateBuild() {
+    AlternateBuildLib=${AlternateBuildId}Lib.rs
+    AlternateBuildTreeDs=$RustTree/$AlternateBuildId
+    AlternateBuildTreeSrcDs=$RustTree/$AlternateBuildTreeDs/src
+    cargo new --vcs none --lib $RustBuildName
+    cd $AlternateBuildTreeDs
+    _SetEnvironment
+    _PlopAlternateBuildRunSource
+    AlternateLibFs=$HERE/$AlternateBuildId.rs
+    AlternateMainSrcFs=$HERE/$AlternateBuildId.main.rs
+    cp $AlternateLibFs $LibSrcFs
+    cp $AlternateMainSrcFs $MainSrcFs
+    cd $AlternateBuildTreeSrcDs
+}
+
 reInitWorkingTreeFromExhibitSource() {
     cargo new --vcs none --lib $RustBuildName
     cd $MainBuildTreeDs
@@ -200,6 +221,9 @@ setInitOptions() {
     local _optArg="$2"
     
     case "$_Option" in
+    A)
+        AlternateBuildId="$_optArg"
+        ;;
     C)
         CargoCmd=clippy
         ;;

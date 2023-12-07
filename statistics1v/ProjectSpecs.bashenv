@@ -12,6 +12,7 @@ readonly SamesProjectClassColumnsDs=$SAMESPROJECTHOME/classcolumns
 readonly SamesProjectExtrasDs=$SAMESPROJECTHOME/extras
 readonly SamesProjectSBin=$SAMESPROJECTHOME/sbin
 readonly SamesProjectTestsDs=$SAMESPROJECTHOME/tests
+readonly SamesProjectTmpDs=$SAMESPROJECTHOME/tmp
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of ProjectSpecs.bashenv

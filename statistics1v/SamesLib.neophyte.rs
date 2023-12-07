@@ -1,7 +1,12 @@
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // SamesLib.neophyte.rs
 
+use csv;
+use phf;
+use phf_macros::phf_map;
 use regex::Regex;
+//use serde::{Serialize, Deserialize};
+use serde::Serialize;
 use std::collections::*;
 //use std::{error::Error, fmt};
 //use std::process::{ExitCode, Termination};
@@ -19,6 +24,8 @@ pub enum ValidationError {
     ArgumentError(String),
     #[error("Calculation overflow for field {0}")]
     CalculationOverflow(String),
+    #[error("Calculation invalid with zero value n: {0}")]
+    CalculationInvalidWithZeroElements(usize),
     #[error("String number {0} exceeds float capacity")]
     FloatCapacityExceeded(String),
     #[error("Invalid argument: {0}")]
@@ -29,10 +36,14 @@ pub enum ValidationError {
     MethodOnlyForSumOfXsData(),
     #[error("No range found for value: '{0}'")]
     NoRangeFoundForValue(f64),
+    #[error("Parse error on would be number string {0}")]
+    ParseErrorOnWouldBeNumberString(String),
     #[error("Range key {0} not equal to start no {1}")]
     RangeKeyNotEqualStartNo(i64,i64),
     #[error("Summations Have Already Been Made.")]
     SummationsHaveAlreadyBeenMade(usize),
+    #[error("Value {0} is unexpectedly less than its predecessor {1}")]
+    UnexpectedReducedValue(f64,f64),
     #[error("Value {0} at or above high stop point {1}")]
     ValueAtOrAboveHighStop(f64,f64),
     #[error("Value {0} below low limit {1}")]
@@ -45,34 +56,46 @@ pub enum ValidationError {
     ValueOrderWrong(f64,f64),
     #[error("Value Range Conflict [{0},{1}] overlaps [{2},{3}]")]
     ValueRangeConflict(f64,f64,f64,f64),
+    #[error("Zero Result not considered valid.")]
+    ZeroResultInvalid(),
 }
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Global Procedures
 
-pub fn generate_mode_from_frequency_aa<'a>(faa_a: &'a BTreeMap<&'a str, u32>) -> &'a str {
-    let mut x = "";
-    let mut m = 0;
-    for (key, &value) in faa_a.iter() {
-        if value > m {
-            x = key;
-            m = value;
-        }
+pub fn convert_numstr_hashset_to_f64_one(strhs: &HashSet<&str>) -> Result<Option<HashSet<f64>>,ValidationError> {
+    if strhs.len() == 0 {
+        return Ok(None);
     }
-    return x;
+    let mut floatset: HashSet<f64> = HashSet::new();
+    for numstr in strhs.iter() {
+        let result = numstr.parse::<f64>();
+        let buffloat = match result {
+            Ok(heldfloat)   => heldfloat,
+            Err(_err)       => return Err(ValidationError::ParseErrorOnWouldBeNumberString(String)),
+        }
+        floatset.insert(buffloat);
+    }
+    return Ok(Some(floatset));
 }
 
-// The following may not be needed:
-pub fn generate_mode_from_frequency_aahm<'a>(faa_a: &'a HashMap<&'a str, u32>) -> &'a str {
-    let mut x = "";
-    let mut m = 0;
+pub fn generate_mode_from_frequency_aa<'a>(faa_a: &'a BTreeMap<&'a str, u32>) -> Option<(u32,HashSet<&'a str>)> {
+    let mut m: u32 = 0;
+    let mut candidates: HashSet<f64> = HashSet::new();
     for (key, &value) in faa_a.iter() {
+        if value == m {
+            candidates.insert(key);
+        }
         if value > m {
-            x = key;
             m = value;
+            candidates.clear();
+            candidates.insert(key);
         }
     }
-    return x;
+    if m == 1 {
+        return None;
+    }
+    return Some(m,candidates);
 }
 
 pub fn is_a_num_str(str_a: &str) -> bool {
@@ -113,10 +136,10 @@ pub fn is_usable_number_string_vector(v_a: &Vec<&str>) -> bool {
 }
 
 pub fn round_to_f64_precision(subject_float: f64, precision_digits: usize) -> f64 {
-    let base: f64 = 10.0;
-    let precision_base: f64 = base.powf( precision_digits as f64 );
-    let buffer: f64 = ( subject_float * precision_base ).round();
-    let newfloat: f64 = buffer / precision_base;
+    let base: f64           = 10.0;
+    let precision_base: f64 = base.powi( precision_digits );
+    let buffer: f64         = ( subject_float * precision_base ).round();
+    let newfloat            = buffer / precision_base;
     return newfloat;
 }
 
@@ -475,12 +498,6 @@ impl SumsOfPowersAccess for SumsOfPowers {
         return Ok(result);
     }
 
-    fn new(population_distribution: bool) -> Self {
-        let mut buffer: SumsOfPowers    = Default::default();
-        buffer.population               = population_distribution;
-        return buffer;
-    }
-
     fn add_to_sums(&mut self,s_float: f64) {
         if ! self.diff_from_mean_inputs_used {
             self.n += 1;
@@ -717,6 +734,12 @@ impl SumsOfPowersAccess for SumsOfPowers {
         return Ok(ss_g1);
     }
 
+    fn new(population_distribution: bool) -> Self {
+        let mut buffer: SumsOfPowers    = Default::default();
+        buffer.population               = population_distribution;
+        return buffer;
+    }
+
     fn request_kurtosis(&self) -> Result<f64, ValidationError> {
         // This of course needs to be expanded to use both diffs from mean ANd sum of Xs calculation.
         let kurtosis = self.calculate_kurtosis_unbiased_diff_from_mean_calculation()?;
@@ -757,7 +780,9 @@ impl SumsOfPowersAccess for SumsOfPowers {
 
 }
 
-/*
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+// VectorOfX - Representing a kind of base class area.
 
 enum BadDataAction {
     BlankField,
@@ -768,17 +793,45 @@ enum BadDataAction {
     ZeroField,
 }
 
-pub trait VectorOfX {
- //   fn flail_unused_field(&self) -> (usize, bool);
-    fn gen_count(&self) -> usize;
-    fn new(vector_of_x: Vec<&str>) -> Self;
-    fn push_x_string(&mut self,x: &str);
+trait VectorOfX {
+
+    fn _assure_sorted_vector_of_x(&self,force_sort: bool) {
+        if self.sorted_vector_of_x.len() == this.vector_of_x.len() {
+            if ! force_sort {
+                return ();
+            }
+        }
+        self.sorted_vector_of_x = this.vector_of_x.clone();
+        self.sorted_vector_of_x.sort();
+    }
+
+    fn get_count(&self) -> usize {
+        let n = self.vector_of_x.len();
+        return n;
+    }
+    pub fn new() -> Self;
+    pub fn new_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self;
+    fn push_x_string(&mut self, x_string: &str) -> Result<(), ValidationError>;
+
 }
+
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+// VectorOfContinouos for floating point based distributions.  All Xs floats.
+
+// static VoCoOpIds: phf::Map<&'static str, &'static str> = phf_map! {
+
+}
+ */
 
 pub struct VectorOfContinuous {
     in_precision: usize,
     out_precision: usize,
-    use_sum_of_xs: bool,
+    population: bool,
+    sorted_vector_of_x: Vec<f64>,
+    //sums_of_powers_object: Vec<f64>,
+    use_diff_from_mean_calculations: bool,
+    validate_string_numbers: bool,
     vector_of_x: Vec<f64>,
 }
 
@@ -787,7 +840,11 @@ impl Default for VectorOfContinuous {
         VectorOfContinuous {
             in_precision: 4,
             out_precision: 4,
-            use_sum_of_xs: false,
+            population: false,
+            sorted_vector_of_x: Vec::new(),
+            //sums_of_powers_object: SumsOfPowers::new(),
+            use_diff_from_mean_calculations: true,
+            validate_string_numbers: false,
             vector_of_x: Vec::new(),
         }
     }
@@ -795,12 +852,12 @@ impl Default for VectorOfContinuous {
 
 impl VectorOfX for VectorOfContinuous {
 
-    fn gen_count(&self) -> usize {
-        let n = self.vector_of_x.len();
-        return n;
+    fn new() -> Self {
+        let mut buffer: VectorOfContinuous = Default::default();
+        return buffer;
     }
 
-    fn new(vector_of_x: Vec<&str>) -> Self {
+    fn new_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
             buffer.push_x_string(lx);
@@ -808,8 +865,9 @@ impl VectorOfX for VectorOfContinuous {
         return buffer;
     }
 
-    fn push_x_string(&mut self, x_string: &str) {
-        let x_float_unrounded: f64  = x_string.trim().parse().expect("push_x_string parse failure.");
+    fn push_x_string(&mut self, x_string: &str) -> Result<(), ValidationError> {
+//NOTE:  TBD figure out return value from parse expect trim etc and deal with that.
+        let x_float_unrounded: f64  = x_string.trim().parse().expect("push_x_string parse failure.")?
         let x_float                 = round_to_f64_precision(x_float_unrounded, self.in_precision);
         self.vector_of_x.push(x_float);
     }
@@ -818,54 +876,306 @@ impl VectorOfX for VectorOfContinuous {
 
 impl VectorOfContinuous {
 
-    pub fn gen_sum(&self) -> f64 {
+    const ARITHMETICMEANID: &str    = "ArithmeticMean";
+    const ARMEANAADID: &str         = "AMeanAAD"; // Average Absolute Deviation
+    // Note; I have Max and Min available for AAD, but presume these will not be used formally.
+    const COVPOPULATIONID: &str     = "PopulationCoefficientOfVariation";
+    const COVSAMPLEID: &str         = "SampleCoefficientOfVariation";
+    const COVID: &str               = "CoefficientOfVariation";
+    const GEOMETRICMEANID: &str     = "GeometricMean";
+    const GMEANAADID: &str          = "GMeanAAD"; // Geometric Mean Average Absolute Deviation
+    const HARMONICMEANID: &str      = "HarmonicMean";
+    const HMEANAADID: &str          = "HMeanAAD"; // Harmonic Mean Average Absolute Deviation
+    const ISEVENID: &str            = "IsEven";
+    const KURTOSISID: &str          = "Kurtosis";
+    const MADID: &str               = "MAD"; // Mean Absolute Difference  NOTE that this will not be addressed in acceptance tests due to a paucity of presence in common apps.
+    const MAXID: &str               = "Max";
+    const MEDIANAADID: &str         = "MedianAAD";// Median Absolute Deviation
+    const MEDIANID: &str            = "Median";
+    const MINID: &str               = "Min";
+    const MODEAADID: &str           = "ModeAAD"; // Mode Absolute Deviation
+    const MODEID: &str              = "Mode";
+    const NID: &str                 = "N";
+    const SKEWNESSID: &str          = "Skewness";
+    const STDDEVID: &str            = "StandardDeviation";
+    const STDDEVDIFFSPOPID: &str    = "StddevDiffsPop";
+    const STDDEVDIFFSSAMPLEID: &str = "StddevDiffsSample";
+    const STDDEVSUMXSPOPID: &str    = "StddevSumxsPop";
+    const STDDEVSUMXSSAMPLEID: &str = "StddevSumxsSample";
+    const SUMID: &str               = "Sum";
+
+    fn _add_up_xs_to_sums_of_powers(&mut self,population_calculation: bool,sum_of_diffs: bool) -> Result<(), ValidationError> {
+        self.sums_of_powers_object  = SumsOfPowers::new(population_calculation);
+        if self.use_diff_from_mean_calculations {
+            let n                   = self.get_count();
+            let sum                 = self.get_sum();
+            self.sums_of_powers_object.set_to_diffs_from_mean_state(sum,n)?;
+        }
+        if self.use_diff_from_mean_calculations {
+            let amean               = self.calculate_arithmetic_mean()?;
+            for lx in vector_of_x.iter() {
+                let diff            = lx - amean;
+                self.sums_of_powers_object.add_to_sums(diff);
+            }
+        } else {    // sum of Xs
+            for lx in vector_of_x.iter() {
+                self.sums_of_powers_object.add_to_sums(lx);
+            }
+        }
+    }
+
+    fn _decide_histogram_start_number(&self,use_start_number: bool,start_number: f64) -> f64 {
+        let startno: f64;
+        if use_start_number {
+            startno = start_number;
+        } else {
+            startnooption   = self.get_min();
+            startno = match startnooption {
+                None => 0,
+                Some(minresult) => minresult,
+            };
+        }
+        return startno;
+    }
+
+    fn _n_zero(&self) -> bool {
+        if self.get_count() == 0 {
+            return true;
+        }
+        return false;
+    }
+
+    pub fn calculate_arithmetic_mean(&self) -> Option<f64> {
+        if self._n_zero() {
+            return None;
+        }
+        let nf              = self.get_count() as f64;
+        let sumxs           = self.calculate_sum();
+        let mean_unrounded  = sumxs / nf;
+        let mean            = round_to_f64_precision(mu_unrounded, self.out_precision);
+        return Some(mean);
+    }
+
+    pub fn calculate_geometric_mean(&self) -> Option<f64> {
+        if self._n_zero() {
+            return None;
+        }
+        let nf          = self.get_count() as f64;
+        let exponent    = 1.0 / nf;
+        let productxs   = self.vector_of_x.into_iter().reduce(|a, b| a * b);
+        let unrounded   = productxs.powf(exponent);
+        let rounded     = round_to_f64_precision(unrounded, self.out_precision);
+        return Some(rounded);
+    }
+
+    pub fn calculate_harmonic_mean(&self) -> Result<Option<f64>, ValidationError> {
+        if self._n_zero() {
+            return Ok(None);
+        }
+        let nf              = self.get_count() as f64;
+        let sumreciprocals  = 0;
+        for lx in vector_of_x.iter() {
+            if lx == 0.0 {
+                return Err(ValidationError::ValueMayNotBeZero(lx));
+            }
+            sumreciprocals  += 1.0 / lx;
+        }
+        let unrounded       = nf / sumreciprocals;
+        let rounded         = round_to_f64_precision(unrounded, self.out_precision);
+        return Ok(Some(rounded));
+    }
+
+    pub fn calculate_quartile(&self,q_no: u8) -> Result<Option<f64>, ValidationError> {
+        if self._n_zero() {
+            return Ok(None);
+        }
+        if q_no < 0 {
+            return Err(ValidationError::ValueMayNotBeNegative(q_no as f64));
+        }
+        if 5 < q_no {
+            let m = "Value q_no '{q_no}' may not be larger than 5.";
+            return Err(ValidationError::ArgumentError(m));
+        }
+        self._assure_sorted_vector_of_x();
+        let nf                      = self.get_count() as f64;
+        let qindexfloat             = q_no * ( nf - 1.0 ) / 4.0
+        let thisquartilefraction    = qindexfloat % 1
+        let qvalue: f64;
+        if thisquartilefraction % 1 == 0 {
+            qi                      = qindexfloat as usize;
+            qvalue                  = self.sorted_vector_of_x[qi];
+        else
+            let portion0            = 1.0 - thisquartilefraction;
+            let portion1            = 1.0 - portion0;
+            let qi0                 = qindexfloat as usize;
+            let qi1                 = qi0 + 1;
+            qvalue                  = self.sorted_vector_of_x[qi0] * portion0 + self.sorted_vector_of_x[qi1] * portion1;
+        }
+        return Ok(Some(qvalue));
+    }
+
+    pub fn calculate_sum(&self) -> f64 {
+        if self.vector_of_x.len() == 0 {
+            return 0;
+        }
         let sumxs = self.vector_of_x.iter().sum();
         return sumxs;
     }
 
-    pub fn gen_mean(&self) -> f64 {
-        let n               = self.gen_count();
-        let sumxs           = self.gen_sum();
-        let mu_unrounded    = sumxs  / ( n as f64 );
-        let mu              = round_to_f64_precision(mu_unrounded, self.out_precision);
-        return mu;
+    pub fn generate_average_absolute_deviation(&self,centralPointType: &str) -> Result<Option<f64>, ValidationError> {
+        if self._n_zero() {
+            return Ok(None);
+        }
+        let cpf: f64;
+        match centralPointType {
+            ArithmeticMeanId    => cpf = self.calculateArithmeticMean()?,
+            GeometricMeanId     => cpf = calculateGeometricMean()?,
+            HarmonicMeanId      => cpf = calculateHarmonicMean()?,
+            MaxId               => cpf = get_max(),
+            MedianId            => cpf = request_median()?,
+            MinId               => cpf = generate_mode()?,
+            ModeId              => cpf = get_max(),
+            _ => {
+                m = "This Average Absolute Mean formula has not implemented a statistic for central point '#{centralPointType}' at this time."
+                return Err(ValidationError::ArgumentError(m));
+            }
+        };
+        let nf                  = self.get_count() as f64;
+        let sumofabsolutediffs  = 0;
+        for lx in vector_of_x.iter() {
+            let previous        = sumofabsolutediffs;
+            sumofabsolutediffs  += ( lx - cpf ).abs();
+            if previous > sumofabsolutediffs {
+                return Err(ValidationError::UnexpectedReducedValue(sumofabsolutediffs,previous);
+            }
+        }
+        let unrounded           = sumofabsolutediffs / nf;
+        let rounded             = round_to_f64_precision(unrounded, self.out_precision);
+        return Ok(Some(rounded));
     }
 
-    pub fn gen_meanstddev(&self) -> f64 {
-        let variance;
-        if self.use_sum_of_xs {
-            variance = self.gen_variance_by_sum_of_xs_squared();
-        } else {
-            variance = self.gen_variance_by_sum_of_differences_from_mean();
+    pub fn generate_coefficient_of_variation(&self) -> Result<Option<f64>, ValidationError> {
+        if self._n_zero() {
+            return Ok(None);
         }
-        let stddev = variance.sqrt();
-        return stddev;
+        self._add_up_xs_to_sums_of_powers(self.population,self.use_diff_from_mean_calculations)?;
+        let amean       = self.sums_of_powers_object.arithmetic_mean;
+        if amean == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(amean));
+        }
+        let stddev      = self.sums_of_powers_object.generate_standard_deviation()?;
+        let unrounded   = stddev / amean;
+        let rounded     = round_to_f64_precision(unrounded, self.out_precision);
+        return Ok(Some(rounded));
     }
 
-    pub fn gen_variance_by_sum_of_differences_from_mean(&self) -> f64 {
-        let mu                          = self.gen_mean();
-        let n                           = self.gen_count();
-        let mut sumofdiffsquared: f64   = 0.0;
-        for lx in self.vector_of_x.iter() {
-            let xlessmu                 = lx - mu;
-            sumofdiffsquared            += xlessmu * xlessmu;
+    pub fn generate_histogram_aa_by_number_of_segments(&self,desired_segment_count,start_number) -> Result<Option<Vec<(f64,f64,usize)>>, ValidationError> {
+        if self._n_zero() {
+            return Ok(None);
         }
-        let divisor: f64                =  ( n - 1 ) as f64;
-        let v                           = sumofdiffsquared / divisor;
-        return v
+        lmax            = self.get_max().unwrap(); // Presuming from n > 0 this will always be a Some.
+        let startno     = self._decide_histogram_start_number(start_number);
+        let histo       = HistogramOfX.new_from_desired_segment_count(startno,lmax,desired_segment_count)?;
+        histo.validate_ranges_complete()?;
+        for lx in vector_of_x.iter() {
+            histo.add_to_counts(lx)
+        }
+        resultvectors   = histo.generate_count_collection();
+        return Ok(Some(resultvectors));
     }
 
-    pub fn gen_variance_by_sum_of_xs_squared(&self) -> f64 {
-        let mu                      = self.gen_mean();
-        let n                       = self.gen_count();
-        let mut sumxssquared: f64   = 0.0;
-        for lx in self.vector_of_x.iter() {
-            sumxssquared            += lx * lx;
+    pub fn generate_histogram_aa_by_segment_size(&self,segment_size,start_number) -> Result<Option<Vec<(f64,f64,usize)>>, ValidationError> {
+        if self._n_zero() {
+            return Ok(None);
         }
-        let numerator               = sumxssquared - ( mu * mu );
-        let divisor: f64            =  ( n - 1 ) as f64;
-        let v                       = numerator / divisor;
-        return v
+        lmax            = self.get_max().unwrap(); // Presuming from n > 0 this will always be a Some.
+        let startno     = self._decide_histogram_start_number(start_number);
+        let histo       = HistogramOfX.new_from_desired_segment_size(startno,max,desired_segment_size)?;
+        histo.validate_ranges_complete()?;
+        for lx in vector_of_x.iter() {
+            histo.add_to_counts(lx)
+        }
+        resultvectors   = histo.generate_count_collection();
+        return Ok(Some(resultvectors));
+    }
+
+    fn generate_mean_absolute_difference(&self,segment_size,start_number) -> Result<Option<f64>, ValidationError> {
+        # https://en.wikipedia.org/wiki/Mean_absolute_difference
+        if self._n_zero() {
+            return Ok(None);
+        }
+        let nf                      = self.get_count() as f64;
+        let sumofabsolutediffs      = 0;
+        for lxi in vector_of_x.iter() {
+            for lxj in vector_of_x.iter() {
+                sumofabsolutediffs  += ( lxi - lxj ).abs
+            }
+        }
+        let denominator             = nf * ( nf - 1.0 );
+        if denominator == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(denominator));
+        }
+        let unrounded               = sumofabsolutediffs / denominator;
+        let rounded                 = round_to_f64_precision(unrounded, self.out_precision);
+        return Ok(Some(rounded));
+    }
+
+    fn generate_mode(&self) -> Result<Option<(u32,HashSet<f64>)>,ValidationError> {
+        /* NOTE:  Because matching floats is not a practical enterprise,
+            or at least given I have other infrastructure to do it that
+            I choose to use, I'll instead crop to out precision, and
+            format to strings, then pick by string equal value, and
+            convert back go f64 to return.  This may seem cockamamie,
+            and is slower, but the point is not efficiency in any of these
+            drafts not specifically labeled as such anyway.
+         */
+        if self._n_zero() {
+            return None;
+        }
+        let lsaa            = BTreeMap<&'a str,u32>::new();
+        for lx in vector_of_x.iter() {
+            let btkey = lx.to_string();
+            if lsaa.contains_key(btkey) {
+                lsaa[btkey] += 1;
+            } else {
+                lsaa[btkey] = 1;
+            }
+        }
+        let modtuple        = generate_mode_from_frequency_aa(lsaa);
+        let fcount          = modtuple.0;
+        let strset          = modtuple.1;
+        let result          = convert_numstr_hashset_to_f64_one(strset)?;
+        let floatset        = match result {
+            None            => return Ok(None),
+            Some(fsbuffer)  => fsbuffer,
+        }
+        return Ok(Some((fcount,floatset)));
+    }
+
+    pub fn get_max() -> Option<f64> {
+        let max_opval = self.vector_of_x.iter().max();
+        return max_opval;
+    }
+
+    pub fn get_min(&self) -> Option<f64> {
+        let min_opval = self.vector_of_x.iter().min();
+        return Some(min_opval);
+    }
+
+    pub fn is_even_n(&self) -> bool {
+        n = self.get_count();
+        if n % 2 == 0 {
+            return true
+        }
+        return false;
+    }
+
+    pub fn new_from_string_number_vector(vector_of_x: Vec<&str>) -> Result<Self, ValidationError> {
+        let mut buffer: VectorOfContinuous = Default::default();
+        for lx in vector_of_x.iter() {
+            buffer.push_x_string(lx)?;
+        }
+        return buffer;
     }
 
     pub fn push_x(&mut self, x_float_unrounded: f64) {
@@ -873,226 +1183,183 @@ impl VectorOfContinuous {
         self.vector_of_x.push(x_float);
     }
 
-}
-
-struct VectorOfDiscrete {
-    vector_of_x: Vec<&str>;
-    map_of_values: Map<String>;
-}
-
-    fn pushX(&x_str: &str)
-        vector_of_x.push(x_str);
-    }
-
-    fn pushXString(&x_str: &str)
-        vector_of_x.push(x_str);
-    }
-
-}
-
-impl VectorOfX for VectorOfContinuous {
-
-    fn newAfterValidation(arrayA)
-        v = Array.new
-        arrayA.each do |le|
-            raise ArgumentError unless isUsableNumber?(le)
-            v.push(le.to_f)
+    pub fn request_standard_deviation(&self) -> Result<f64, ValidationError> {
+        self._add_up_xs_to_sums_of_powers(self.population,self.use_diff_from_mean_calculations)?;
+        let unrounded   = self.sums_of_powers_object.generateStandardDeviation()?
+        if unrounded == 0.0 {
+            return Err(ValidationError::ValueMayNotBeZero(unrounded));
         }
-        localo = self.new(v)
-        return localo
+        let stddev      = round_to_f64_precision(unrounded, self.out_precision);
+        return Ok(stddev);
     }
 
-    fn newAfterInvalidatedDropped(arrayA)
-        v = Array.new
-        arrayA.each do |le|
-            next unless isUsableNumber?(le)
-            v.push(le.to_f)
+    pub fn request_excess_kurtosis(&self,formula_id) -> Result<f64, ValidationError> {
+        unless @UseDiffFromMeanCalculations
+            raise ArgumentError, "May NOT be used with Sum of Xs Data."
         }
-        localo = self.new(v)
-        return localo
-    }
-
-    fn initialize(vectorX=Array.new)
-        @VectorOfContinuous = vectorX
-        @UseSumOfXs = false
-    }
-
-    fn assureXsPrecision(precisionSpec)
-        raise ArgumentError, "Not Yet Implemented."
-    }
-
-    fn genInterQuartileRange
-        n = @VectorOfContinuous.size
-                                // Subtract one here
-                                // to get the offset.
-        q1os    = 1                 - 1
-        q2os    = ( n + 1 ) / 4     - 1
-        q3os    = ( n / 2 )         - 1
-        q4os    = 3 * ( q2os + 1 )  - 1
-        qendos  = n                 - 1
-        return q1os,  q2os,  q3os,  q4os,  qendos
-    }
-
-    fn gen_max
-        let max = 0;
-        match self.last.copied() {
-            let max = 0 => None,
-            n => {
-Some(&self[n-1])
-        svox = self.sort_default
-            }
-        }
-        return svox[-1]
-    }
-
-    fn genMean
-        n = @VectorOfContinuous.size.to_f
-        sumxs = @VectorOfContinuous.sum.to_f
-        return ( sumxs / n ).round(4)
-    }
-
-    fn genMedian
-        n = @VectorOfContinuous.size
-        svox = @VectorOfContinuous.sort
-        if n % 2 == 0 then
-            nm2 = ( n + 1 ) / 2
-            return svox[nm2]
+        self._add_up_xs_to_sums_of_powers(self.population,self.use_diff_from_mean_calculations)?;
+        let unrounded: f64;
+        case formulaId
+        when 2
+            unrounded   = @SOPo.calculateExcessKurtosis_2_JR_R
+        when 3
+            unrounded   = @SOPo.generateExcessKurtosis_3_365datascience
         else
-            nm2a = n / 2
-            x1 = svox[nm2a]
-            nm2b = nm2a + 1
-            x2 = svox[nm2b]
-            x3 = ( x1 + x2 ).to_f / 2.0
-            return x3.round(4)
+            m="There is no excess kurtosis formula #{formulaId} implemented at this time."
+            raise ArgumentError, m
+        }
+        rounded         = unrounded.round(@OutputDecimalPrecision)
+        return rounded
+    }
+
+    pub fn request_kurtosis(&self) -> Result<f64, ValidationError> {
+        @SOPo       = _addUpXsToSumsOfPowers(@Population) unless @SOPo
+        unrounded   = @SOPo.requestKurtosis
+        rounded     = unrounded.round(@OutputDecimalPrecision)
+        return rounded);
+    }
+
+    pub fn request_median(&self) -> Result<Option<f64>, ValidationError> {
+        let n  = self.get_count();
+        if n == 0 {
+            return Ok(None);
+        }
+        let q2 = self.calculate_quartile(2)?;
+        return Ok(Some(q2));
+    }
+
+    pub fn request_quartile_collection(&self) -> Result<Option<[f64,5]>, ValidationError> {
+        let n       = self.get_count();
+        if n == 0 {
+            return Ok(None);
+        }
+        let qos0    = calculate_quartile(0)?;
+        let qos1    = calculate_quartile(1)?;
+        let qos2    = calculate_quartile(2)?;
+        let qos3    = calculate_quartile(3)?;
+        let qos4    = calculate_quartile(4)?;
+        let ra      = [qos0,qos1,qos2,qos3,qos4];
+        return Ok(Some(ra))
+    }
+
+    pub fn request_range(&self) -> Option<[]> {
+        let n    = self.get_count();
+        if n == 0 {
+            return None;
+        }
+        let lmax = self.get_max();
+        let lmin = self.get_min();
+        return Some([lmin,lmax]);
+    }
+
+    pub fn request_result_aa_csv(&self) -> Result<&str, ValidationError> {
+        let scaa = self.request_summary_collection()?;
+        return <<-EOAACSV
+"#{ArithmeticMeanId}", #{scaa[ArithmeticMeanId]}
+"#{ArMeanAADId}", #{scaa[ArMeanAADId]}
+"#{CoefficientOfVariationId}", #{scaa[CoefficientOfVariationId]}
+"#{GeometricMeanId}", #{scaa[GeometricMeanId]}
+"#{HarmonicMeanId}", #{scaa[HarmonicMeanId]}
+"#{IsEvenId}", #{scaa[IsEvenId]}
+"#{KurtosisId}", #{scaa[KurtosisId]}
+"#{MaxId}", #{scaa[MaxId]}
+"#{MedianId}", #{scaa[MedianId]}
+"#{MedianAADId}", #{scaa[MedianAADId]}
+"#{MinId}", #{scaa[MinId]}
+"#{ModeId}", #{scaa[ModeId]}
+"#{NId}", #{scaa[NId]}
+"#{SkewnessId}", #{scaa[SkewnessId]}
+"#{StandardDeviation}", #{scaa[StandardDeviation]}
+"#{SumId}", #{scaa[SumId]}
+EOAACSV
+    }
+
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+    pub fn request_result_csv_line(&self,include_hdr=false) -> Result<&str, ValidationError> {
+        # NOTE: Mean Absolute Diffence is no longer featured here.
+        scaa        = requestSummaryCollection
+        csvline     =   "#{scaa[ArithmeticMeanId]},#{scaa[ArMeanAADId]},"
+        csvline     +=  "#{scaa[CoefficientOfVariationId]},"
+        csvline     +=  "#{scaa[GeometricMeanId]},#{scaa[HarmonicMeanId]},"
+        csvline     +=  "#{scaa[IsEvenId]},#{scaa[KurtosisId]},"
+        csvline     +=  "#{scaa[MaxId]},#{scaa[MedianId]},#{scaa[MedianAADId]},"
+        csvline     +=  "#{scaa[MinId]},#{scaa[ModeId]},#{scaa[NId]},"
+        csvline     +=  "#{scaa[SkewnessId]},#{scaa[StandardDeviation]},"
+        csvline     +=  "#{scaa[SumId]}"
+        if includeHdr then
+            csvhdr  =   "#{ArithmeticMeanId},#{ArMeanAADId},"
+            csvhdr  +=  "#{CoefficientOfVariationId},#{GeometricMeanId},"
+            csvhdr  +=  "#{HarmonicMeanId},#{IsEvenId},#{KurtosisId},"
+            csvhdr  +=  "#{MaxId},#{MedianId},#{MedianAADId},#{MinId},#{ModeId},"
+            csvhdr  +=  "#{NId},#{SkewnessId},#{StandardDeviation},#{SumId}"
+            return <<EOCSV
+#{csvhdr}
+#{csvline}
+EOCSV
+        else
+            return csvline
         }
     }
 
-    fn genMin
-        svox = @VectorOfContinuous.sort
-        return svox[0]
+    pub fn request_result_json(&self) -> Result<&str, ValidationError> {
+        let scaa    = self.requestSummaryCollection()?;
+        let jsonstr = serde_json::to_string(&scaa)?; // Need to handle non ValidationError error.
+        return Ok(jsonstr);
     }
 
-    fn genMinMax
-        svox = @VectorOfContinuous.sort
-        return svox[0], svox[-1]
+    pub fn request_skewness(&self,formula_id) -> Result<f64, ValidationError> {
+        self._add_up_xs_to_sums_of_powers(self.population,self.use_diff_from_mean_calculations)?;
+        let unrounded   = self.sums_of_powers_object.request_skewness(formula_id)?;
+        let rounded     = round_to_f64_precision(unrounded, self.out_precision);
+        return Ok(rounded);
     }
 
-    fn genMode
-        // This is broken.  Do NOT debug until later.  TBD
-        h = Hash.new
-        @VectorOfContinuous.each do |lx|
-            h[lx] = 1   unless h.has_key?(lx)
-            h[lx] += 1      if h.has_key?(lx)
+    pub fn request_summary_collection(&self) -> Result<HashMap<&str,f64>, ValidationError> {
+        // NOTE:  Some of these are ONLY for sample.  For now, this is best used ONLY for Samples.
+        let hmb: HashMap<&str,f64>  = HashMap::new();
+        self._add_up_xs_to_sums_of_powers(self.population,self.use_diff_from_mean_calculations)?;
+        hmb.insert(ARITHMETICMEANID,    self.calculateArithmeticMean()?);
+        hmb.insert(ARMEANAADID,         self.generateAverageAbsoluteDeviation()?);
+        hmb.insert(COVSAMPLEID,         self.generateCoefficientOfVariation()?);
+        hmb.insert(GEOMETRICMEANID,     self.calculateGeometricMean()?);
+        hmb.insert(HARMONICMEANID,      self.calculateHarmonicMean()?);
+        if self.use_diff_from_mean_calculations {
+            unrounded                   = self.sums_of_powers_object.request_kurtosis()?;
+            let kurtosis                = 
+            hmb.insert(KURTOSISID,      kurtosis);
         }
-        x = 0
-        m = 0
-        h.keys.each do |lx|
-            if h[lx] > m then
-                x = lx
-                m = h[lx]
-            }
-        }
-        return x
+        hmb.insert(MADID,               self.generate_mean_absolute_difference()?);
+        hmb.insert(MEDIANID,            self.request_median()?);
+        hmb.insert(MEDIANAADID,         self.generateAverage_absolute_deviation(MedianId)?);
+        hmb.insert(MAXID,               self.get_max());
+        hmb.insert(MINID,               self.get_min());
+        hmb.insert(MODEID,              self.generate_mode()?);
+        hmb.insert(NID,                 self.get_count());
+        let unrounded                   = self.sums_of_powers_object.requestSkewness()?;
+        let skewness                    = 
+        hmb.insert(SKEWNESSID,          skewness);
+        let unrounded                   = self.sums_of_powers_object.generate_standard_deviation()?;
+        let stddev                      = 
+        hmb.insert(STANDARDDEVIATIONID, stddev);
+        hmb.insert(SUMID,               self.get_sum());
+        return Ok(hmb);
     }
 
-    fn genNIsEven {
-        n = @VectorOfContinuous.size
-        return true if n % 2 == 0
-        return false
+    pub fn request_variance_sum_of_differences_from_mean(&self,population_calculation: bool) -> Result<f64, ValidationError {
+        self._add_up_xs_to_sums_of_powers(self.population,self.use_diff_from_mean_calculations)?;
+        let v   = self.sums_of_powers_object.calculate_variance_using_subject_as_diffs()?;
+        # Note rounding is not done here, as it would be double rounded with stddev.
+        return v;
     }
 
-    fn genOutliers(stdDev,numberOfStdDevs=1)
-        raise ArgumentError, "Not Yet Implemented."
+    pub fn request_variance_xs_squared_method(&self,population_calculation:bool) -> Result<f64, ValidationError> {
+        self._add_up_xs_to_sums_of_powers(self.population,self.use_diff_from_mean_calculations)?;
+        let v   = self.sums_of_powers_object.calculate_variance_using_subject_as_sum_xs()?;
+        # Note rounding is not done here, as it would be double rounded with stddev.
+        return v;
     }
-
-    fn genQuartiles
-        qos0, qos1, qos2, qos3, qos4, qose = genInterQuartileRange
-        svox = @VectorOfContinuous.sort
-        return svox[qos0], svox[qos2], svox[qos3], svox[qos4], svox[qos3]
-    }
-
-    fn genRange
-        svox = @VectorOfContinuous.sort
-        return svox[0], svox[-1]
-    }
-
-    fn pushX(xFloat)
-        raise ArgumentError unless isUsableNumber?(xFloat)
-        lfn = xFloat.to_f
-        @VectorOfContinuous.push(lfn)
-    }
-
-    attr_accessor :UseSumOfXs
 
 }
-
-class VectorOfDiscrete < VectorOfX
-    // TBD for use with columns having discrete values.
-}
-
-class VectorTable
-
-    class << self
-
-        fn isAllowedDataVectorClass?(vectorClass)
-            return false    unless vectorClass.is_a? Class
-            return true         if vectorClass.ancestors.include? VectorOfX
-            return false
-        }
-
-        fn newFromCSV(fSpec,vcSpec,skipFirstLine=true)
-            localo = self.new(vcSpec)
-            File.open(fSpec) do |fp|
-                i = 0
-                fp.each_line do |ll|
-                    sll = ll.strip
-                    unless ( i == 0 and skipFirstLine )
-                        columns = sll.parse_csv
-                        localo.pushTableRow(columns)
-                    }
-                    i += 1
-                }
-            }
-            return localo
-        }
-
-    }
-
-    fn initialize(vectorOfClasses)
-        raise ArgumentError unless vectorOfClasses.is_a? Array
-        @TableOfVectors     = Array.new
-        @VectorOfClasses    = vectorOfClasses
-        i = 0
-        @VectorOfClasses.each do |lci|
-            if lci then
-                raise ArgumentError unless self.class.isAllowedDataVectorClass?(lci)
-                @TableOfVectors[i] = lci.new        if lci
-            else
-                @TableOfVectors[i] = nil        
-            }
-            i += 1
-        }
-    }
-
-    fn getVectorObject(indexNo)
-        unless VectorTable.isAllowedDataVectorClass?( @TableOfVectors[indexNo].class )
-            raise ArgumentError, "Column #{indexNo} not configured for Data Processing."
-        }
-        return @TableOfVectors[indexNo]
-    }
-
-    fn pushTableRow(arrayA)
-        i = 0
-        @TableOfVectors.each do |lvoe|
-            if lvoe.is_a? VectorOfX then
-                lvoe.pushX(arrayA[i])
-            }
-            i += 1
-        }
-    }
-
-}
-*/
 
 #[cfg(test)]
 mod tests {
