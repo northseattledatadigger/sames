@@ -824,11 +824,10 @@ pub struct VectorOfContinuous {
     in_precision: i32,
     out_precision: i32,
     population: bool,
-    sorted_vector_of_x: Vec<f64>,
-    //sums_of_powers_object: Vec<f64>,
+    sorted_vector_of_x: Vec<i128>
     use_diff_from_mean_calculations: bool,
     validate_string_numbers: bool,
-    vector_of_x: Vec<f64>,
+    vector_of_x: Vec<f64>
 }
 
 impl Default for VectorOfContinuous {
@@ -838,7 +837,7 @@ impl Default for VectorOfContinuous {
             out_precision: 4,
             population: false,
             sorted_vector_of_x: Vec::new(),
-            //sums_of_powers_object: SumsOfPowers::new(),
+            sums_of_powers_object: SumsOfPowers::new(false),
             use_diff_from_mean_calculations: true,
             validate_string_numbers: false,
             vector_of_x: Vec::new(),
@@ -848,13 +847,38 @@ impl Default for VectorOfContinuous {
 
 impl VectorOfX for VectorOfContinuous {
 
+    fn __from_f64_to_i128(&self,subject_float: f64) -> i128 {
+        let base: f64           = 10.0;
+        let precision_base: f64 = base.powi( self.in_precision );
+        let buffer: i128         = ( subject_float * precision_base ).round();
+        return buffer;
+    }
+
+    fn __from_i128_to_f64(&self,integer: i128) -> f64 {
+        let base: f64           = 10.0;
+        let precision_base: f64 = base.powi( precision_digits );
+        let newfloat            = subject_integer as f64 / precision_base;
+        return newfloat;
+    }
+
+    fn __insert_i128_from_f64(&self,subject_float: f64) {
+        // Should not require error handling because the values are already vetted.
+        let base: f64           = 10.0;
+        let precision_base: f64 = base.powi( self.in_precision );
+        let buffer: i128         = ( subject_float * precision_base ).round();
+        self.sorted_vector_of_x.insert(buffer);
+    }
+
     fn _assure_sorted_vector_of_x(&self,force_sort: bool) {
         if self.sorted_vector_of_x.len() == self.vector_of_x.len() {
             if ! force_sort {
                 return ();
             }
         }
-        self.sorted_vector_of_x = self.vector_of_x.clone();
+        self.sorted_vector_of_x.clear();
+        for lx in self.vector_of_x.iter() {
+            self.__insert_i128_from_f64(lx);
+        }
         self.sorted_vector_of_x.sort();
     }
 
