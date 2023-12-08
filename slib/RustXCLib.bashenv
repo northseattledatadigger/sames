@@ -82,9 +82,11 @@ _SetEnvironment() {
     local libSubtype="$1"
 
     # Crates always Used:
+    cargo add csv
     cargo add phf
     cargo add phf_macros
     cargo add regex
+    cargo add serde_json
     cargo add thiserror
 
     # Crates specific to LibSubtype:
@@ -93,15 +95,12 @@ _SetEnvironment() {
         return 0
         ;;
     native)
-        cargo add csv
         return 0
         ;;
     polars)
-        cargo add csv
         return 0
         ;;
     spark)
-        cargo add csv
         return 0
         ;;
     esac

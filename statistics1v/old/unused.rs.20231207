@@ -1,0 +1,24 @@
+
+        let fcount                      = modtuple.0;
+        let strset                      = modtuple.1;
+        let option                      = convert_numstr_hashset_to_f64_one(strset)?;
+        let floatset                    = match option {
+            None            => return Ok(None),
+            Some(fsbuffer)  => fsbuffer,
+        };
+pub fn convert_numstr_hashset_to_f64_one(strhs: &HashSet<&str>) -> Result<Option<HashSet<f64>>,ValidationError> {
+    if strhs.len() == 0 {
+        return Ok(None);
+    }
+    let mut floatset: HashSet<f64> = HashSet::new();
+    for numstr in strhs.iter() {
+        let result = numstr.parse::<f64>();
+        let buffloat = match result {
+            Ok(heldfloat)   => heldfloat,
+            Err(_err)       => return Err(ValidationError::ParseErrorOnWouldBeNumberString("Invalid HashSet Construction".to_string())),
+        };
+        floatset.insert(buffloat);
+    }
+    return Ok(Some(floatset));
+}
+
