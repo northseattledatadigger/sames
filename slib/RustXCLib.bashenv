@@ -86,6 +86,7 @@ _SetEnvironment() {
     cargo add phf
     cargo add phf_macros
     cargo add regex
+    cargo add serde
     cargo add serde_json
     cargo add thiserror
 
