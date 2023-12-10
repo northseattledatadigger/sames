@@ -891,8 +891,9 @@ pub trait VectorOfX {
     fn get_count(&self) -> usize;
     fn get_x(&mut self,index_a: usize,sorted_vector: bool) -> Result<f64,ValidationError>;
     fn new() -> Self;
-    //fn new_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Result<Self, ValidationError>;
-    fn push_x_string(&mut self, x_string: &str) -> Result<(), ValidationError>;
+    fn new_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self;
+    fn push_x_str(&mut self, x_string: &str) -> Result<(), ValidationError>;
+    fn push_x_string(&mut self, x_string: String) -> Result<(), ValidationError>;
 
 }
 
@@ -973,24 +974,38 @@ impl VectorOfX for VectorOfContinuous {
         return buffer;
     }
 
-    /*
-    fn new_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Result<Self, ValidationError> {
+    fn new_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
-            buffer.push_x_string(lx)?;
+            if is_a_num_str(lx) {
+                buffer.push_x_str(lx).unwrap();
+            }
         }
-        return Ok(buffer);
+        return buffer;
     }
-     */
 
-    fn push_x_string(&mut self, x_string: &str) -> Result<(), ValidationError> {
+    fn push_x_str(&mut self, x_str: &str) -> Result<(), ValidationError> {
+        /*  NOTE:  TBD figure out return value from parse expect trim etc and
+            deal with that.
+         */
+        let result                  = x_str.trim().parse();
+        let x_float_unrounded = match result {
+            Ok(unrounded)   => unrounded,
+            Err(_err)       => return Err(ValidationError::ParseErrorOnWouldBeNumberString(x_str.to_string())),
+        };
+        let x_float                 = round_to_f64_precision(x_float_unrounded, self.in_precision);
+        self.vector_of_x.push(x_float);
+        return Ok(());
+    }
+
+    fn push_x_string(&mut self, x_string: String) -> Result<(), ValidationError> {
         /*  NOTE:  TBD figure out return value from parse expect trim etc and
             deal with that.
          */
         let result                  = x_string.trim().parse();
         let x_float_unrounded = match result {
             Ok(unrounded)   => unrounded,
-            Err(_err)       => return Err(ValidationError::ParseErrorOnWouldBeNumberString(x_string.to_string())),
+            Err(_err)       => return Err(ValidationError::ParseErrorOnWouldBeNumberString(x_string)),
         };
         let x_float                 = round_to_f64_precision(x_float_unrounded, self.in_precision);
         self.vector_of_x.push(x_float);
@@ -1165,7 +1180,7 @@ impl VectorOfContinuous {
             Self::MINID               =>    option   = self.get_min(),
             Self::MODEID              =>    option   = self.generate_mode(),
             _ => {
-                let m = "This Average Absolute Mean formula has not implemented a statistic for central point '#{central_point_type}' at this time.".to_string();
+                let m = "This Average Absolute Mean formula has not implemented a statistic for central point '{central_point_type}' at this time.".to_string();
                 return Err(ValidationError::ArgumentError(m));
             },
         };
@@ -1306,17 +1321,15 @@ impl VectorOfContinuous {
     pub fn new_from_string_number_vector(vector_of_x: Vec<&str>) -> Result<VectorOfContinuous, ValidationError> {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
-            buffer.push_x_string(lx)?;
+            buffer.push_x_str(lx)?;
         }
         return Ok(buffer);
     }
 
-    /*
-    fn push_x(&mut self, x_float_unrounded: f64) {
+    pub fn push_x(&mut self, x_float_unrounded: f64) {
         let x_float                 = round_to_f64_precision(x_float_unrounded, self.in_precision);
         self.vector_of_x.push(x_float);
     }
-     */
 
     pub fn request_excess_kurtosis(&mut self,formula_id: u8) -> Result<Option<f64>, ValidationError> {
         if self._n_zero() {
@@ -1533,23 +1546,28 @@ impl VectorOfContinuous {
         let mut btmb: BTreeMap<&str,String>   = BTreeMap::new();
         self._add_up_xs_to_sums_of_powers(self.population,self.use_diff_from_mean_calculations)?;
         insert_op_data_to_str_aa(self.calculate_arithmetic_mean(),              &mut btmb,  Self::ARITHMETICMEANID);
-        insert_op_data_to_str_aa(self.generate_average_absolute_deviation(Self::ARITHMETICMEANID)?,
-                                                                                &mut btmb,  Self::ARMEANAADID);
-        insert_op_data_to_str_aa(self.generate_coefficient_of_variation()?,     &mut btmb,  Self::COVID);
         insert_op_data_to_str_aa(self.calculate_geometric_mean(),               &mut btmb,  Self::GEOMETRICMEANID);
         insert_op_data_to_str_aa(self.calculate_harmonic_mean()?,               &mut btmb,  Self::HARMONICMEANID);
-        insert_op_data_to_str_aa(self.request_kurtosis()?,                      &mut btmb,  Self::KURTOSISID);
-        insert_op_data_to_str_aa(self.generate_mean_absolute_difference()?,     &mut btmb,  Self::MADID);
-        insert_op_data_to_str_aa(self.request_median(),                         &mut btmb,  Self::MEDIANID);
-        insert_op_data_to_str_aa(self.generate_average_absolute_deviation(Self::MEDIANAADID)?,
+        insert_op_data_to_str_aa(Some(self.calculate_sum()),                    &mut btmb,  Self::SUMID);
+        insert_op_data_to_str_aa(self.generate_average_absolute_deviation(Self::ARITHMETICMEANID)?,
+                                                                                &mut btmb,  Self::ARMEANAADID);
+        insert_op_data_to_str_aa(self.generate_average_absolute_deviation(Self::MEDIANID)?,
                                                                                 &mut btmb,  Self::MEDIANAADID);
-        insert_op_data_to_str_aa(self.get_max(),                                &mut btmb,  Self::MAXID);
-        insert_op_data_to_str_aa(self.get_min(),                                &mut btmb,  Self::MINID);
+        insert_op_data_to_str_aa(self.generate_coefficient_of_variation()?,     &mut btmb,  Self::COVID);
+        insert_op_data_to_str_aa(self.generate_mean_absolute_difference()?,     &mut btmb,  Self::MADID);
         insert_op_data_to_str_aa(self.generate_mode(),                          &mut btmb,  Self::MODEID);
         insert_op_data_to_str_aa(Some(self.get_count() as f64),                 &mut btmb,  Self::NID);
+        insert_op_data_to_str_aa(self.get_max(),                                &mut btmb,  Self::MAXID);
+        insert_op_data_to_str_aa(self.get_min(),                                &mut btmb,  Self::MINID);
+        if self.is_even_n() {
+            btmb.insert(Self::ISEVENID,"TRUE".to_string());
+        } else {
+            btmb.insert(Self::ISEVENID,"FALSE".to_string());
+        }
+        insert_op_data_to_str_aa(self.request_kurtosis()?,                      &mut btmb,  Self::KURTOSISID);
+        insert_op_data_to_str_aa(self.request_median(),                         &mut btmb,  Self::MEDIANID);
         insert_op_data_to_str_aa(self.request_skewness(3)?,                     &mut btmb,  Self::SKEWNESSID);
         insert_op_data_to_str_aa(self.request_standard_deviation()?,            &mut btmb,  Self::STDDEVID);
-        insert_op_data_to_str_aa(Some(self.calculate_sum()),                    &mut btmb,  Self::SUMID);
         return Ok(Some(btmb));
     }
 
@@ -2028,6 +2046,469 @@ mod tests {
     }
 
     // VectorOfX, VectorOfContinuous, VectorOfDiscrete
+
+    /*345678901234567890123456789012345678901234567890123456789012345678901234567890
+    Tests for trait VectorOfX implemented for VectorOfContinuous.
+     */
+
+    #[test]
+    fn test_basic_construction_and_get_count_method() {
+        let mut localo = VectorOfContinuous::new();
+        localo.push_x_str("1234.56").unwrap();
+        let n = localo.get_count();
+        assert_eq!(n,1);
+    }
+
+    #[test]
+    fn test_sorted_vector_function_and_get_x_method() {
+        let a: Vec<&str>    = vec!["3", "2", "1"];
+        let mut localo      = VectorOfContinuous::new_from_string_number_vector(a).unwrap();
+        let n               = localo.get_count();
+        assert_eq!(n,3);
+        localo._assure_sorted_vector_of_x(false);
+        assert_eq!(3,localo.sorted_vector_of_x.len());
+        let x0              = localo.get_x(0,true).unwrap();
+        assert_eq!(1.0,x0);
+        assert_eq!(2.0,localo.get_x(1,true).unwrap());
+        assert_eq!(3.0,localo.get_x(2,true).unwrap());
+        let a: Vec<&str>    = vec!["1.5","99","5876.1234","String"];
+        let localo          = VectorOfContinuous::new_after_invalidated_dropped(a);
+        assert_eq!(localo.get_count(),3);
+    }
+
+
+    #[test]
+    fn test_push_x_methods() {
+        let mut localo      = VectorOfContinuous::new();
+        localo.push_x_str("11234.51234").unwrap();
+        assert_eq!(localo.get_count(),1);
+        localo.push_x_string("98765.43210".to_string()).unwrap();
+        assert_eq!(localo.get_count(),2);
+        localo.push_x(10101010.202020202);
+        assert_eq!(localo.get_count(),3);
+    }
+
+    #[test]
+    fn test_request_result_aa_output_methods() {
+        let a: Vec<&str>    = vec!["3", "2", "1"];
+        let mut localo      = VectorOfContinuous::new_from_string_number_vector(a).unwrap();
+        localo.push_x_str("11234.51234").unwrap();
+        localo.push_x_string("98765.43210".to_string()).unwrap();
+        localo.push_x(10101010.202020202);
+        let resultbm    = match localo.request_summary_collection().unwrap() {
+            None            => panic!("Test failed."),
+            Some(buffer)    => buffer,
+        };
+        for (key, value) in resultbm.iter() {
+            println!("trace key, value:  {}, {}",key, value);
+        }
+        assert_eq!(resultbm.len(),17);
+        let csvstring   = match localo.request_result_aa_csv().unwrap() {
+            None            => panic!("Test failed."),
+            Some(buffer)    => buffer,
+        };
+        assert_eq!(csvstring.len(),299);
+        let csvstring   = match localo.request_result_csv_line(false).unwrap() {
+            None            => panic!("Test failed."),
+            Some(buffer)    => buffer,
+        };
+        assert_eq!(csvstring.len(),146);
+        let jsonstring   = match localo.request_result_json().unwrap() {
+            None            => panic!("Test failed."),
+            Some(buffer)    => buffer,
+        };
+        assert_eq!(jsonstring.len(),480);
+    }
+
+
+    /*345678901234567890123456789012345678901234567890123456789012345678901234567890
+    # Tests for remainder of VectorOfContinuous implementation.
+     */
+
+    #[test]
+    fn test_has_internal_focused_method_to_construct_a_new_sums_of_powers_object_for_moment_statistics() {
+        let a: Vec<&str>    = vec!["3", "2", "1"];
+        let mut localo      = VectorOfContinuous::new_from_string_number_vector(a).unwrap();
+        assert_eq!(3,localo.get_count());
+        localo._add_up_xs_to_sums_of_powers(false,false).unwrap();
+        localo._add_up_xs_to_sums_of_powers(false,true).unwrap();
+        localo._add_up_xs_to_sums_of_powers(true,false).unwrap();
+        localo._add_up_xs_to_sums_of_powers(true,true).unwrap();
+    }
+
+/*
+    #[test]
+    fn test_has_internal_focused_method_to_decide_startno_value_for_histogram() {
+        a = [1,2,3]
+        localo = VectorOfContinuous.new(a)
+        assert_equal localo.getCount, 3
+        startno = localo._decideHistogramStartNumber
+        assert startno == 1
+        startno = localo._decideHistogramStartNumber(0)
+        assert startno == 0
+    }
+
+    #[test]
+    fn test_calculates_arithmetic_mean_in_two_places() {
+        a = [1,2,3]
+        localo  = VectorOfContinuous.new(a)
+        vocoam  = localo.calculateArithmeticMean
+        sopo    = localo._addUpXsToSumsOfPowers
+        assert sopo.is_a? SumsOfPowers
+        sopoam  = sopo.ArithmeticMean
+        assert_equal vocoam, sopoam
+    }
+
+    #[test]
+    fn test_calculates_geometric_mean() {
+        a = [1,2,3,4,5]
+        localo  = VectorOfContinuous.new(a)
+        gmean  = localo.calculateGeometricMean
+        assert_equal 2.6052, gmean
+        a           = [2,2,2,2]
+        localo      = VectorOfContinuous.new(a)
+        amean       = localo.calculateArithmeticMean
+        gmean       = localo.calculateGeometricMean
+        assert_equal amean, gmean
+        a           = [1,2,3,4,5,6,7,8,9]
+        localo      = VectorOfContinuous.new(a)
+        amean       = localo.calculateArithmeticMean
+        gmean       = localo.calculateGeometricMean
+        assert amean > gmean
+    }
+
+    #[test]
+    fn test_calculates_harmonic_mean() {
+        a = [1,2,3,4,5]
+        localo  = VectorOfContinuous.new(a)
+        hmean  = localo.calculateHarmonicMean
+        assert_equal 2.1898, hmean
+        a           = [2,2,2,2]
+        localo      = VectorOfContinuous.new(a)
+        amean       = localo.calculateArithmeticMean
+        gmean       = localo.calculateGeometricMean
+        hmean       = localo.calculateHarmonicMean
+        assert_equal amean, gmean
+        assert_equal amean, hmean
+        a           = [1,2,3,4,5,6,7,8,9]
+        localo      = VectorOfContinuous.new(a)
+        amean       = localo.calculateArithmeticMean
+        gmean       = localo.calculateGeometricMean
+        hmean       = localo.calculateHarmonicMean
+        assert amean > gmean
+        assert gmean > hmean
+    }
+
+    #[test]
+    fn test_has_a_calculate_quartile_method_which_returns_the_value_for_a_designated_quartile() {
+        a  = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0]
+        sa = a.sort
+        #puts "trace a:  #{a}, #{sa}, #{a.size}"
+        localo = VectorOfContinuous.new(a)
+        qv = localo.calculateQuartile(1)
+        assert_equal qv, 3
+
+        a       = [1,2,3,4,5]
+        localo  = VectorOfContinuous.new(a)
+        qv      = localo.calculateQuartile(0)
+        assert_equal qv, 1
+        #puts "trace BEGIN first quartile"
+        qv      = localo.calculateQuartile(1)
+        #puts "trace END first quartile"
+        assert_equal qv, 2
+        qv      = localo.calculateQuartile(2)
+        assert_equal qv, 3
+        qv      = localo.calculateQuartile(3)
+        assert_equal qv, 4
+        qv      = localo.calculateQuartile(4)
+        assert_equal qv, 5
+
+        a       = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0]
+        sa      = a.sort
+        localo  = VectorOfContinuous.new(a)
+        qv      = localo.calculateQuartile(0)
+        assert_equal qv, 0
+        qv      = localo.calculateQuartile(1)
+        assert_equal qv, 3.0
+        qv      = localo.calculateQuartile(2)
+        assert_equal qv, 7.0
+        qv      = localo.calculateQuartile(3)
+        assert_equal qv, 8.0
+        qv      = localo.calculateQuartile(4)
+        assert_equal qv, 9.0
+    }
+
+    #[test]
+    fn test_generates_a_average_absolute_deviation_for_arithmetic_geometric_harmonic_means_median_min_max_mode() {
+        a           = [1,2,3,4,5,6,7,8.9]
+        localo      = VectorOfContinuous.new(a)
+        amaad1      = localo.generateAverageAbsoluteDeviation
+        assert_equal 2.1125, amaad1
+        amaad2      = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::ArithmeticMeanId)
+        assert_equal amaad1, amaad2
+        gmaad       = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::GeometricMeanId)
+        assert_equal 2.1588, gmaad
+        hmaad       = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::HarmonicMeanId)
+        assert_equal 2.3839, hmaad
+        medianaad   = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::MedianId)
+        assert_equal 2.1125, medianaad
+        minaad      = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::MinId)
+        assert_equal 3.6125, minaad
+        maxaad      = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::MaxId)
+        assert_equal 4.2875, maxaad
+        modeaad     = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::ModeId)
+        assert_equal 4.2875, modeaad
+        a           = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0]
+        localo      = VectorOfContinuous.new(a)
+        aad         = localo.generateAverageAbsoluteDeviation
+        assert_equal 2.6112, aad
+        aad         = localo.generateAverageAbsoluteDeviation(VectorOfContinuous::MedianId)
+        assert_equal 2.5172, aad
+    }
+
+    #[test]
+    fn test_generates_a_coefficient_of_variation() {
+        a = [1,2,3,4,5,6,7,8.9]
+        localo      = VectorOfContinuous.new(a)
+        amean       = localo.calculateArithmeticMean
+        stddev      = localo.requestStandardDeviation
+        herecov     = ( stddev / amean ).round(localo.OutputDecimalPrecision)
+        cov         = localo.generateCoefficientOfVariation
+        assert_equal cov, herecov
+    }
+
+    #[test]
+    fn test_has_two_methods_to_generate_a_matrix_of_histogram_data() {
+        a = [1,2,3,4,5,6,7,8,9]
+        localo = VectorOfContinuous.new(a)
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,1)
+        assert_equal 3, hdaa.size
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,0)
+        assert_equal 3, hdaa.size
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(3,-1)
+        assert_equal 3, hdaa.size
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(4,1)
+        assert_equal 4, hdaa.size
+        hdaa = localo.generateHistogramAAbyNumberOfSegments(5,0)
+        assert_equal 5, hdaa.size
+        hdaa = localo.generateHistogramAAbySegmentSize(2,1)
+        diff0 = hdaa[0][1] - hdaa[0][0]
+        #STDERR.puts "trace diff0 = hdaa[0][1] - hdaa[0][0]:  #{diff0} == #{hdaa[0][1]} - #{hdaa[0][0]}"
+        assert_equal diff0, 2.0
+        diff1 = hdaa[1][1] - hdaa[1][0]
+        assert_equal diff1, 2
+        hdaa = localo.generateHistogramAAbySegmentSize(3,0)
+        diff2 = hdaa[2][1] - hdaa[2][0]
+        assert_equal diff2, 3
+    }
+
+    #[test]
+    fn test_generates_a_mean_absolute_difference() {
+        a = [1,2,3,4,5,6,7,8.9]
+        localo      = VectorOfContinuous.new(a)
+        mad         = localo.generateMeanAbsoluteDifference
+        assert_equal 3.225, mad
+    }
+
+    #[test]
+    fn test_can_get_the_minimum_median_maximum_and_mode() {
+        a       = [1,2,3,4,5,6,7,8,9]
+        localo  = VectorOfContinuous.new(a)
+        assert_equal localo.getCount, 9
+        assert_equal 1, localo.getMin
+        assert_equal 5, localo.requestMedian
+        assert_equal 9, localo.getMax
+        assert_equal 1, localo.generateMode # Question here:  should I return a sentinal when it is uniform?  NOTE
+        a       = [1,2,3,4,5,6,7,8,9,8,7,8]
+        localo  = VectorOfContinuous.new(a)
+        min,max = localo.requestRange
+        assert_equal localo.getCount, 12
+        assert_equal 1, min
+        #puts "trace BEGIN median mmmm test"
+        assert_equal 6.5, localo.requestMedian
+        #puts "trace END median mmmm"
+        assert_equal 9, max
+        assert_equal 8, localo.generateMode # Question here:  should I return a sentinal when it is uniform?  NOTE
+    }
+
+    #[test]
+    fn test_has_a_method_to_test_if_the_vector_of_x_has_an_even_n() {
+        a = [1,2,3,4,5,6,7,8.9]
+        localo      = VectorOfContinuous.new(a)
+        assert localo.isEvenN?
+        a = [1,2,3,4,5,6,7,8.9,11]
+        localo      = VectorOfContinuous.new(a)
+        assert ( not localo.isEvenN? )
+    }
+
+    #[test]
+    fn test_has_an_method_to_return_get_because_it_is_direct_call_to_language_method_the_sum() {
+        a       = [1,2,2,3,3,3]
+        localo  = VectorOfContinuous.new(a)
+        assert_equal localo.getCount, 6
+        assert_equal 14, localo.getSum
+    }
+
+    #[test]
+    fn test_can_request_calculation_of_kurtosis() {
+        a = [1,2,3,4,5,6,7,8,9]
+        localo  = VectorOfContinuous.new(a)
+        ek      = localo.requestExcessKurtosis(2)
+        #STDERR.puts "trace ek:  #{ek}"
+        assert_equal -1.23, ek
+        ek      = localo.requestExcessKurtosis
+        assert_equal -1.2, ek
+        k       = localo.requestKurtosis
+        #STDERR.puts "trace k:  #{k}"
+        assert_equal 1.8476, k
+
+        localo.UseDiffFromMeanCalculations = false
+        assert_raise ArgumentError do
+            localo.requestExcessKurtosis(2)
+        }
+        assert_raise ArgumentError do
+            localo.requestExcessKurtosis
+        }
+        k       = localo.requestKurtosis
+        #STDERR.puts "trace k:  #{k}"
+        assert_equal 1.8476, k
+    }
+
+    #[test]
+    fn test_can_request_a_complete_collection_of_all_5_quartiles_in_an_array() {
+        a       = [1,2,3,4,5]
+        localo  = VectorOfContinuous.new(a)
+        qa      = localo.requestQuartileCollection
+        assert_equal 1, qa[0]
+        assert_equal 2, qa[1]
+        assert_equal 3, qa[2]
+        assert_equal 4, qa[3]
+        assert_equal 5, qa[4]
+        a           = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0,1,2,2,3,3,3,99.336,5.9,0x259,1133.7,1234]
+        localo  = VectorOfContinuous.new(a)
+        qa      = localo.requestQuartileCollection
+        assert_equal 0, qa[0]
+        assert_equal 3.0, qa[1]
+        assert_equal 6.0, qa[2]
+        assert_equal 8.25, qa[3]
+        assert_equal 1234, qa[4]
+    }
+
+    #[test]
+    fn test_has_some_formatted_result_methods() {
+        a       = [1,2,3,4,5,6,7,8,9]
+        localo  = VectorOfContinuous.new(a)
+        assert_respond_to localo, :requestResultAACSV
+        assert localo.requestResultAACSV.is_a?      String
+        assert localo.requestResultCSVLine.is_a?    String
+        assert localo.requestResultJSON.is_a?       String
+    }
+
+    #[test]
+    fn test_can_request_a_calculation_of_skewness() {
+        a       = [1,2,3,4,5,6,7,8,9]
+        localo  = VectorOfContinuous.new(a)
+        sk      = localo.requestSkewness
+        assert_equal 0, sk
+        sk      = localo.requestSkewness(1)
+        assert_equal 0, sk
+        sk      = localo.requestSkewness(2)
+        assert_equal 0, sk
+        sk      = localo.requestSkewness(3)
+        assert_equal 0, sk
+        a       = [1,2,2,3,3,3,4,4,4,4,4,4]
+        localo  = VectorOfContinuous.new(a)
+        sk      = localo.requestSkewness
+        assert_equal -0.9878, sk
+        sk1     = localo.requestSkewness(1)
+        assert_equal -0.7545, sk1
+        sk2     = localo.requestSkewness(2)
+        assert_equal -0.8597, sk2
+        sk3     = localo.requestSkewness(3)
+        assert_equal sk3, sk
+    }
+
+    #[test]
+    fn test_has_four_standard_deviation_calculations_corresponding_to_the_four_variance_combinations() {
+        a       = [1,2,3]
+        localo  = VectorOfContinuous.new(a)
+        sdsd    = localo.requestStandardDeviation
+        localo.UseDiffFromMeanCalculations = false
+        sdsx    = localo.requestStandardDeviation
+        assert_equal sdsd, sdsx
+        localo.Population = true
+        sdsd    = localo.requestStandardDeviation
+        localo.UseDiffFromMeanCalculations = false
+        sdsx    = localo.requestStandardDeviation
+        assert_equal sdsd, sdsx
+    }
+
+    #[test]
+    fn test_has_two_variance_generation_methods() {
+        a = [1,2,2,3,3,3,99.336,5.9,0x259,1133.7,1234]
+        localo = VectorOfContinuous.new(a)
+        v = localo.requestVarianceSumOfDifferencesFromMean
+        assert_equal 231232.125543275, v
+        v = localo.requestVarianceXsSquaredMethod
+        assert_equal 231232.12554327273, v
+        v = localo.requestVarianceSumOfDifferencesFromMean(true)
+        assert_equal 210211.0232211591, v
+        v = localo.requestVarianceXsSquaredMethod(true)
+        assert_equal 210211.02322115703, v
+    }
+
+    #[test]
+    fn test_input_routine_pushx_validates_arguments() {
+        lvo = VectorOfContinuous.new
+        assert_nothing_raised do
+            lvo.pushX(123.456)
+        }
+        assert_raise ArgumentError do
+            lvo.pushX("asdf")
+        }
+        assert_raise ArgumentError do
+            lvo.pushX("0x9")
+        }
+        assert_raise ArgumentError do
+            lvo.pushX("1234..56")
+        }
+        assert_raise ArgumentError do
+            lvo.pushX("2 34")
+        }
+        lvo.ValidateStringNumbers = true
+        assert_raise RangeError do
+            lvo.pushX("9999999999999999999999999999")
+        }
+    }
+
+    #[test]
+    fn test_fails_differently_according_to_special_arguments_to_pushx() {
+        # These are the pertinent identifiers:
+        #BlankFieldOnBadData = 0
+        #FailOnBadData       = 1
+        #SkipRowOnBadData    = 2
+        #ZeroFieldOnBadData  = 3
+        localo = VectorOfContinuous.new
+        assert_equal 0, localo.getCount
+        assert_raise ArgumentError do
+            localo.pushX("")
+        }
+        assert_equal 0, localo.getCount
+        assert_raise ArgumentError do
+            localo.pushX("",VectorOfX::BlankFieldOnBadData)
+        }
+        assert_equal 0, localo.getCount
+        assert_raise ArgumentError do
+            localo.pushX("",VectorOfX::FailOnBadData)
+        }
+        assert_equal 0, localo.getCount
+        localo.pushX("",VectorOfX::SkipRowOnBadData)
+        assert_equal 0, localo.getCount
+        localo.pushX("",VectorOfX::ZeroFieldOnBadData)
+        assert_equal 1, localo.getCount
+    }
+
+    */
 
     // VectorTable
 
