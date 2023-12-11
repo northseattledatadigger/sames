@@ -891,7 +891,7 @@ pub trait VectorOfX {
     fn get_count(&self) -> usize;
     fn get_x(&mut self,index_a: usize,sorted_vector: bool) -> Result<f64,ValidationError>;
     fn new() -> Self;
-    fn new_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self;
+    fn new_from_str_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self;
     fn push_x_str(&mut self, x_string: &str) -> Result<(), ValidationError>;
     fn push_x_string(&mut self, x_string: String) -> Result<(), ValidationError>;
 
@@ -974,7 +974,7 @@ impl VectorOfX for VectorOfContinuous {
         return buffer;
     }
 
-    fn new_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self {
+    fn new_from_str_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
             if is_a_num_str(lx) {
@@ -1318,13 +1318,41 @@ impl VectorOfContinuous {
         return false;
     }
 
-    pub fn new_from_string_number_vector(vector_of_x: Vec<&str>) -> Result<VectorOfContinuous, ValidationError> {
+    fn new_from_f64(vector_of_x: Vec<f64>) -> Self {
+        let mut buffer: VectorOfContinuous = Default::default();
+        for lx in vector_of_x.iter() {
+            buffer.push_x(*lx);
+        }
+        return buffer;
+    }
+
+    fn new_from_i32(vector_of_x: Vec<i32>) -> Self {
+        let mut buffer: VectorOfContinuous = Default::default();
+        for lx in vector_of_x.iter() {
+            buffer.push_x(*lx as f64);
+        }
+        return buffer;
+    }
+
+    pub fn new_from_str_number_vector(vector_of_x: Vec<&str>) -> Result<VectorOfContinuous, ValidationError> {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
             buffer.push_x_str(lx)?;
         }
         return Ok(buffer);
     }
+
+    /* Still considering String version of the following and another.  Don't know enough about Rust yet:
+
+    pub fn new_from_string_number_vector(vector_of_x: Vec<String>) -> Result<VectorOfContinuous, ValidationError> {
+        let mut buffer: VectorOfContinuous = Default::default();
+        for lx in vector_of_x.iter() {
+            buffer.push_x_string(lx)?;
+        }
+        return Ok(buffer);
+    }
+     */
+
 
     pub fn push_x(&mut self, x_float_unrounded: f64) {
         let x_float                 = round_to_f64_precision(x_float_unrounded, self.in_precision);
@@ -2060,9 +2088,28 @@ mod tests {
     }
 
     #[test]
+    fn test_various_array_construction_methods() {
+        let a: Vec<&str>    = vec!["3", "2", "1"];
+        let localo          = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
+        assert_eq!(localo.get_count(),3);
+        let a: Vec<&str>    = vec!["1.5","99","5876.1234","String"];
+        let localo          = VectorOfContinuous::new_from_str_after_invalidated_dropped(a);
+        assert_eq!(localo.get_count(),3);
+        let a: Vec<f64>     = vec![1.5,99.0,5876.1234,3.0,2.0,1.0];
+        let localo          = VectorOfContinuous::new_from_f64(a);
+        assert_eq!(localo.get_count(),6);
+        let a: Vec<f64>     = vec![1.5,99.0,5876.1234,3.0,2.0,1.0,1.0,2.0,3.0];
+        let localo          = VectorOfContinuous::new_from_f64(a);
+        assert_eq!(localo.get_count(),9);
+        let a: Vec<i32>     = vec![1,99,5876,3,2,1,1,2,3];
+        let localo          = VectorOfContinuous::new_from_i32(a);
+        assert_eq!(localo.get_count(),9);
+    }
+
+    #[test]
     fn test_sorted_vector_function_and_get_x_method() {
         let a: Vec<&str>    = vec!["3", "2", "1"];
-        let mut localo      = VectorOfContinuous::new_from_string_number_vector(a).unwrap();
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
         let n               = localo.get_count();
         assert_eq!(n,3);
         localo._assure_sorted_vector_of_x(false);
@@ -2072,7 +2119,7 @@ mod tests {
         assert_eq!(2.0,localo.get_x(1,true).unwrap());
         assert_eq!(3.0,localo.get_x(2,true).unwrap());
         let a: Vec<&str>    = vec!["1.5","99","5876.1234","String"];
-        let localo          = VectorOfContinuous::new_after_invalidated_dropped(a);
+        let localo          = VectorOfContinuous::new_from_str_after_invalidated_dropped(a);
         assert_eq!(localo.get_count(),3);
     }
 
@@ -2091,11 +2138,11 @@ mod tests {
     #[test]
     fn test_request_result_aa_output_methods() {
         let a: Vec<&str>    = vec!["3", "2", "1"];
-        let mut localo      = VectorOfContinuous::new_from_string_number_vector(a).unwrap();
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
         localo.push_x_str("11234.51234").unwrap();
         localo.push_x_string("98765.43210".to_string()).unwrap();
         localo.push_x(10101010.202020202);
-        let resultbm    = match localo.request_summary_collection().unwrap() {
+        let resultbm        = match localo.request_summary_collection().unwrap() {
             None            => panic!("Test failed."),
             Some(buffer)    => buffer,
         };
@@ -2103,17 +2150,17 @@ mod tests {
             println!("trace key, value:  {}, {}",key, value);
         }
         assert_eq!(resultbm.len(),17);
-        let csvstring   = match localo.request_result_aa_csv().unwrap() {
+        let csvstring       = match localo.request_result_aa_csv().unwrap() {
             None            => panic!("Test failed."),
             Some(buffer)    => buffer,
         };
         assert_eq!(csvstring.len(),299);
-        let csvstring   = match localo.request_result_csv_line(false).unwrap() {
+        let csvstring       = match localo.request_result_csv_line(false).unwrap() {
             None            => panic!("Test failed."),
             Some(buffer)    => buffer,
         };
         assert_eq!(csvstring.len(),146);
-        let jsonstring   = match localo.request_result_json().unwrap() {
+        let jsonstring      = match localo.request_result_json().unwrap() {
             None            => panic!("Test failed."),
             Some(buffer)    => buffer,
         };
@@ -2128,77 +2175,93 @@ mod tests {
     #[test]
     fn test_has_internal_focused_method_to_construct_a_new_sums_of_powers_object_for_moment_statistics() {
         let a: Vec<&str>    = vec!["3", "2", "1"];
-        let mut localo      = VectorOfContinuous::new_from_string_number_vector(a).unwrap();
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
         assert_eq!(3,localo.get_count());
         localo._add_up_xs_to_sums_of_powers(false,false).unwrap();
         localo._add_up_xs_to_sums_of_powers(false,true).unwrap();
         localo._add_up_xs_to_sums_of_powers(true,false).unwrap();
         localo._add_up_xs_to_sums_of_powers(true,true).unwrap();
+        assert_eq!(3,localo.get_count());
+        assert_eq!(3,localo.sums_of_powers_object.n);
     }
 
-/*
     #[test]
     fn test_has_internal_focused_method_to_decide_startno_value_for_histogram() {
-        a = [1,2,3]
-        localo = VectorOfContinuous.new(a)
-        assert_equal localo.getCount, 3
-        startno = localo._decideHistogramStartNumber
-        assert startno == 1
-        startno = localo._decideHistogramStartNumber(0)
-        assert startno == 0
+        let a: Vec<&str>    = vec!["1", "2", "3"];
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
+        assert_eq!(3,localo.get_count());
+        let startno = localo._decide_histogram_start_number(true,1.0);
+        assert_eq!(1.0,startno);
+        let startno = localo._decide_histogram_start_number(false,0.0);
+        assert_eq!(1.0,startno);
     }
 
     #[test]
     fn test_calculates_arithmetic_mean_in_two_places() {
-        a = [1,2,3]
-        localo  = VectorOfContinuous.new(a)
-        vocoam  = localo.calculateArithmeticMean
-        sopo    = localo._addUpXsToSumsOfPowers
-        assert sopo.is_a? SumsOfPowers
-        sopoam  = sopo.ArithmeticMean
-        assert_equal vocoam, sopoam
+        let a: Vec<&str>    = vec!["1", "2", "3"];
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
+        let vocoam          = localo.calculate_arithmetic_mean().unwrap();
+        localo._add_up_xs_to_sums_of_powers(false,false).unwrap();
+        assert_eq!(vocoam,localo.sums_of_powers_object.arithmetic_mean);
+        localo._add_up_xs_to_sums_of_powers(false,true).unwrap();
+        assert_eq!(vocoam,localo.sums_of_powers_object.arithmetic_mean);
+        localo._add_up_xs_to_sums_of_powers(true,false).unwrap();
+        let pam1            = localo.sums_of_powers_object.arithmetic_mean;
+        localo._add_up_xs_to_sums_of_powers(true,true).unwrap();
+        let pam2            = localo.sums_of_powers_object.arithmetic_mean;
+        assert_eq!(pam1,pam2);
     }
 
     #[test]
     fn test_calculates_geometric_mean() {
-        a = [1,2,3,4,5]
-        localo  = VectorOfContinuous.new(a)
-        gmean  = localo.calculateGeometricMean
-        assert_equal 2.6052, gmean
-        a           = [2,2,2,2]
-        localo      = VectorOfContinuous.new(a)
-        amean       = localo.calculateArithmeticMean
-        gmean       = localo.calculateGeometricMean
-        assert_equal amean, gmean
-        a           = [1,2,3,4,5,6,7,8,9]
-        localo      = VectorOfContinuous.new(a)
-        amean       = localo.calculateArithmeticMean
-        gmean       = localo.calculateGeometricMean
-        assert amean > gmean
+        let a               = vec!["1","2","3","4","5"];
+        let localo          = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
+        let gmean           = localo.calculate_geometric_mean().unwrap();
+        assert_eq!(2.6052,gmean);
+        let a               = vec![2.0,2.0,2.0,2.0];
+        let localo          = VectorOfContinuous::new_from_f64(a);
+        let amean           = localo.calculate_arithmetic_mean().unwrap();
+        let gmean           = localo.calculate_geometric_mean().unwrap();
+        assert_eq!(amean,gmean);
+        let a               = vec![1,2,3,4,5,6,7,8,9];
+        let localo          = VectorOfContinuous::new_from_i32(a);
+        let amean           = localo.calculate_arithmetic_mean().unwrap();
+        let gmean           = localo.calculate_geometric_mean().unwrap();
+        assert!(amean > gmean);
     }
 
     #[test]
     fn test_calculates_harmonic_mean() {
-        a = [1,2,3,4,5]
-        localo  = VectorOfContinuous.new(a)
-        hmean  = localo.calculateHarmonicMean
-        assert_equal 2.1898, hmean
-        a           = [2,2,2,2]
-        localo      = VectorOfContinuous.new(a)
-        amean       = localo.calculateArithmeticMean
-        gmean       = localo.calculateGeometricMean
-        hmean       = localo.calculateHarmonicMean
-        assert_equal amean, gmean
-        assert_equal amean, hmean
-        a           = [1,2,3,4,5,6,7,8,9]
-        localo      = VectorOfContinuous.new(a)
-        amean       = localo.calculateArithmeticMean
-        gmean       = localo.calculateGeometricMean
-        hmean       = localo.calculateHarmonicMean
-        assert amean > gmean
-        assert gmean > hmean
+        let a = vec![1,2,3,4,5];
+        let localo          = VectorOfContinuous::new_from_i32(a);
+        let hmean           = match localo.calculate_harmonic_mean().unwrap() {
+            None            => panic!("Test failed."),
+            Some(buffer)    => buffer,
+        };
+        assert_eq!( 2.1898, hmean );
+        let a               = vec![2,2,2,2];
+        let localo          = VectorOfContinuous::new_from_i32(a);
+        let amean           = localo.calculate_arithmetic_mean().unwrap();
+        let gmean           = localo.calculate_geometric_mean().unwrap();
+        let hmean           = match localo.calculate_harmonic_mean().unwrap() {
+            None            => panic!("Test failed."),
+            Some(buffer)    => buffer,
+        };
+        assert_eq!(amean,gmean);
+        assert_eq!(amean,hmean);
+        let a               = vec![1,2,3,4,5,6,7,8,9];
+        let localo          = VectorOfContinuous::new_from_i32(a);
+        let amean           = localo.calculate_arithmetic_mean().unwrap();
+        let gmean           = localo.calculate_geometric_mean().unwrap();
+        let hmean           = match localo.calculate_harmonic_mean().unwrap() {
+            None            => panic!("Test failed."),
+            Some(buffer)    => buffer,
+        };
+        assert!(amean > gmean);
+        assert!(gmean > hmean);
     }
 
+/*
     #[test]
     fn test_has_a_calculate_quartile_method_which_returns_the_value_for_a_designated_quartile() {
         a  = [0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0]
