@@ -42,6 +42,8 @@ macro_rules! collection_json_table_fmt_str {
 //use csv;
 //use phf;
 //use phf_macros::phf_map;
+//use num::{BigUint, One};
+//use num_bigfloat::BigFloat;
 use regex::Regex;
 //use serde::{Serialize, Deserialize};
 //use serde;
@@ -106,6 +108,16 @@ pub enum ValidationError {
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Global Procedures
 
+/*
+fn factorial(n: usize) -> BigUint {
+    (1..=n).fold(BigUint::one(), |a, b| a * b)
+}
+ */
+
+fn factorial(int_arg: u128) -> u128 {
+    (1..=int_arg).fold(1, |acc, xs| acc * xs)
+}
+
 pub fn from_f64_to_i128(precision: i32,subject_float: f64) -> i128 {
     let base: f64           = 10.0;
     let precision_base: f64 = base.powi( precision );
@@ -144,7 +156,6 @@ pub fn generate_mode_from_frequency_aa(faa_a: &BTreeMap<String, u32>) -> Option<
     return Some(k);
 }
 
-//pub fn insert_op_data_to_str_aa<'a>(operation_option_output: Option<f64>,aa_buffer: &BTreeMap<&'a str,&str>,data_id: &'a str) {
 pub fn insert_op_data_to_str_aa<'a, 'b>(operation_option_output: Option<f64>,aa_buffer: &mut BTreeMap<&'a str, String>,data_id: &'a str) {
     let string_data = match operation_option_output {
         None            => "None".to_string(),
@@ -873,7 +884,6 @@ impl SumsOfPowersAccess for SumsOfPowers {
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // VectorOfX - Representing a kind of base class area.
 
-/*
 enum BadDataAction {
     BlankField,
     DefaultFill,
@@ -882,18 +892,18 @@ enum BadDataAction {
     SkipRow,
     ZeroField,
 }
- */
 
 pub trait VectorOfX {
 
     fn _assure_sorted_vector_of_x(&mut self,force_sort: bool);
     fn _n_zero(&self) -> bool;
     fn get_count(&self) -> usize;
-    fn get_x(&mut self,index_a: usize,sorted_vector: bool) -> Result<f64,ValidationError>;
+    fn get_x(&mut self,index_a: usize) -> Result<f64,ValidationError>;
+    fn get_x_sorted(&mut self,index_a: usize) -> Result<f64,ValidationError>;
     fn new() -> Self;
     fn new_from_str_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self;
-    fn push_x_str(&mut self, x_string: &str) -> Result<(), ValidationError>;
-    fn push_x_string(&mut self, x_string: String) -> Result<(), ValidationError>;
+    fn push_x_str(&mut self, x_str: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError>;
+    fn push_x_string(&mut self, x_string: String,on_bad_data: BadDataAction) -> Result<(), ValidationError>;
 
 }
 
@@ -954,19 +964,24 @@ impl VectorOfX for VectorOfContinuous {
         return n;
     }
 
-    fn get_x(&mut self,index_a: usize,sorted_vector: bool) -> Result<f64,ValidationError> {
+    fn get_x(&mut self,index_a: usize) -> Result<f64,ValidationError> {
         let n = self.get_count();
         if n <= index_a {
             let m = "Index argument {index_a} is greater than or equal to n {n}".to_string();
             return Err(ValidationError::InvalidArgument(m));
         }
-        if sorted_vector {
-            self._assure_sorted_vector_of_x(false); // in case update occurred from pushX.
-            let buffer = from_i128_to_f64(self.in_precision,self.sorted_vector_of_x[index_a]);
-            return Ok(buffer);
-        } else {
-            return Ok(self.vector_of_x[index_a]);
+        return Ok(self.vector_of_x[index_a]);
+    }
+
+    fn get_x_sorted(&mut self,index_a: usize) -> Result<f64,ValidationError> {
+        let n = self.get_count();
+        if n <= index_a {
+            let m = "Index argument {index_a} is greater than or equal to n {n}".to_string();
+            return Err(ValidationError::InvalidArgument(m));
         }
+        self._assure_sorted_vector_of_x(false); // in case update occurred from pushX.
+        let buffer = from_i128_to_f64(self.in_precision,self.sorted_vector_of_x[index_a]);
+        return Ok(buffer);
     }
 
     fn new() -> Self {
@@ -984,7 +999,7 @@ impl VectorOfX for VectorOfContinuous {
         return buffer;
     }
 
-    fn push_x_str(&mut self, x_str: &str) -> Result<(), ValidationError> {
+    fn push_x_str(&mut self, x_str: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
         /*  NOTE:  TBD figure out return value from parse expect trim etc and
             deal with that.
          */
@@ -998,7 +1013,7 @@ impl VectorOfX for VectorOfContinuous {
         return Ok(());
     }
 
-    fn push_x_string(&mut self, x_string: String) -> Result<(), ValidationError> {
+    fn push_x_string(&mut self, x_string: String,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
         /*  NOTE:  TBD figure out return value from parse expect trim etc and
             deal with that.
          */
@@ -1044,7 +1059,7 @@ impl VectorOfContinuous {
     //const STDDEVSUMXSSAMPLEID: &str = "StddevSumxsSample";
     const SUMID: &str               = "Sum";
 
-    //def _addUpXsToSumsOfPowers(populationCalculation=false,sumOfDiffs=true)
+    //fn _addUpXsToSumsOfPowers(populationCalculation=false,sumOfDiffs=true)
     // NOTE:  Usage differs here:  Need to address.TBD
     fn _add_up_xs_to_sums_of_powers(&mut self,population_calculation: bool,sum_of_diffs: bool) -> Result<(), ValidationError> {
         self.sums_of_powers_object  = SumsOfPowers::new(population_calculation);
@@ -1318,7 +1333,7 @@ impl VectorOfContinuous {
         return false;
     }
 
-    fn new_from_f64(vector_of_x: Vec<f64>) -> Self {
+    pub fn new_from_f64(vector_of_x: Vec<f64>) -> Self {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
             buffer.push_x(*lx);
@@ -1326,7 +1341,7 @@ impl VectorOfContinuous {
         return buffer;
     }
 
-    fn new_from_i32(vector_of_x: Vec<i32>) -> Self {
+    pub fn new_from_i32(vector_of_x: Vec<i32>) -> Self {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
             buffer.push_x(*lx as f64);
@@ -1334,25 +1349,21 @@ impl VectorOfContinuous {
         return buffer;
     }
 
-    pub fn new_from_str_number_vector(vector_of_x: Vec<&str>) -> Result<VectorOfContinuous, ValidationError> {
+    pub fn new_from_str_number_vector(vector_of_x: Vec<&str>,on_bad_data: BadDataAction) -> Result<VectorOfContinuous, ValidationError> {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
-            buffer.push_x_str(lx)?;
+            buffer.push_x_str(lx,on_bad_data)?;
         }
         return Ok(buffer);
     }
 
-    /* Still considering String version of the following and another.  Don't know enough about Rust yet:
-
-    pub fn new_from_string_number_vector(vector_of_x: Vec<String>) -> Result<VectorOfContinuous, ValidationError> {
+    pub fn new_from_string_number_vector(vector_of_x: Vec<String>,on_bad_data: BadDataAction) -> Result<VectorOfContinuous, ValidationError> {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
-            buffer.push_x_string(lx)?;
+            buffer.push_x_string(lx,on_bad_data)?;
         }
         return Ok(buffer);
     }
-     */
-
 
     pub fn push_x(&mut self, x_float_unrounded: f64) {
         let x_float                 = round_to_f64_precision(x_float_unrounded, self.in_precision);
@@ -1622,6 +1633,250 @@ impl VectorOfContinuous {
         return Ok(Some(v));
     }
 
+}
+
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+// VectorOfDiscrete - catchall for arbitrary X that could be a string.
+
+pub struct VectorOfDiscrete<'a> {
+    out_precision: i32,
+    frequencies_aa: BTreeMap<&'a str,u32>,
+    vector_of_x: Vec<&'a str>,
+}
+
+impl<'a> Default for VectorOfDiscrete<'a> {
+    fn default() -> Self {
+        VectorOfDiscrete {
+            out_precision: 4,
+            frequencies_aa: BTreeMap::new(),
+            vector_of_x: Vec::new(),
+        }
+    }
+}
+
+impl<'a> VectorOfX for VectorOfDiscrete<'a> {
+
+    fn _assure_sorted_vector_of_x(&mut self,force_sort: bool) {
+        // NOTE:  NOT USED.
+        return ();
+    }
+
+    fn _n_zero(&self) -> bool {
+        if self.get_count() == 0 {
+            return true;
+        }
+        return false;
+    }
+
+    fn get_count(&self) -> usize {
+        let n = self.vector_of_x.len();
+        return n;
+    }
+
+    fn get_x(&mut self,index_a: usize) -> Result<f64,ValidationError> {
+        let n = self.get_count();
+        if n <= index_a {
+            let m = "Index argument {index_a} is greater than or equal to n {n}".to_string();
+            return Err(ValidationError::InvalidArgument(m));
+        }
+        return Ok(self.vector_of_x[index_a]);
+    }
+
+    fn get_x_sorted(&mut self,index_a: usize) -> Result<f64,ValidationError> {
+        return Ok(None);
+    }
+
+    fn new() -> Self {
+        let buffer: VectorOfDiscrete = Default::default();
+        return buffer;
+    }
+
+    fn new_from_str_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self {
+        let mut buffer: VectorOfContinuous = Default::default();
+        for lx in vector_of_x.iter() {
+            if is_a_num_str(lx) {
+                buffer.push_x_str(lx,SkipRow).unwrap();
+            }
+        }
+        return buffer;
+    }
+
+    fn push_x_str(&mut self, x_str: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
+        /*  NOTE:  TBD figure out return value from parse expect trim etc and
+            deal with that.
+         */
+        self.vector_of_x.push(x_str);
+        return Ok(());
+    }
+
+    fn push_x_string(&mut self, x_string: String,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
+        /*  NOTE:  TBD figure out return value from parse expect trim etc and
+            deal with that.
+         */
+        let x_str = x_string.to_str();
+        self.vector_of_x.push(x_str);
+        return Ok(());
+    }
+
+}
+
+impl<'a> VectorOfDiscrete<'a> {
+
+    const FREQUENCYPREFIXID: &str   = "FreqPrefix";
+    const ISEVENID: &str            = "IsEven";
+    const MODEID: &str              = "Mode";
+    const NID: &str                 = "N";
+
+    fn calculate_binomial_probability(&self,subject_value: &str,n_trials: u32,n_successes: u32) -> Result<Option<f64>, ValidationError> {
+        if self._n_zero() {
+            return Ok(None);
+        }
+        if n_trials == 0 {
+            return Err(ValidationError::ValueMayNotBeZero(n_trials));
+        }
+        if n_successes == 0 {
+            return Err(ValidationError::ValueMayNotBeZero(n_successes));
+        }
+        if n_trials >= n_successes {
+            return Err(ValidationError::ArgumentError("Number of Successes must be less than number of trials."));
+        }
+        let n_failures              = n_trials - n_successes;
+
+        let samplecountf            = self.get_count() as f64;
+
+        let freqcountf              = self.frequencies_aa[subject_value] as f64;
+
+        let psuccess1trial          = freqcountf / samplecountf; // Probability of success in 1 trial.
+
+        let pfailure1trial          = 1.0 - psuccess1trial;
+
+        let meansquared             = self.arithmetic_mean.powi(2);
+        let pfailurefactor          = pfailure1trial.powi(n_failures);
+        let psuccessfactor          = psuccess1trial.powi(n_successes);
+
+        let successpermutations     = factorial(n_successes);
+        let failurepermutations     = factorial(n_trials - n_successes);
+        let trials_permutations     = factorial(n_trials);
+
+        let combinations: f64;
+        if successpermutations < failurepermutations {
+            let b                   = trials_permutations / failurepermutations;
+            combinations            = b as f64 / successpermutations as f64; 
+            
+        } else {
+            let b                   = trials_permutations / successpermutations;
+            combinations            = b as f64 / failurepermutations as f64; 
+        }
+        let binomialprobability     = combinations * psuccessfactor * pfailurefactor;
+        return Ok(Some(binomialprobability));
+    }
+
+    fn get_frequency(&self,subject_value: &str) -> Option<u32> {
+        if self._n_zero() {
+            return None;
+        }
+        if self.frequencies_aa.contains_key(subject_value) {
+            return Some(self.frequencies_aa[subject_value]);
+        }
+        return None;
+    }
+
+    fn push_x_str(&self,x_item: &str,onBadData: BadDataAction) -> Result<Option<f64>, ValidationError> {
+        if x_item.len() == 0 {
+            match onBadData {
+                BlankField          => x_item=" ",
+                DefaultFill         => x_item=" ",
+                FailOnBadData       => return Err(ValidationError::ValueMayNotBeMissing()),
+                SkipRowOnBadData    => return Ok(()),
+                ZeroFloatOnBadData  => x_item="0.0",
+                ZeroIntegerOnBadData  => x_item="0",
+            }
+        }
+        if self.frequencies_aa.contains_key(x_item) {
+            self.frequencies_aa[x_item] += 1;
+        } else {
+            self.frequenciesAA[x_item] = 1;
+        }
+        self.vector_of_x.push(x_item);
+        return Ok(());
+    }
+
+    fn request_mode(&self) -> Option<String> {
+        if self._n_zero() {
+            return None;
+        }
+        let x = generate_mode_from_frequency_aa(self.frequencies_aa);
+        return Some(x);
+    }
+
+    fn request_result_aa_csv(&self) -> Option<String> {
+        if self._n_zero() {
+            return None;
+        }
+        let resultcollection    = self.request_summary_collection();
+        let mut content         = "ID,Value".to_string();
+        for (idstr, &valstring) in &self.frequency_aa {
+            content = format!("{content}\n{idstr},{valstring}");
+        }
+        content = format!("{content}\n");
+        return Some(content);
+    }
+
+    fn request_result_csv_line(&self) -> Option<String> {
+        if self._n_zero() {
+            return None;
+        }
+        let resultcollection    = self.request_summary_collection();
+        let mut content         = "".to_string();
+        for (idstr, &valstring) in &self.frequency_aa {
+            content = format!("{content},{idstr},{valstring}");
+        }
+        content = format!("{content}\n");
+        return Some(content);
+    }
+
+    fn request_result_json(&self)  -> Option<String> {
+        if self._n_zero() {
+            return None;
+        }
+        let resultcollection    = self.request_summary_collection();
+        let mut content         = "{{".to_string();
+        let mut i               = 0;
+        for (idstr, &valstring) in &self.frequency_aa {
+            if i == 0 {
+                content = format!("{content}\n\"{idstr}\": \"{valstring}\"");
+            } else {
+                content = format!("{content},\n\"{idstr}\": \"{valstring}\"");
+            }
+            i += 1;
+        }
+        content = format!("{content}\n}}");
+        return Some(content);
+    }
+
+    pub fn request_summary_collection(self) -> Option<BTreeMap<&'a str,String>> {
+        if self._n_zero() {
+            return Ok(None);
+        }
+        let mut btmb: BTreeMap<&str,String>   = BTreeMap::new();
+        for (lx, &count) in &self.frequency_aa {
+            btmb.insert(format!("{}_{}",Self::FREQUENCYPREFIXID,lx),format!("{count}"));
+        }
+        let count                           = self.get_count();
+        btmb.insert(format!("{}",Self::NID),format!("{count}"));
+        if self.is_even_n() {
+            btmb.insert(Self::ISEVENID,"TRUE".to_string());
+        } else {
+            btmb.insert(Self::ISEVENID,"FALSE".to_string());
+        }
+        let lmode   = match self.request_mode() {
+            None        => "None",
+            Some(b)     => b,
+        };
+        btmb.insert(Self::MODEID,format!("{lmode}"));
+        return Ok(Some(btmb));
+    }
 }
 
 #[cfg(test)]
