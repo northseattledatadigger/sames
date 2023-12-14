@@ -1775,7 +1775,7 @@ impl VectorOfDiscrete {
     const MODEID:               &str  = "Mode";
     const NID:                  &str  = "N";
 
-    fn calculate_binomial_probability(&self,subject_value: String,n_trials: u32,n_successes: u32) -> Result<Option<f64>, ValidationError> {
+    pub fn calculate_binomial_probability(&self,subject_value: String,n_trials: u32,n_successes: u32) -> Result<Option<f64>, ValidationError> {
         if self.is_n_zero() {
             return Ok(None);
         }
@@ -1833,7 +1833,7 @@ impl VectorOfDiscrete {
         return Ok(Some(binomialprobability));
     }
 
-    fn get_frequency(&self,subject_value: String) -> Option<u32> {
+    pub fn get_frequency(&self,subject_value: String) -> Option<u32> {
         if self.is_n_zero() {
             return None;
         }
@@ -1844,7 +1844,7 @@ impl VectorOfDiscrete {
         return Some(frequency);
     }
 
-    fn get_x(&mut self,index_a: usize) -> Option<String> {
+    pub fn get_x(&mut self,index_a: usize) -> Option<String> {
         let n = self.get_count();
         if n <= index_a {
             return None;
@@ -1852,7 +1852,27 @@ impl VectorOfDiscrete {
         return Some(self.vector_of_x[index_a].clone());
     }
 
-    fn request_mode(&self) -> Option<String> {
+    /* NOTE:  This follows one of many areas of duplicated code
+        which I have NOT yet figured out how to put into a unique
+        area like a trait.
+     */  
+    pub fn new_from_str_number_vector(vector_of_x: Vec<&str>) -> Result<VectorOfDiscrete, ValidationError> {
+        let mut buffer: VectorOfDiscrete = Default::default();
+        for lx in vector_of_x.iter() {
+            buffer.push_x_str(lx)?;
+        }
+        return Ok(buffer);
+    }
+
+    pub fn new_from_string_number_vector(vector_of_x: Vec<String>) -> Result<VectorOfDiscrete, ValidationError> {
+        let mut buffer: VectorOfDiscrete = Default::default();
+        for lx in vector_of_x.iter() {
+            buffer.push_x_string(lx.to_string())?;
+        }
+        return Ok(buffer);
+    }
+
+    pub fn request_mode(&self) -> Option<String> {
         if self.is_n_zero() {
             return None;
         }
@@ -1860,7 +1880,7 @@ impl VectorOfDiscrete {
         return option;
     }
 
-    fn request_result_aa_csv(&self) -> Option<String> {
+    pub fn request_result_aa_csv(&self) -> Option<String> {
         if self.is_n_zero() {
             return None;
         }
@@ -1878,7 +1898,7 @@ impl VectorOfDiscrete {
         return Some(content);
     }
 
-    fn request_result_csv_line(&self) -> Option<String> {
+    pub fn request_result_csv_line(&self) -> Option<String> {
         if self.is_n_zero() {
             return None;
         }
@@ -1895,7 +1915,7 @@ impl VectorOfDiscrete {
         return Some(content);
     }
 
-    fn request_result_json(&self)  -> Option<String> {
+    pub fn request_result_json(&self)  -> Option<String> {
         if self.is_n_zero() {
             return None;
         }
@@ -2003,7 +2023,19 @@ mod tests {
     }
 
     #[test]
-    fn test_sees_number_strings() {
+    fn test_from_f64_to_i128() {
+    }
+
+    #[test]
+    fn test_from_i128_to_f64() {
+    }
+
+    #[test]
+    fn test_insert_op_data_to_aa() {
+    }
+
+    #[test]
+    fn test_is_a_num_str() {
         assert!(is_a_num_str("1234"));
         assert!(is_a_num_str("1234.56789"));
         assert!(is_a_num_str(".1234"));
@@ -2061,9 +2093,25 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_float_left_of_decimal() {
+    }
+
+    #[test]
+    fn test_parse_float_right_of_decimal() {
+    }
+
+    #[test]
+    fn test_push_i128_from_f64() {
+    }
+
+    #[test]
     fn test_round_to_f64_precision() {
         assert_eq!(round_to_f64_precision(1234.56789123457890, 4),1234.5679);
         assert_eq!(round_to_f64_precision(1234.0, 4),1234.0);
+    }
+
+    #[test]
+    fn test_zero_decimal_effective() {
     }
 
     // Object Groups of Procedures, defined by traits, structs and
@@ -2450,6 +2498,30 @@ mod tests {
     /*345678901234567890123456789012345678901234567890123456789012345678901234567890
     Tests for trait VectorOfX implemented for VectorOfContinuous.
      */
+
+    #[test]
+// BadDataAction
+    fn test_bad_data_action_identifiers() {
+        /* I found the popular advice around enums to be confusing and perhaps even
+        gratuituosly obscure.  Enums make a type, and you gotta make identifiers for
+        them to use values for them.  As such, I made constants.  Due to the less
+        than concrete state of documentation for things like this in Rust, I'm still
+        not sure my usage is considered regular, nor if it is optimal.
+         */
+        let bdaa = [BLANKFIELD,DEFAULTFILL,EXCLUDEROW,FAIL,SKIPDATAITEM,ZEROFLOAT,ZEROINTEGER];
+        assert_eq!(bdaa.len(),7);
+        for lbda in bdaa.iter() {
+            match lbda {
+                BadDataAction::BlankField   => assert!(true),
+                BadDataAction::DefaultFill  => assert!(true),
+                BadDataAction::ExcludeRow   => assert!(true),
+                BadDataAction::Fail         => assert!(true),
+                BadDataAction::SkipDataItem => assert!(true),
+                BadDataAction::ZeroFloat    => assert!(true),
+                BadDataAction::ZeroInteger  => assert!(true),
+            };
+        }
+    }
 
     #[test]
     fn test_basic_construction_and_get_count_method() {
@@ -3054,6 +3126,59 @@ mod tests {
     fn test_fails_differently_according_to_special_arguments_to_pushx() {
         let localo  = VectorOfContinuous::new();
         assert_eq!( 0, localo.get_count() );
+    }
+
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+    // Tests for VectorOfDiscrete
+
+    fn test_constructs_with_no_argument() {
+        let mut localo = VectorOfDiscrete::new();
+        localo.push_x_str("5.333");
+        localo.push_x_str("Any old str");
+        localo.push_x_string("Any old string".to_string());
+        assert_eq!( 3, localo.get_count());
+    }
+
+    fn test_constructs_with_a_str_slice_vec() {
+        let a       = vec!["1.5","99","5876.1234","some old string"];
+        let localo  = match VectorOfDiscrete::new_from_str_number_vector(a) {
+            Ok(b)   => b,
+            Err(_e) => panic!("Failed test."),
+        };
+        assert_eq!( 4, localo.get_count());
+    }
+
+    fn test_has_a_binomial_probability_calculation() {
+        let a       = vec!["1","2","3","4","5","6","7","8","9","8"];
+        let localo  = match VectorOfDiscrete::new_from_str_number_vector(a) {
+            Ok(b)   => b,
+            Err(_e) => panic!("Failed test."),
+        };
+        assert_eq!( 10, localo.get_count() );
+        //assert_equal 0.384, localo.calculateBinomialProbability(8,3,1) # The calculation returned at:  https://stattrek.com/online-calculator/binomial
+        match localo.calculate_binomial_probability("8".to_string(),3,1) {
+            Ok(b)       => {
+                match b {
+                    None        => panic!("Test failed."),
+                    Some(b2)    => assert_eq!( 0.3840000000000001, b2 ),
+                }
+            },
+            Err(_err)   => panic!("Test failed."),
+        }
+    }
+
+    fn test_has_a_method_to_get_the_mode() {
+        let a       = vec!["1.5","99","5876.1234","some old string","99"];
+        let localo  = match VectorOfDiscrete::new_from_str_number_vector(a) {
+            Ok(b)   => b,
+            Err(_e) => panic!("Failed test."),
+        };
+        assert_eq!( 5, localo.get_count() );
+        let lmode   = match localo.request_mode() {
+            None    => panic!("Test failed."),
+            Some(b) => b,
+        };
+        assert_eq!( "99", lmode );
     }
 
     // VectorTable
