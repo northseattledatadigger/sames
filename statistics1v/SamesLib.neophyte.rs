@@ -1290,7 +1290,7 @@ impl VectorOfContinuous {
         return Ok(Some(resultvectors));
     }
 
-    fn generate_mean_absolute_difference(&self) -> Result<Option<f64>, ValidationError> {
+    pub fn generate_mean_absolute_difference(&self) -> Result<Option<f64>, ValidationError> {
         // https://en.wikipedia.org/wiki/Mean_absolute_difference
         if self.is_n_zero() {
             return Ok(None);
@@ -1311,7 +1311,7 @@ impl VectorOfContinuous {
         return Ok(Some(rounded));
     }
 
-    fn generate_mode(&self) -> Option<f64> {
+    pub fn generate_mode(&self) -> Option<f64> {
         if self.is_n_zero() {
             return None;
         }
@@ -1352,7 +1352,7 @@ impl VectorOfContinuous {
         return Some(min_opval);
     }
 
-    fn get_x(&mut self,index_a: usize) -> Option<f64> {
+    pub fn get_x(&mut self,index_a: usize) -> Option<f64> {
         let n = self.get_count();
         if n <= index_a {
             return None;
@@ -1360,7 +1360,7 @@ impl VectorOfContinuous {
         return Some(self.vector_of_x[index_a]);
     }
 
-    fn get_x_sorted(&mut self,index_a: usize) -> Option<f64> {
+    pub fn get_x_sorted(&mut self,index_a: usize) -> Option<f64> {
         let n = self.get_count();
         if n <= index_a {
             return None;
@@ -1963,6 +1963,12 @@ impl VectorOfDiscrete {
     }
 }
 
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+// Unit Tests
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+
 #[cfg(test)]
 mod tests {
 /* NOTE:  this long tests stanza corresponds to the entirety of the
@@ -2527,12 +2533,11 @@ mod tests {
 
     // VectorOfX, VectorOfContinuous, VectorOfDiscrete
 
-    /*345678901234567890123456789012345678901234567890123456789012345678901234567890
+/*345678901234567890123456789012345678901234567890123456789012345678901234567890
     Tests for trait VectorOfX implemented for VectorOfContinuous.
      */
 
     #[test]
-// BadDataAction
     fn test_bad_data_action_identifiers() {
         /* I found the popular advice around enums to be confusing and perhaps even
         gratuituosly obscure.  Enums make a type, and you gotta make identifiers for
@@ -2644,7 +2649,7 @@ mod tests {
     }
 
 
-    /*345678901234567890123456789012345678901234567890123456789012345678901234567890
+/*345678901234567890123456789012345678901234567890123456789012345678901234567890
     # Tests for remainder of VectorOfContinuous implementation.
      */
 
