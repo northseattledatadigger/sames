@@ -642,7 +642,7 @@ class VectorOfX
     DefaultFillOnBadData    = 1
     ExcludeRowOnBadData     = 2
     FailOnBadData           = 3
-    SkipRowOnBadData        = 4
+    SkipDataItemOnBadData        = 4
     ZeroFieldOnBadData      = 5
 
     def _assureSortedVectorOfX(forceSort=false)
@@ -992,7 +992,7 @@ class VectorOfContinuous < VectorOfX
                 xFloat=0.0
             when VectorOfX::FailOnBadData
                 raise ArgumentError, "#{xFloat} not usable number."
-            when VectorOfX::SkipRowOnBadData
+            when VectorOfX::SkipDataItemOnBadData
                 return
             when VectorOfX::ZeroFieldOnBadData
                 xFloat=0.0
@@ -1251,7 +1251,7 @@ class VectorOfDiscrete < VectorOfX
                 xFloat=" "
             when VectorOfX::FailOnBadData
                 raise ArgumentError, "#{xItem} not usable value."
-            when VectorOfX::SkipRowOnBadData
+            when VectorOfX::SkipDataItemOnBadData
                 return
             when VectorOfX::ZeroFieldOnBadData
                 xItem=0.0
@@ -1425,7 +1425,7 @@ class VectorTable
     def pushTableRow(arrayA,onBadData=VectorOfX::DefaultFillOnBadData)
         raise ArgumentError unless arrayA.is_a? Array
         raise ArgumentError unless arrayA.size == @TableOfVectors.size
-        raise ArgumentError if onBadData == VectorOfX::SkipRowOnBadData
+        raise ArgumentError if onBadData == VectorOfX::SkipDataItemOnBadData
         i = 0
         @TableOfVectors.each do |lvoe|
             if lvoe.is_a? VectorOfX then

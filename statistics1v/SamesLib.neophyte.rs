@@ -1,6 +1,8 @@
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // SamesLib.neophyte.rs
 
+#![ allow(unused)]
+
 macro_rules! collection_csv_line_fmt_str {
     () => {
         "{},{}\n{},{}\n{},{}\n{},{}\n{},{}\n{},{}\n{},{}\n{},{}\n{},{}\n{},{}\n{},{}\n{},{}\n{},{}\n{},{}\n{},{}\n{},{}\n"
@@ -77,6 +79,8 @@ pub enum ValidationError {
     MethodOnlyForSumOfXsData(),
     #[error("No range found for value: '{0}'")]
     NoRangeFoundForValue(f64),
+    #[error("Option {0} may NOT be used here")]
+    OptionMayNotBeUsedHere(String),
     #[error("Parse error on would be number string {0}")]
     ParseErrorOnWouldBeNumberString(String),
     #[error("Procedure not programmed for '{0}' state")]
@@ -93,6 +97,8 @@ pub enum ValidationError {
     ValueAtOrAboveHighStop(f64,f64),
     #[error("Value {0} below low limit {1}")]
     ValueBelowLowLimit(f64,f64),
+    #[error("Value May NOT be missing.")]
+    ValueMayNotBeMissing(),
     #[error("Value {0} may not be negative.")]
     ValueMayNotBeNegative(f64),
     #[error("Value {0} may not be zero.")]
@@ -116,6 +122,10 @@ fn factorial(n: usize) -> BigUint {
 
 fn factorial(int_arg: u128) -> u128 {
     (1..=int_arg).fold(1, |acc, xs| acc * xs)
+}
+
+fn ffactorial(int_arg: u8) -> f64 {
+    (1..=int_arg).fold(1.0, |acc, xs| acc * xs as f64)
 }
 
 pub fn from_f64_to_i128(precision: i32,subject_float: f64) -> i128 {
@@ -156,12 +166,12 @@ pub fn generate_mode_from_frequency_aa(faa_a: &BTreeMap<String, u32>) -> Option<
     return Some(k);
 }
 
-pub fn insert_op_data_to_str_aa<'a, 'b>(operation_option_output: Option<f64>,aa_buffer: &mut BTreeMap<&'a str, String>,data_id: &'a str) {
+pub fn insert_op_data_to_aa(operation_option_output: Option<f64>,aa_buffer: &mut BTreeMap<String, String>,data_id: &str) {
     let string_data = match operation_option_output {
         None            => "None".to_string(),
         Some(buffer)    => format!("{}",buffer),
     }; 
-    aa_buffer.insert(data_id,string_data);
+    aa_buffer.insert(data_id.to_string(),string_data);
 }
 
 pub fn is_a_num_str(str_a: &str) -> bool {
@@ -173,7 +183,7 @@ pub fn is_a_num_str(str_a: &str) -> bool {
     return false;
 }
 
-pub fn is_usable_number_string_array(a_a: &[&str]) -> bool {
+pub fn is_usable_number_str_array(a_a: &[&str]) -> bool {
     for element in a_a.iter() {
         if is_a_num_str(element) {
             continue;
@@ -183,7 +193,27 @@ pub fn is_usable_number_string_array(a_a: &[&str]) -> bool {
     return true;
 }
 
-pub fn is_usable_number_string_vector(v_a: &Vec<&str>) -> bool {
+pub fn is_usable_number_string_array(a_a: &[String]) -> bool {
+    for element in a_a.iter() {
+        if is_a_num_str(element) {
+            continue;
+        }
+        return false;
+    }
+    return true;
+}
+
+pub fn is_usable_number_str_vector(v_a: &Vec<&str>) -> bool {
+    for element in v_a.iter() {
+        if is_a_num_str(element) {
+            continue;
+        }
+        return false;
+    }
+    return true;
+}
+
+pub fn is_usable_number_string_vector(v_a: &Vec<String>) -> bool {
     for element in v_a.iter() {
         if is_a_num_str(element) {
             continue;
@@ -335,7 +365,6 @@ pub trait HistogramMethods {
 impl Default for HistogramOfX {
     fn default() -> Self {
         HistogramOfX {
-            //frequency_aa: BTreeMap<i64, RangeOccurrence>::new(),
             frequency_aa: BTreeMap::new(),
             max: 0.0,
             min: 0.0,
@@ -889,21 +918,29 @@ enum BadDataAction {
     DefaultFill,
     ExcludeRow,
     Fail,
-    SkipRow,
-    ZeroField,
+    SkipDataItem,
+    ZeroFloat,
+    ZeroInteger,
 }
+
+const BLANKFIELD:    BadDataAction  = BadDataAction::BlankField;
+const DEFAULTFILL:   BadDataAction  = BadDataAction::DefaultFill;
+const EXCLUDEROW:    BadDataAction  = BadDataAction::ExcludeRow;
+const FAIL:          BadDataAction  = BadDataAction::Fail;
+const SKIPDATAITEM:  BadDataAction  = BadDataAction::SkipDataItem;
+const ZEROFLOAT:     BadDataAction  = BadDataAction::ZeroFloat;
+const ZEROINTEGER:   BadDataAction  = BadDataAction::ZeroInteger;
 
 pub trait VectorOfX {
 
-    fn _assure_sorted_vector_of_x(&mut self,force_sort: bool);
-    fn _n_zero(&self) -> bool;
     fn get_count(&self) -> usize;
-    fn get_x(&mut self,index_a: usize) -> Result<f64,ValidationError>;
-    fn get_x_sorted(&mut self,index_a: usize) -> Result<f64,ValidationError>;
+    fn is_n_even(&self) -> bool;
+    fn is_n_zero(&self) -> bool;
     fn new() -> Self;
     fn new_from_str_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self;
-    fn push_x_str(&mut self, x_str: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError>;
-    fn push_x_string(&mut self, x_string: String,on_bad_data: BadDataAction) -> Result<(), ValidationError>;
+    fn new_from_string_after_invalidated_dropped(vector_of_x: Vec<String>) -> Self;
+    fn push_x_str(&mut self, x_str: &str) -> Result<(), ValidationError>;
+    fn push_x_string(&mut self, x_string: String) -> Result<(), ValidationError>;
 
 }
 
@@ -912,6 +949,7 @@ pub trait VectorOfX {
 // VectorOfContinouos for floating point based distributions.  All Xs floats.
 
 pub struct VectorOfContinuous {
+    on_bad_data:    BadDataAction,
     in_precision: i32,
     out_precision: i32,
     population: bool,
@@ -925,6 +963,7 @@ pub struct VectorOfContinuous {
 impl Default for VectorOfContinuous {
     fn default() -> Self {
         VectorOfContinuous {
+            on_bad_data: BadDataAction::Fail,
             in_precision: 4,
             out_precision: 4,
             population: false,
@@ -939,49 +978,24 @@ impl Default for VectorOfContinuous {
 
 impl VectorOfX for VectorOfContinuous {
 
-    fn _assure_sorted_vector_of_x(&mut self,force_sort: bool) {
-        if self.sorted_vector_of_x.len() == self.vector_of_x.len() {
-            if ! force_sort {
-                return ();
-            }
-        }
-        self.sorted_vector_of_x.clear();
-        for lx in self.vector_of_x.iter() {
-            push_i128_from_f64(self.in_precision,*lx,&mut self.sorted_vector_of_x);
-        }
-        self.sorted_vector_of_x.sort();
-    }
-
-    fn _n_zero(&self) -> bool {
-        if self.get_count() == 0 {
-            return true;
-        }
-        return false;
-    }
-
     fn get_count(&self) -> usize {
         let n = self.vector_of_x.len();
         return n;
     }
 
-    fn get_x(&mut self,index_a: usize) -> Result<f64,ValidationError> {
+    fn is_n_even(&self) -> bool {
         let n = self.get_count();
-        if n <= index_a {
-            let m = "Index argument {index_a} is greater than or equal to n {n}".to_string();
-            return Err(ValidationError::InvalidArgument(m));
+        if n % 2 == 0 {
+            return true
         }
-        return Ok(self.vector_of_x[index_a]);
+        return false;
     }
 
-    fn get_x_sorted(&mut self,index_a: usize) -> Result<f64,ValidationError> {
-        let n = self.get_count();
-        if n <= index_a {
-            let m = "Index argument {index_a} is greater than or equal to n {n}".to_string();
-            return Err(ValidationError::InvalidArgument(m));
+    fn is_n_zero(&self) -> bool {
+        if self.get_count() == 0 {
+            return true;
         }
-        self._assure_sorted_vector_of_x(false); // in case update occurred from pushX.
-        let buffer = from_i128_to_f64(self.in_precision,self.sorted_vector_of_x[index_a]);
-        return Ok(buffer);
+        return false;
     }
 
     fn new() -> Self {
@@ -999,28 +1013,38 @@ impl VectorOfX for VectorOfContinuous {
         return buffer;
     }
 
-    fn push_x_str(&mut self, x_str: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
-        /*  NOTE:  TBD figure out return value from parse expect trim etc and
-            deal with that.
-         */
-        let result                  = x_str.trim().parse();
-        let x_float_unrounded = match result {
-            Ok(unrounded)   => unrounded,
-            Err(_err)       => return Err(ValidationError::ParseErrorOnWouldBeNumberString(x_str.to_string())),
-        };
-        let x_float                 = round_to_f64_precision(x_float_unrounded, self.in_precision);
-        self.vector_of_x.push(x_float);
+    fn new_from_string_after_invalidated_dropped(vector_of_x: Vec<String>) -> Self {
+        let mut buffer: VectorOfContinuous = Default::default();
+        for lx in vector_of_x.iter() {
+            if is_a_num_str(lx.as_str()) {
+                buffer.push_x_str(lx).unwrap();
+            }
+        }
+        return buffer;
+    }
+
+    fn push_x_str(&mut self,x_item: &str) -> Result<(), ValidationError> {
+        self.push_x_string(x_item.to_string())?;
         return Ok(());
     }
 
-    fn push_x_string(&mut self, x_string: String,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
-        /*  NOTE:  TBD figure out return value from parse expect trim etc and
-            deal with that.
-         */
-        let result                  = x_string.trim().parse();
+    fn push_x_string(&mut self,x_item: String) -> Result<(), ValidationError> {
+        let mut x_mut               = x_item;
+        if x_mut.len() == 0 {
+            match self.on_bad_data {
+                BadDataAction::BlankField   => x_mut=" ".to_string(),
+                BadDataAction::DefaultFill  => x_mut=" ".to_string(),
+                BadDataAction::ExcludeRow   => return Err(ValidationError::OptionMayNotBeUsedHere("ExcludeRow".to_string())),
+                BadDataAction::Fail         => return Err(ValidationError::ValueMayNotBeMissing()),
+                BadDataAction::SkipDataItem => return Ok(()),
+                BadDataAction::ZeroFloat    => x_mut="0.0".to_string(),
+                BadDataAction::ZeroInteger  => x_mut="0".to_string(),
+            };
+        }
+        let result                  = x_mut.trim().parse();
         let x_float_unrounded = match result {
             Ok(unrounded)   => unrounded,
-            Err(_err)       => return Err(ValidationError::ParseErrorOnWouldBeNumberString(x_string)),
+            Err(_err)       => return Err(ValidationError::ParseErrorOnWouldBeNumberString(x_mut)),
         };
         let x_float                 = round_to_f64_precision(x_float_unrounded, self.in_precision);
         self.vector_of_x.push(x_float);
@@ -1032,32 +1056,22 @@ impl VectorOfX for VectorOfContinuous {
 impl VectorOfContinuous {
 
     const ARITHMETICMEANID: &str    = "ArithmeticMean";
-    const ARMEANAADID: &str         = "AMeanAAD"; // Average Absolute Deviation
-    // Note; I have Max and Min available for AAD, but presume these will not be used formally.
-    //const COVPOPULATIONID: &str     = "PopulationCoefficientOfVariation";
-    //const COVSAMPLEID: &str         = "SampleCoefficientOfVariation";
-    const COVID: &str               = "CoefficientOfVariation";
-    const GEOMETRICMEANID: &str     = "GeometricMean";
-    //const GMEANAADID: &str          = "GMeanAAD"; // Geometric Mean Average Absolute Deviation
-    const HARMONICMEANID: &str      = "HarmonicMean";
-    //const HMEANAADID: &str          = "HMeanAAD"; // Harmonic Mean Average Absolute Deviation
-    const ISEVENID: &str            = "IsEven";
-    const KURTOSISID: &str          = "Kurtosis";
-    const MADID: &str               = "MAD"; // Mean Absolute Difference  NOTE that this will not be addressed in acceptance tests due to a paucity of presence in common apps.
-    const MAXID: &str               = "Max";
-    const MEDIANAADID: &str         = "MedianAAD";// Median Absolute Deviation
-    const MEDIANID: &str            = "Median";
-    const MINID: &str               = "Min";
-    //const MODEAADID: &str           = "ModeAAD"; // Mode Absolute Deviation
-    const MODEID: &str              = "Mode";
-    const NID: &str                 = "N";
-    const SKEWNESSID: &str          = "Skewness";
-    const STDDEVID: &str            = "StandardDeviation";
-    //const STDDEVDIFFSPOPID: &str    = "StddevDiffsPop";
-    //const STDDEVDIFFSSAMPLEID: &str = "StddevDiffsSample";
-    //const STDDEVSUMXSPOPID: &str    = "StddevSumxsPop";
-    //const STDDEVSUMXSSAMPLEID: &str = "StddevSumxsSample";
-    const SUMID: &str               = "Sum";
+    const ARMEANAADID:      &str    = "AMeanAAD"; // Average Absolute Deviation
+    const COVID:            &str    = "CoefficientOfVariation";
+    const GEOMETRICMEANID:  &str    = "GeometricMean";
+    const HARMONICMEANID:   &str    = "HarmonicMean";
+    const ISEVENID:         &str    = "IsEven";
+    const KURTOSISID:       &str    = "Kurtosis";
+    const MADID:            &str    = "MAD"; // Mean Absolute Difference  NOTE that this will not be addressed in acceptance tests due to a paucity of presence in common apps.
+    const MAXID:            &str    = "Max";
+    const MEDIANAADID:      &str    = "MedianAAD";// Median Absolute Deviation
+    const MEDIANID:         &str    = "Median";
+    const MINID:            &str    = "Min";
+    const MODEID:           &str    = "Mode";
+    const NID:              &str    = "N";
+    const SKEWNESSID:       &str    = "Skewness";
+    const STDDEVID:         &str    = "StandardDeviation";
+    const SUMID:            &str    = "Sum";
 
     //fn _addUpXsToSumsOfPowers(populationCalculation=false,sumOfDiffs=true)
     // NOTE:  Usage differs here:  Need to address.TBD
@@ -1086,6 +1100,19 @@ impl VectorOfContinuous {
         return Ok(());
     }
 
+    fn _assure_sorted_vector_of_x(&mut self,force_sort: bool) {
+        if self.sorted_vector_of_x.len() == self.vector_of_x.len() {
+            if ! force_sort {
+                return ();
+            }
+        }
+        self.sorted_vector_of_x.clear();
+        for lx in self.vector_of_x.iter() {
+            push_i128_from_f64(self.in_precision,*lx,&mut self.sorted_vector_of_x);
+        }
+        self.sorted_vector_of_x.sort();
+    }
+
     fn _decide_histogram_start_number(&mut self,use_start_number: bool,start_number: f64) -> f64 {
         let startno: f64;
         if use_start_number {
@@ -1101,7 +1128,7 @@ impl VectorOfContinuous {
     }
 
     pub fn calculate_arithmetic_mean(&self) -> Option<f64> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return None;
         }
         let nf          = self.get_count() as f64;
@@ -1112,7 +1139,7 @@ impl VectorOfContinuous {
     }
 
     pub fn calculate_geometric_mean(&self) -> Option<f64> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return None;
         }
         let nf          = self.get_count() as f64;
@@ -1124,7 +1151,7 @@ impl VectorOfContinuous {
     }
 
     pub fn calculate_harmonic_mean(&self) -> Result<Option<f64>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         let nf                  = self.get_count() as f64;
@@ -1141,7 +1168,7 @@ impl VectorOfContinuous {
     }
 
     pub fn calculate_quartile(&mut self,q_no: u8) -> Result<Option<f64>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         /*
@@ -1174,7 +1201,7 @@ impl VectorOfContinuous {
     }
 
     pub fn calculate_sum(&self) -> f64 {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return 0.0;
         }
         let sumxs = self.vector_of_x.iter().sum();
@@ -1182,7 +1209,7 @@ impl VectorOfContinuous {
     }
 
     pub fn generate_average_absolute_deviation(&mut self,central_point_type: &str) -> Result<Option<f64>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         let option: Option<f64>;
@@ -1218,7 +1245,7 @@ impl VectorOfContinuous {
     }
 
     pub fn generate_coefficient_of_variation(&mut self) -> Result<Option<f64>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         self._add_up_xs_to_sums_of_powers(self.population,self.use_diff_from_mean_calculations)?;
@@ -1233,7 +1260,7 @@ impl VectorOfContinuous {
     }
 
     pub fn generate_histogram_aa_by_number_of_segments(&mut self,desired_segment_count: u8,use_start_number: bool,start_number: f64) -> Result<Option<Vec<(f64,f64,usize)>>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         let extramargin     = 1.0;
@@ -1249,7 +1276,7 @@ impl VectorOfContinuous {
     }
 
     pub fn generate_histogram_aa_by_segment_size(&mut self,desired_segment_size: f64,use_start_number: bool,start_number: f64) -> Result<Option<Vec<(f64,f64,usize)>>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         let lmax            = self.get_max().unwrap(); // Presuming from n > 0 this will always be a Some.
@@ -1265,7 +1292,7 @@ impl VectorOfContinuous {
 
     fn generate_mean_absolute_difference(&self) -> Result<Option<f64>, ValidationError> {
         // https://en.wikipedia.org/wiki/Mean_absolute_difference
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         let nf                      = self.get_count() as f64;
@@ -1285,7 +1312,7 @@ impl VectorOfContinuous {
     }
 
     fn generate_mode(&self) -> Option<f64> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return None;
         }
         let mut lsaa: BTreeMap<String,u32>    = BTreeMap::new();
@@ -1306,7 +1333,7 @@ impl VectorOfContinuous {
     }
 
     pub fn get_max(&mut self) -> Option<f64> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return None;
         }
         self._assure_sorted_vector_of_x(false);
@@ -1316,7 +1343,7 @@ impl VectorOfContinuous {
     }
 
     pub fn get_min(&mut self) -> Option<f64> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return None;
         }
         self._assure_sorted_vector_of_x(false);
@@ -1325,12 +1352,22 @@ impl VectorOfContinuous {
         return Some(min_opval);
     }
 
-    pub fn is_even_n(&self) -> bool {
+    fn get_x(&mut self,index_a: usize) -> Option<f64> {
         let n = self.get_count();
-        if n % 2 == 0 {
-            return true
+        if n <= index_a {
+            return None;
         }
-        return false;
+        return Some(self.vector_of_x[index_a]);
+    }
+
+    fn get_x_sorted(&mut self,index_a: usize) -> Option<f64> {
+        let n = self.get_count();
+        if n <= index_a {
+            return None;
+        }
+        self._assure_sorted_vector_of_x(false); // in case update occurred from pushX.
+        let buffer = from_i128_to_f64(self.in_precision,self.sorted_vector_of_x[index_a]);
+        return Some(buffer);
     }
 
     pub fn new_from_f64(vector_of_x: Vec<f64>) -> Self {
@@ -1349,18 +1386,18 @@ impl VectorOfContinuous {
         return buffer;
     }
 
-    pub fn new_from_str_number_vector(vector_of_x: Vec<&str>,on_bad_data: BadDataAction) -> Result<VectorOfContinuous, ValidationError> {
+    pub fn new_from_str_number_vector(vector_of_x: Vec<&str>) -> Result<VectorOfContinuous, ValidationError> {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
-            buffer.push_x_str(lx,on_bad_data)?;
+            buffer.push_x_str(lx)?;
         }
         return Ok(buffer);
     }
 
-    pub fn new_from_string_number_vector(vector_of_x: Vec<String>,on_bad_data: BadDataAction) -> Result<VectorOfContinuous, ValidationError> {
+    pub fn new_from_string_number_vector(vector_of_x: Vec<String>) -> Result<VectorOfContinuous, ValidationError> {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
-            buffer.push_x_string(lx,on_bad_data)?;
+            buffer.push_x_string(lx.to_string())?;
         }
         return Ok(buffer);
     }
@@ -1371,7 +1408,7 @@ impl VectorOfContinuous {
     }
 
     pub fn request_excess_kurtosis(&mut self,formula_id: u8) -> Result<Option<f64>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         if ! self.use_diff_from_mean_calculations {
@@ -1392,7 +1429,7 @@ impl VectorOfContinuous {
     }
 
     pub fn request_kurtosis(&mut self) -> Result<Option<f64>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         if ! self.use_diff_from_mean_calculations {
@@ -1405,7 +1442,7 @@ impl VectorOfContinuous {
     }
 
     pub fn request_median(&mut self) -> Option<f64> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return None;
         }
         let option = match self.calculate_quartile(2) {
@@ -1416,7 +1453,7 @@ impl VectorOfContinuous {
     }
 
     pub fn request_quartile_collection(&mut self) -> Result<Option<Vec<f64>>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         let mut ra: Vec<f64> = Vec::new();
@@ -1435,7 +1472,7 @@ impl VectorOfContinuous {
     }
 
     pub fn request_range(&mut self) -> Option<[f64;2]> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return None;
         }
         let lmax = self.get_max()?;
@@ -1444,7 +1481,7 @@ impl VectorOfContinuous {
     }
 
     pub fn request_result_aa_csv(&mut self) -> Result<Option<String>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         let option          = self.request_summary_collection()?;
@@ -1453,29 +1490,29 @@ impl VectorOfContinuous {
             Some(aabuffer)  => aabuffer,
         };
         let b       = format!(  collection_csv_line_fmt_str!(),
-                        Self::ARITHMETICMEANID,         scaa[Self::ARITHMETICMEANID],
-                        Self::ARMEANAADID,              scaa[Self::ARMEANAADID],
-                        Self::COVID,                    scaa[Self::COVID],
-                        Self::GEOMETRICMEANID,          scaa[Self::GEOMETRICMEANID],
-                        Self::HARMONICMEANID,           scaa[Self::HARMONICMEANID],
-                        Self::ISEVENID,                 scaa[Self::ISEVENID],
-                        Self::KURTOSISID,               scaa[Self::KURTOSISID],
-                        Self::MAXID,                    scaa[Self::MAXID],
-                        Self::MEDIANID,                 scaa[Self::MEDIANID],
-                        Self::MEDIANAADID,              scaa[Self::MEDIANAADID],
-                        Self::MINID,                    scaa[Self::MINID],
-                        Self::MODEID,                   scaa[Self::MODEID],
-                        Self::NID,                      scaa[Self::NID],
-                        Self::SKEWNESSID,               scaa[Self::SKEWNESSID],
-                        Self::STDDEVID,                 scaa[Self::STDDEVID],
-                        Self::SUMID,                    scaa[Self::SUMID]);
+                        Self::ARITHMETICMEANID,         scaa[&Self::ARITHMETICMEANID.to_string()],
+                        Self::ARMEANAADID,              scaa[&Self::ARMEANAADID.to_string()],
+                        Self::COVID,                    scaa[&Self::COVID.to_string()],
+                        Self::GEOMETRICMEANID,          scaa[&Self::GEOMETRICMEANID.to_string()],
+                        Self::HARMONICMEANID,           scaa[&Self::HARMONICMEANID.to_string()],
+                        Self::ISEVENID,                 scaa[&Self::ISEVENID.to_string()],
+                        Self::KURTOSISID,               scaa[&Self::KURTOSISID.to_string()],
+                        Self::MAXID,                    scaa[&Self::MAXID.to_string()],
+                        Self::MEDIANID,                 scaa[&Self::MEDIANID.to_string()],
+                        Self::MEDIANAADID,              scaa[&Self::MEDIANAADID.to_string()],
+                        Self::MINID,                    scaa[&Self::MINID.to_string()],
+                        Self::MODEID,                   scaa[&Self::MODEID.to_string()],
+                        Self::NID,                      scaa[&Self::NID.to_string()],
+                        Self::SKEWNESSID,               scaa[&Self::SKEWNESSID.to_string()],
+                        Self::STDDEVID,                 scaa[&Self::STDDEVID.to_string()],
+                        Self::SUMID,                    scaa[&Self::SUMID.to_string()]);
         return Ok(Some(b));
     }
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
     pub fn request_result_csv_line(&mut self,include_hdr: bool) -> Result<Option<String>, ValidationError> {
         // NOTE: Mean Absolute Diffence is no longer featured here.
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         let option          = self.request_summary_collection()?;
@@ -1485,22 +1522,22 @@ impl VectorOfContinuous {
         };
         let mut csvline         =
             format!(collection_csv_table_fmt_str!(),
-                    scaa[Self::ARITHMETICMEANID],
-                    scaa[Self::ARMEANAADID],
-                    scaa[Self::COVID],
-                    scaa[Self::GEOMETRICMEANID],
-                    scaa[Self::HARMONICMEANID],
-                    scaa[Self::ISEVENID],
-                    scaa[Self::KURTOSISID],
-                    scaa[Self::MAXID],
-                    scaa[Self::MEDIANID],
-                    scaa[Self::MEDIANAADID],
-                    scaa[Self::MINID],
-                    scaa[Self::MODEID],
-                    scaa[Self::NID],
-                    scaa[Self::SKEWNESSID],
-                    scaa[Self::STDDEVID],
-                    scaa[Self::SUMID]);
+                    scaa[&Self::ARITHMETICMEANID.to_string()],
+                    scaa[&Self::ARMEANAADID.to_string()],
+                    scaa[&Self::COVID.to_string()],
+                    scaa[&Self::GEOMETRICMEANID.to_string()],
+                    scaa[&Self::HARMONICMEANID.to_string()],
+                    scaa[&Self::ISEVENID.to_string()],
+                    scaa[&Self::KURTOSISID.to_string()],
+                    scaa[&Self::MAXID.to_string()],
+                    scaa[&Self::MEDIANID.to_string()],
+                    scaa[&Self::MEDIANAADID.to_string()],
+                    scaa[&Self::MINID.to_string()],
+                    scaa[&Self::MODEID.to_string()],
+                    scaa[&Self::NID.to_string()],
+                    scaa[&Self::SKEWNESSID.to_string()],
+                    scaa[&Self::STDDEVID.to_string()],
+                    scaa[&Self::SUMID.to_string()]);
         if include_hdr {
             let csvhdr      =
                 format!(collection_csv_table_fmt_str!(),
@@ -1526,7 +1563,7 @@ impl VectorOfContinuous {
     }
 
     pub fn request_result_json(&mut self) -> Result<Option<String>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         let option      = self.request_summary_collection()?;
@@ -1535,27 +1572,27 @@ impl VectorOfContinuous {
             Some(aabuffer)  => aabuffer,
         };
         let b       = format!(  collection_json_table_fmt_str!(),
-                        Self::ARITHMETICMEANID,         scaa[Self::ARITHMETICMEANID],
-                        Self::ARMEANAADID,              scaa[Self::ARMEANAADID],
-                        Self::COVID,                    scaa[Self::COVID],
-                        Self::GEOMETRICMEANID,          scaa[Self::GEOMETRICMEANID],
-                        Self::HARMONICMEANID,           scaa[Self::HARMONICMEANID],
-                        Self::ISEVENID,                 scaa[Self::ISEVENID],
-                        Self::KURTOSISID,               scaa[Self::KURTOSISID],
-                        Self::MAXID,                    scaa[Self::MAXID],
-                        Self::MEDIANID,                 scaa[Self::MEDIANID],
-                        Self::MEDIANAADID,              scaa[Self::MEDIANAADID],
-                        Self::MINID,                    scaa[Self::MINID],
-                        Self::MODEID,                   scaa[Self::MODEID],
-                        Self::NID,                      scaa[Self::NID],
-                        Self::SKEWNESSID,               scaa[Self::SKEWNESSID],
-                        Self::STDDEVID,                 scaa[Self::STDDEVID],
-                        Self::SUMID,                    scaa[Self::SUMID]);
+                        Self::ARITHMETICMEANID,         scaa[&Self::ARITHMETICMEANID.to_string()],
+                        Self::ARMEANAADID,              scaa[&Self::ARMEANAADID.to_string()],
+                        Self::COVID,                    scaa[&Self::COVID.to_string()],
+                        Self::GEOMETRICMEANID,          scaa[&Self::GEOMETRICMEANID.to_string()],
+                        Self::HARMONICMEANID,           scaa[&Self::HARMONICMEANID.to_string()],
+                        Self::ISEVENID,                 scaa[&Self::ISEVENID.to_string()],
+                        Self::KURTOSISID,               scaa[&Self::KURTOSISID.to_string()],
+                        Self::MAXID,                    scaa[&Self::MAXID.to_string()],
+                        Self::MEDIANID,                 scaa[&Self::MEDIANID.to_string()],
+                        Self::MEDIANAADID,              scaa[&Self::MEDIANAADID.to_string()],
+                        Self::MINID,                    scaa[&Self::MINID.to_string()],
+                        Self::MODEID,                   scaa[&Self::MODEID.to_string()],
+                        Self::NID,                      scaa[&Self::NID.to_string()],
+                        Self::SKEWNESSID,               scaa[&Self::SKEWNESSID.to_string()],
+                        Self::STDDEVID,                 scaa[&Self::STDDEVID.to_string()],
+                        Self::SUMID,                    scaa[&Self::SUMID.to_string()]);
         return Ok(Some(b));
     }
 
     pub fn request_skewness(&mut self,formula_id: u8) -> Result<Option<f64>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         self._add_up_xs_to_sums_of_powers(self.population,self.use_diff_from_mean_calculations)?;
@@ -1565,7 +1602,7 @@ impl VectorOfContinuous {
     }
 
     pub fn request_standard_deviation(&mut self) -> Result<Option<f64>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         self._add_up_xs_to_sums_of_powers(self.population,self.use_diff_from_mean_calculations)?;
@@ -1577,44 +1614,44 @@ impl VectorOfContinuous {
         return Ok(Some(stddev));
     }
 
-    pub fn request_summary_collection(&mut self) -> Result<Option<BTreeMap<&str,String>>, ValidationError> {
+    pub fn request_summary_collection(&mut self) -> Result<Option<BTreeMap<String,String>>, ValidationError> {
         // NOTE:  Some of these are ONLY for sample.  For now, this is best used ONLY for Samples,
         // NOT populations numbers.
         // NOTE:  BTreeMap usage was adopted to yield ordered output.  Other options may be reviewed
         // later.
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
-        let mut btmb: BTreeMap<&str,String>   = BTreeMap::new();
+        let mut btmb: BTreeMap<String,String>   = BTreeMap::new();
         self._add_up_xs_to_sums_of_powers(self.population,self.use_diff_from_mean_calculations)?;
-        insert_op_data_to_str_aa(self.calculate_arithmetic_mean(),              &mut btmb,  Self::ARITHMETICMEANID);
-        insert_op_data_to_str_aa(self.calculate_geometric_mean(),               &mut btmb,  Self::GEOMETRICMEANID);
-        insert_op_data_to_str_aa(self.calculate_harmonic_mean()?,               &mut btmb,  Self::HARMONICMEANID);
-        insert_op_data_to_str_aa(Some(self.calculate_sum()),                    &mut btmb,  Self::SUMID);
-        insert_op_data_to_str_aa(self.generate_average_absolute_deviation(Self::ARITHMETICMEANID)?,
+        insert_op_data_to_aa(self.calculate_arithmetic_mean(),              &mut btmb,  Self::ARITHMETICMEANID);
+        insert_op_data_to_aa(self.calculate_geometric_mean(),               &mut btmb,  Self::GEOMETRICMEANID);
+        insert_op_data_to_aa(self.calculate_harmonic_mean()?,               &mut btmb,  Self::HARMONICMEANID);
+        insert_op_data_to_aa(Some(self.calculate_sum()),                    &mut btmb,  Self::SUMID);
+        insert_op_data_to_aa(self.generate_average_absolute_deviation(Self::ARITHMETICMEANID)?,
                                                                                 &mut btmb,  Self::ARMEANAADID);
-        insert_op_data_to_str_aa(self.generate_average_absolute_deviation(Self::MEDIANID)?,
+        insert_op_data_to_aa(self.generate_average_absolute_deviation(Self::MEDIANID)?,
                                                                                 &mut btmb,  Self::MEDIANAADID);
-        insert_op_data_to_str_aa(self.generate_coefficient_of_variation()?,     &mut btmb,  Self::COVID);
-        insert_op_data_to_str_aa(self.generate_mean_absolute_difference()?,     &mut btmb,  Self::MADID);
-        insert_op_data_to_str_aa(self.generate_mode(),                          &mut btmb,  Self::MODEID);
-        insert_op_data_to_str_aa(Some(self.get_count() as f64),                 &mut btmb,  Self::NID);
-        insert_op_data_to_str_aa(self.get_max(),                                &mut btmb,  Self::MAXID);
-        insert_op_data_to_str_aa(self.get_min(),                                &mut btmb,  Self::MINID);
-        if self.is_even_n() {
-            btmb.insert(Self::ISEVENID,"TRUE".to_string());
+        insert_op_data_to_aa(self.generate_coefficient_of_variation()?,     &mut btmb,  Self::COVID);
+        insert_op_data_to_aa(self.generate_mean_absolute_difference()?,     &mut btmb,  Self::MADID);
+        insert_op_data_to_aa(self.generate_mode(),                          &mut btmb,  Self::MODEID);
+        insert_op_data_to_aa(Some(self.get_count() as f64),                 &mut btmb,  Self::NID);
+        insert_op_data_to_aa(self.get_max(),                                &mut btmb,  Self::MAXID);
+        insert_op_data_to_aa(self.get_min(),                                &mut btmb,  Self::MINID);
+        if self.is_n_even() {
+            btmb.insert(Self::ISEVENID.to_string(),"TRUE".to_string());
         } else {
-            btmb.insert(Self::ISEVENID,"FALSE".to_string());
+            btmb.insert(Self::ISEVENID.to_string(),"FALSE".to_string());
         }
-        insert_op_data_to_str_aa(self.request_kurtosis()?,                      &mut btmb,  Self::KURTOSISID);
-        insert_op_data_to_str_aa(self.request_median(),                         &mut btmb,  Self::MEDIANID);
-        insert_op_data_to_str_aa(self.request_skewness(3)?,                     &mut btmb,  Self::SKEWNESSID);
-        insert_op_data_to_str_aa(self.request_standard_deviation()?,            &mut btmb,  Self::STDDEVID);
+        insert_op_data_to_aa(self.request_kurtosis()?,                      &mut btmb,  Self::KURTOSISID);
+        insert_op_data_to_aa(self.request_median(),                         &mut btmb,  Self::MEDIANID);
+        insert_op_data_to_aa(self.request_skewness(3)?,                     &mut btmb,  Self::SKEWNESSID);
+        insert_op_data_to_aa(self.request_standard_deviation()?,            &mut btmb,  Self::STDDEVID);
         return Ok(Some(btmb));
     }
 
     pub fn request_variance_sum_of_differences_from_mean(&mut self,population_calculation: bool) -> Result<Option<f64>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         self._add_up_xs_to_sums_of_powers(population_calculation,true)?;
@@ -1624,7 +1661,7 @@ impl VectorOfContinuous {
     }
 
     pub fn request_variance_sum_of_xs_squared_method(&mut self,population_calculation: bool) -> Result<Option<f64>, ValidationError> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return Ok(None);
         }
         self._add_up_xs_to_sums_of_powers(population_calculation,false)?;
@@ -1639,15 +1676,17 @@ impl VectorOfContinuous {
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // VectorOfDiscrete - catchall for arbitrary X that could be a string.
 
-pub struct VectorOfDiscrete<'a> {
+pub struct VectorOfDiscrete {
+    on_bad_data:    BadDataAction,
     out_precision: i32,
-    frequencies_aa: BTreeMap<&'a str,u32>,
-    vector_of_x: Vec<&'a str>,
+    frequencies_aa: BTreeMap<String,u32>,
+    vector_of_x: Vec<String>,
 }
 
-impl<'a> Default for VectorOfDiscrete<'a> {
+impl Default for VectorOfDiscrete {
     fn default() -> Self {
         VectorOfDiscrete {
+            on_bad_data: BadDataAction::Fail,
             out_precision: 4,
             frequencies_aa: BTreeMap::new(),
             vector_of_x: Vec::new(),
@@ -1655,36 +1694,26 @@ impl<'a> Default for VectorOfDiscrete<'a> {
     }
 }
 
-impl<'a> VectorOfX for VectorOfDiscrete<'a> {
-
-    fn _assure_sorted_vector_of_x(&mut self,force_sort: bool) {
-        // NOTE:  NOT USED.
-        return ();
-    }
-
-    fn _n_zero(&self) -> bool {
-        if self.get_count() == 0 {
-            return true;
-        }
-        return false;
-    }
+impl VectorOfX for VectorOfDiscrete {
 
     fn get_count(&self) -> usize {
         let n = self.vector_of_x.len();
         return n;
     }
 
-    fn get_x(&mut self,index_a: usize) -> Result<f64,ValidationError> {
+    fn is_n_even(&self) -> bool {
         let n = self.get_count();
-        if n <= index_a {
-            let m = "Index argument {index_a} is greater than or equal to n {n}".to_string();
-            return Err(ValidationError::InvalidArgument(m));
+        if n % 2 == 0 {
+            return true
         }
-        return Ok(self.vector_of_x[index_a]);
+        return false;
     }
 
-    fn get_x_sorted(&mut self,index_a: usize) -> Result<f64,ValidationError> {
-        return Ok(None);
+    fn is_n_zero(&self) -> bool {
+        if self.get_count() == 0 {
+            return true;
+        }
+        return false;
     }
 
     fn new() -> Self {
@@ -1693,130 +1722,156 @@ impl<'a> VectorOfX for VectorOfDiscrete<'a> {
     }
 
     fn new_from_str_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self {
-        let mut buffer: VectorOfContinuous = Default::default();
+        let mut buffer: VectorOfDiscrete = Default::default();
         for lx in vector_of_x.iter() {
-            if is_a_num_str(lx) {
-                buffer.push_x_str(lx,SkipRow).unwrap();
+            if lx.len() > 0 {
+                buffer.push_x_str(lx).unwrap();
             }
         }
         return buffer;
     }
 
-    fn push_x_str(&mut self, x_str: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
-        /*  NOTE:  TBD figure out return value from parse expect trim etc and
-            deal with that.
-         */
-        self.vector_of_x.push(x_str);
+    fn new_from_string_after_invalidated_dropped(vector_of_x: Vec<String>) -> Self {
+        let mut buffer: VectorOfDiscrete = Default::default();
+        for lx in vector_of_x.iter() {
+            if lx.len() > 0 {
+                buffer.push_x_string(lx.to_string()).unwrap();
+            }
+        }
+        return buffer;
+    }
+
+    fn push_x_str(&mut self,x_item: &str) -> Result<(), ValidationError> {
+        self.push_x_string(x_item.to_string())?;
         return Ok(());
     }
 
-    fn push_x_string(&mut self, x_string: String,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
-        /*  NOTE:  TBD figure out return value from parse expect trim etc and
-            deal with that.
-         */
-        let x_str = x_string.to_str();
-        self.vector_of_x.push(x_str);
+    fn push_x_string(&mut self,x_item: String) -> Result<(), ValidationError> {
+        let mut x_mut   = x_item;
+        if x_mut.len() == 0 {
+            match self.on_bad_data {
+                BadDataAction::BlankField   => x_mut=" ".to_string(),
+                BadDataAction::DefaultFill  => x_mut=" ".to_string(),
+                BadDataAction::ExcludeRow   => return Err(ValidationError::OptionMayNotBeUsedHere("ExcludeRow".to_string())),
+                BadDataAction::Fail         => return Err(ValidationError::ValueMayNotBeMissing()),
+                BadDataAction::SkipDataItem => return Ok(()),
+                BadDataAction::ZeroFloat    => x_mut="0.0".to_string(),
+                BadDataAction::ZeroInteger  => x_mut="0".to_string(),
+            };
+        }
+        match self.frequencies_aa.get(&x_mut) {
+            Some(b) => self.frequencies_aa.insert(x_mut,b + 1),
+            None    => self.frequencies_aa.insert(x_mut,1),
+        };
         return Ok(());
     }
 
 }
 
-impl<'a> VectorOfDiscrete<'a> {
+impl VectorOfDiscrete {
 
-    const FREQUENCYPREFIXID: &str   = "FreqPrefix";
-    const ISEVENID: &str            = "IsEven";
-    const MODEID: &str              = "Mode";
-    const NID: &str                 = "N";
+    const FREQUENCYPREFIXID:    &str  = "FreqPrefix";
+    const ISEVENID:             &str  = "IsEven";
+    const MODEID:               &str  = "Mode";
+    const NID:                  &str  = "N";
 
-    fn calculate_binomial_probability(&self,subject_value: &str,n_trials: u32,n_successes: u32) -> Result<Option<f64>, ValidationError> {
-        if self._n_zero() {
+    fn calculate_binomial_probability(&self,subject_value: String,n_trials: u32,n_successes: u32) -> Result<Option<f64>, ValidationError> {
+        if self.is_n_zero() {
             return Ok(None);
         }
+        if n_trials > 170 {
+            return Err(ValidationError::ArgumentError("Value may not be larger than 170.".to_string()));
+        }
         if n_trials == 0 {
-            return Err(ValidationError::ValueMayNotBeZero(n_trials));
+            return Err(ValidationError::ValueMayNotBeZero(n_trials as f64));
         }
         if n_successes == 0 {
-            return Err(ValidationError::ValueMayNotBeZero(n_successes));
+            return Err(ValidationError::ValueMayNotBeZero(n_successes as f64));
         }
         if n_trials >= n_successes {
-            return Err(ValidationError::ArgumentError("Number of Successes must be less than number of trials."));
+            let m = "Number of Successes must be less than number of trials.".to_string();
+            return Err(ValidationError::ArgumentError(m));
         }
-        let n_failures              = n_trials - n_successes;
+        let n_failures                  = n_trials - n_successes;
 
-        let samplecountf            = self.get_count() as f64;
+        let samplecountf                = self.get_count() as f64;
 
-        let freqcountf              = self.frequencies_aa[subject_value] as f64;
+        let frequency                   = match self.frequencies_aa.get(&subject_value) {
+            Some(b)                 => b,
+            None                    => return Ok(Some(0.0)),
+        };
+        let freqcountf                  = *frequency as f64;
 
-        let psuccess1trial          = freqcountf / samplecountf; // Probability of success in 1 trial.
+        let psuccess1trial              = freqcountf / samplecountf; // Probability of success in 1 trial.
 
-        let pfailure1trial          = 1.0 - psuccess1trial;
+        let pfailure1trial              = 1.0 - psuccess1trial;
 
-        let meansquared             = self.arithmetic_mean.powi(2);
-        let pfailurefactor          = pfailure1trial.powi(n_failures);
-        let psuccessfactor          = psuccess1trial.powi(n_successes);
-
-        let successpermutations     = factorial(n_successes);
-        let failurepermutations     = factorial(n_trials - n_successes);
-        let trials_permutations     = factorial(n_trials);
+        let pfailurefactor              = pfailure1trial.powi(n_failures as i32);
+        let psuccessfactor              = psuccess1trial.powi(n_successes as i32);
 
         let combinations: f64;
-        if successpermutations < failurepermutations {
-            let b                   = trials_permutations / failurepermutations;
-            combinations            = b as f64 / successpermutations as f64; 
-            
+        if n_trials > 34 {
+            let successpermutations     = factorial(n_successes as u128);
+            let failurepermutations     = factorial(n_trials as u128 - n_successes as u128);
+            let trials_permutations     = factorial(n_trials as u128);
+
+            if successpermutations < failurepermutations {
+                let b                   = trials_permutations / failurepermutations;
+                combinations            = b as f64 / successpermutations as f64; 
+                
+            } else {
+                let b                   = trials_permutations / successpermutations;
+                combinations            = b as f64 / failurepermutations as f64; 
+            }
         } else {
-            let b                   = trials_permutations / successpermutations;
-            combinations            = b as f64 / failurepermutations as f64; 
+            let successpermutations     = ffactorial(n_successes as u8);
+            let failurepermutations     = ffactorial(n_trials as u8 - n_successes as u8);
+            let trials_permutations     = ffactorial(n_trials as u8);
+            combinations                = trials_permutations / ( successpermutations * failurepermutations )
         }
-        let binomialprobability     = combinations * psuccessfactor * pfailurefactor;
+        let binomialprobability         = combinations * psuccessfactor * pfailurefactor;
         return Ok(Some(binomialprobability));
     }
 
-    fn get_frequency(&self,subject_value: &str) -> Option<u32> {
-        if self._n_zero() {
+    fn get_frequency(&self,subject_value: String) -> Option<u32> {
+        if self.is_n_zero() {
             return None;
         }
-        if self.frequencies_aa.contains_key(subject_value) {
-            return Some(self.frequencies_aa[subject_value]);
-        }
-        return None;
+        let frequency = match self.frequencies_aa.get(&subject_value) {
+            Some(b) => *b,
+            None    => return None,
+        };
+        return Some(frequency);
     }
 
-    fn push_x_str(&self,x_item: &str,onBadData: BadDataAction) -> Result<Option<f64>, ValidationError> {
-        if x_item.len() == 0 {
-            match onBadData {
-                BlankField          => x_item=" ",
-                DefaultFill         => x_item=" ",
-                FailOnBadData       => return Err(ValidationError::ValueMayNotBeMissing()),
-                SkipRowOnBadData    => return Ok(()),
-                ZeroFloatOnBadData  => x_item="0.0",
-                ZeroIntegerOnBadData  => x_item="0",
-            }
+    fn get_x(&mut self,index_a: usize) -> Option<String> {
+        let n = self.get_count();
+        if n <= index_a {
+            return None;
         }
-        if self.frequencies_aa.contains_key(x_item) {
-            self.frequencies_aa[x_item] += 1;
-        } else {
-            self.frequenciesAA[x_item] = 1;
-        }
-        self.vector_of_x.push(x_item);
-        return Ok(());
+        return Some(self.vector_of_x[index_a].clone());
     }
 
     fn request_mode(&self) -> Option<String> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return None;
         }
-        let x = generate_mode_from_frequency_aa(self.frequencies_aa);
-        return Some(x);
+        let option = generate_mode_from_frequency_aa(&self.frequencies_aa);
+        return option;
     }
 
     fn request_result_aa_csv(&self) -> Option<String> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return None;
         }
-        let resultcollection    = self.request_summary_collection();
         let mut content         = "ID,Value".to_string();
-        for (idstr, &valstring) in &self.frequency_aa {
+        let option              = self.request_summary_collection();
+        let resultcollection    = match option {
+            None            => return None,
+            Some(aabuffer)  => aabuffer,
+        };
+        //for (idstr, &valstring) in resultcollection {
+        for (idstr, valstring) in resultcollection.iter() {
             content = format!("{content}\n{idstr},{valstring}");
         }
         content = format!("{content}\n");
@@ -1824,12 +1879,16 @@ impl<'a> VectorOfDiscrete<'a> {
     }
 
     fn request_result_csv_line(&self) -> Option<String> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return None;
         }
-        let resultcollection    = self.request_summary_collection();
         let mut content         = "".to_string();
-        for (idstr, &valstring) in &self.frequency_aa {
+        let option              = self.request_summary_collection();
+        let resultcollection    = match option {
+            None            => return None,
+            Some(aabuffer)  => aabuffer,
+        };
+        for (idstr, valstring) in resultcollection.iter() {
             content = format!("{content},{idstr},{valstring}");
         }
         content = format!("{content}\n");
@@ -1837,13 +1896,17 @@ impl<'a> VectorOfDiscrete<'a> {
     }
 
     fn request_result_json(&self)  -> Option<String> {
-        if self._n_zero() {
+        if self.is_n_zero() {
             return None;
         }
-        let resultcollection    = self.request_summary_collection();
         let mut content         = "{{".to_string();
         let mut i               = 0;
-        for (idstr, &valstring) in &self.frequency_aa {
+        let option              = self.request_summary_collection();
+        let resultcollection    = match option {
+            None            => return None,
+            Some(aabuffer)  => aabuffer,
+        };
+        for (idstr, valstring) in resultcollection.iter() {
             if i == 0 {
                 content = format!("{content}\n\"{idstr}\": \"{valstring}\"");
             } else {
@@ -1855,27 +1918,28 @@ impl<'a> VectorOfDiscrete<'a> {
         return Some(content);
     }
 
-    pub fn request_summary_collection(self) -> Option<BTreeMap<&'a str,String>> {
-        if self._n_zero() {
-            return Ok(None);
+    pub fn request_summary_collection(&self) -> Option<BTreeMap<String,String>> {
+        if self.is_n_zero() {
+            return None;
         }
-        let mut btmb: BTreeMap<&str,String>   = BTreeMap::new();
-        for (lx, &count) in &self.frequency_aa {
-            btmb.insert(format!("{}_{}",Self::FREQUENCYPREFIXID,lx),format!("{count}"));
+        let mut btmb: BTreeMap<String,String>   = BTreeMap::new();
+        for (lx, &count) in &self.frequencies_aa {
+            let freqid                          = format!("{}_{}",Self::FREQUENCYPREFIXID,lx);
+            btmb.insert(freqid,format!("{count}"));
         }
-        let count                           = self.get_count();
-        btmb.insert(format!("{}",Self::NID),format!("{count}"));
-        if self.is_even_n() {
-            btmb.insert(Self::ISEVENID,"TRUE".to_string());
+        let count                               = self.get_count();
+        btmb.insert(Self::NID.to_string(),format!("{count}"));
+        if self.is_n_even() {
+            btmb.insert(Self::ISEVENID.to_string(),"TRUE".to_string());
         } else {
-            btmb.insert(Self::ISEVENID,"FALSE".to_string());
+            btmb.insert(Self::ISEVENID.to_string(),"FALSE".to_string());
         }
-        let lmode   = match self.request_mode() {
-            None        => "None",
+        let lmode                               = match self.request_mode() {
+            None        => "None".to_string(),
             Some(b)     => b,
         };
-        btmb.insert(Self::MODEID,format!("{lmode}"));
-        return Ok(Some(btmb));
+        btmb.insert(Self::MODEID.to_string(),format!("{lmode}"));
+        return Some(btmb);
     }
 }
 
@@ -1892,6 +1956,40 @@ mod tests {
     use super::*;
 
     // Global Procedures
+
+    #[test]
+    fn test_factorial() {
+        let m   = factorial(5);
+        assert_eq!(120, m);
+        let m   = factorial(25);
+        assert_eq!(15511210043330985984000000, m);
+        let m   = factorial(32);
+        assert_eq!(263130836933693530167218012160000000, m);
+        let m   = factorial(33);
+        assert_eq!(8683317618811886495518194401280000000, m);
+        let m   = factorial(34); // This appears to be the max on my Ubuntu laptop.
+        assert_eq!(295232799039604140847618609643520000000, m);
+    }
+
+    #[test]
+    fn test_ffactorial() {
+        let m   = ffactorial(5);
+        assert_eq!(120.0, m);
+        let m   = ffactorial(25);
+        assert_eq!(15511210043330985984000000.0, m);
+        let m   = ffactorial(32);
+        assert_eq!(263130836933693530167218012160000000.0, m);
+        let m   = ffactorial(64);
+        assert_eq!(1.2688693218588417e89, m);
+        let m   = ffactorial(128);
+        assert_eq!(3.8562048236258025e215, m);
+        let m   = ffactorial(164);
+        assert_eq!(3.2872185855342945e293, m);
+        let m   = ffactorial(169);
+        assert_eq!(4.2690680090047027e304, m);
+        let m   = ffactorial(170); // This appears to be the max on my Ubuntu laptop.
+        assert_eq!(7.257415615307994e306, m);
+    }
 
     #[test]
     fn test_anecdote_expected_results() {
@@ -1927,23 +2025,39 @@ mod tests {
     }
 
     #[test]
+    fn test_is_usable_number_str_array() {
+        assert!(is_usable_number_str_array(&["1","33.33","4"]));
+        assert!(!is_usable_number_str_array(&["1"," 2 3 5 "]));
+        assert!(!is_usable_number_str_array(&["1s","235"]));
+        assert!(!is_usable_number_str_array(&[".","235"]));
+        assert!(!is_usable_number_str_array(&["","235"]));
+        assert!(is_usable_number_str_array(&["235"]));
+    }
+
+    #[test]
     fn test_is_usable_number_string_array() {
-        assert!(is_usable_number_string_array(&["1","33.33","4"]));
-        assert!(!is_usable_number_string_array(&["1"," 2 3 5 "]));
-        assert!(!is_usable_number_string_array(&["1s","235"]));
-        assert!(!is_usable_number_string_array(&[".","235"]));
-        assert!(!is_usable_number_string_array(&["","235"]));
-        assert!(is_usable_number_string_array(&["235"]));
+        assert!(is_usable_number_string_array(&["1".to_string(),"33.33".to_string(),"4".to_string()]));
+        assert!(!is_usable_number_string_array(&["1".to_string()," 2 3 5 ".to_string()]));
+    }
+
+    #[test]
+    fn test_is_usable_number_str_vector() {
+        assert!(is_usable_number_str_vector(&vec!["1","33.33","4"]));
+        assert!(!is_usable_number_str_vector(&vec!["1"," 2 3 5 "]));
+        assert!(!is_usable_number_str_vector(&vec!["1s","235"]));
+        assert!(!is_usable_number_str_vector(&vec![".","235"]));
+        assert!(!is_usable_number_str_vector(&vec!["","235"]));
+        assert!(is_usable_number_str_vector(&vec!["235"]));
     }
 
     #[test]
     fn test_is_usable_number_string_vector() {
-        assert!(is_usable_number_string_vector(&vec!["1","33.33","4"]));
-        assert!(!is_usable_number_string_vector(&vec!["1"," 2 3 5 "]));
-        assert!(!is_usable_number_string_vector(&vec!["1s","235"]));
-        assert!(!is_usable_number_string_vector(&vec![".","235"]));
-        assert!(!is_usable_number_string_vector(&vec!["","235"]));
-        assert!(is_usable_number_string_vector(&vec!["235"]));
+        assert!(is_usable_number_string_vector(&vec!["1".to_string(),"33.33".to_string(),"4".to_string()]));
+        assert!(!is_usable_number_string_vector(&vec!["1".to_string()," 2 3 5 ".to_string()]));
+        assert!(!is_usable_number_string_vector(&vec!["1s".to_string(),"235".to_string()]));
+        assert!(!is_usable_number_string_vector(&vec![".".to_string(),"235".to_string()]));
+        assert!(!is_usable_number_string_vector(&vec!["".to_string(),"235".to_string()]));
+        assert!(is_usable_number_string_vector(&vec!["235".to_string()]));
     }
 
     #[test]
@@ -2372,10 +2486,10 @@ mod tests {
         assert_eq!(n,3);
         localo._assure_sorted_vector_of_x(false);
         assert_eq!(3,localo.sorted_vector_of_x.len());
-        let x0              = localo.get_x(0,true).unwrap();
-        assert_eq!(1.0,x0);
-        assert_eq!(2.0,localo.get_x(1,true).unwrap());
-        assert_eq!(3.0,localo.get_x(2,true).unwrap());
+        let x0              = localo.get_x(0).unwrap();
+        assert_eq!(3.0,x0);
+        assert_eq!(2.0,localo.get_x(1).unwrap());
+        assert_eq!(1.0,localo.get_x(2).unwrap());
         let a: Vec<&str>    = vec!["1.5","99","5876.1234","String"];
         let localo          = VectorOfContinuous::new_from_str_after_invalidated_dropped(a);
         assert_eq!(localo.get_count(),3);
@@ -2747,10 +2861,10 @@ mod tests {
     fn test_has_a_method_to_test_if_the_vector_of_x_has_an_even_n() {
         let a       = vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.9];
         let localo  = VectorOfContinuous::new_from_f64(a);
-        assert!(localo.is_even_n());
+        assert!(localo.is_n_even());
         let a       = vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.9,11.0];
         let localo  = VectorOfContinuous::new_from_f64(a);
-        assert!( ! localo.is_even_n() );
+        assert!( ! localo.is_n_even() );
     }
 
     #[test]
@@ -2938,13 +3052,6 @@ mod tests {
 
     #[test]
     fn test_fails_differently_according_to_special_arguments_to_pushx() {
-        /* These are the pertinent identifiers:
-        #BlankFieldOnBadData = 0
-        #FailOnBadData       = 1
-        #SkipRowOnBadData    = 2
-        #ZeroFieldOnBadData  = 3
-        Address this later.  Leave for unimplemented at this time. NOTE:TBD.
-         */
         let localo  = VectorOfContinuous::new();
         assert_eq!( 0, localo.get_count() );
     }

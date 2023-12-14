@@ -1,0 +1,56 @@
+
+    fn push_x_str(&mut self, x_str: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
+        /*  NOTE:  TBD figure out return value from parse expect trim etc and
+            deal with that.
+         */
+        let result                  = x_str.trim().parse();
+        let x_float_unrounded = match result {
+            Ok(unrounded)   => unrounded,
+            Err(_err)       => return Err(ValidationError::ParseErrorOnWouldBeNumberString(x_str.to_string())),
+        };
+        let x_float                 = round_to_f64_precision(x_float_unrounded, self.in_precision);
+        self.vector_of_x.push(x_float);
+        return Ok(());
+    }
+
+    fn push_x_string(&mut self, x_string: String,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
+        /*  NOTE:  TBD figure out return value from parse expect trim etc and
+            deal with that.
+         */
+        let result                  = x_string.trim().parse();
+        let x_float_unrounded = match result {
+            Ok(unrounded)   => unrounded,
+            Err(_err)       => return Err(ValidationError::ParseErrorOnWouldBeNumberString(x_string)),
+        };
+        let x_float                 = round_to_f64_precision(x_float_unrounded, self.in_precision);
+        self.vector_of_x.push(x_float);
+        return Ok(());
+    }
+
+    fn push_x_str(&mut self, x_str: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
+        /*  NOTE:  TBD figure out return value from parse expect trim etc and
+            deal with that.
+         */
+        self.push_x_string(x_str.to_string())?;
+        return Ok(());
+    }
+
+    fn push_x_string(&mut self, x_string: String,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
+        /*  NOTE:  TBD figure out return value from parse expect trim etc and
+            deal with that.
+         */
+        if x_string.len() == 0 {
+            match on_bad_data {
+                BadDataAction::BlankField   => x_item=" ".to_string(),
+                BadDataAction::DefaultFill  => x_item=" ".to_string(),
+                BadDataAction::ExcludeRow   => return Err(ValidationError::OptionMayNotBeUsedHere("ExcludeRow".to_string())),
+                BadDataAction::Fail         => return Err(ValidationError::ValueMayNotBeMissing()),
+                BadDataAction::SkipDataItem => return Ok(()),
+                BadDataAction::ZeroFloat    => return Ok(0.0),
+                BadDataAction::ZeroInteger  => return Ok(0.0),
+            };
+        }
+        self.vector_of_x.push(x_string);
+        return Ok(());
+    }
+

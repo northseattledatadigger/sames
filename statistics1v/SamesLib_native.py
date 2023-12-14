@@ -561,7 +561,7 @@ class VectorOfX:
     DefaultFillOnBadData    = 1
     ExcludeRowOnBadData     = 2
     FailOnBadData           = 3
-    SkipRowOnBadData        = 4
+    SkipDataItemOnBadData        = 4
     ZeroFieldOnBadData      = 5
 
     def _assureSortedVectorOfX(self,forceSort):
@@ -917,7 +917,7 @@ class VectorOfContinuous(VectorOfX):
                     xFloat=0.0
                 case VectorOfX.FailOnBadData:
                     raise ValueError( "{xFloat} not usable number." )
-                case VectorOfX.SkipRowOnBadData:
+                case VectorOfX.SkipDataItemOnBadData:
                     return
                 case VectorOfX.ZeroFieldOnBadData:
                     xFloat=0.0
@@ -1170,7 +1170,7 @@ class VectorOfDiscrete(VectorOfX):
                     xFloat=" "
                 case VectorOfX.FailOnBadData:
                     raise ValueError( f"{xItem} not usable value." )
-                case VectorOfX.SkipRowOnBadData:
+                case VectorOfX.SkipDataItemOnBadData:
                     return
                 case VectorOfX.ZeroFieldOnBadData:
                     xItem=0.0
@@ -1331,7 +1331,7 @@ class VectorTable:
         lcc = self.getColumnCount()
         if laa != lcc:
             raise ValueError
-        if onBadData == VectorOfX.SkipRowOnBadData:
+        if onBadData == VectorOfX.SkipDataItemOnBadData:
             raise ValueError
         i = 0
         for lvoe in self.TableOfVectors:
