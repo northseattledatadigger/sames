@@ -2024,14 +2024,26 @@ mod tests {
 
     #[test]
     fn test_from_f64_to_i128() {
+        let b = from_f64_to_i128(4,1234.56789);
+        assert_eq!(12345679,b);
     }
 
     #[test]
     fn test_from_i128_to_f64() {
+        let b = from_i128_to_f64(4,12345679);
+        assert_eq!(1234.5679,b);
     }
 
     #[test]
     fn test_insert_op_data_to_aa() {
+        let mut btmo: BTreeMap<String,String>    = BTreeMap::new();
+        const BID: &str  = "BoinkId";
+        insert_op_data_to_aa(Some(125.521),&mut btmo,BID);
+        let idb = BID.to_string();
+        match btmo.get(&idb) {
+            None    => panic!("Test failed."),
+            Some(b) => assert_eq!(*b,"125.521".to_string()),
+        }
     }
 
     #[test]
@@ -2094,14 +2106,32 @@ mod tests {
 
     #[test]
     fn test_parse_float_left_of_decimal() {
+    //pub fn parse_float_left_of_decimal(subject_float: f64) -> f64 
+        let bf  = parse_float_left_of_decimal(1234.56789);
+        assert_eq!(bf,1234.0);
     }
 
     #[test]
     fn test_parse_float_right_of_decimal() {
+    //pub fn parse_float_right_of_decimal(subject_float: f64,precision: i32) -> f64 
+        let bf  = parse_float_right_of_decimal(1234.56789,5);
+        assert_eq!(bf,0.56789);
+        let bf  = parse_float_right_of_decimal(1234.56789,2);
+        assert_eq!(bf,0.57);
     }
 
     #[test]
     fn test_push_i128_from_f64() {
+    //pub fn push_i128_from_f64(precision: i32,subject_float: f64, sorting_vector: &mut Vec<i128>) {
+        let mut sv: Vec<i128>   = Vec::new();
+        push_i128_from_f64(4,123.456, &mut sv);
+        assert_eq!(1,sv.len());
+        push_i128_from_f64(4,999.88, &mut sv);
+        push_i128_from_f64(1,12345.6789, &mut sv);
+        assert_eq!(3,sv.len());
+        assert_eq!(1234560,sv[0]);
+        assert_eq!(9998800,sv[1]);
+        assert_eq!(123457,sv[2]);
     }
 
     #[test]
@@ -2112,6 +2142,8 @@ mod tests {
 
     #[test]
     fn test_zero_decimal_effective() {
+        assert!(zero_decimal_effective(1,1.0001));
+        assert!(!zero_decimal_effective(1,1.1001));
     }
 
     // Object Groups of Procedures, defined by traits, structs and

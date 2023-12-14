@@ -1,17 +1,26 @@
-A. Remaining sections:
-    a.  Sums Of Powers simple tests.
-    b.  All of VectorOfX, VectorOfContinuous, VectorOfDiscrete.
-    c.  VectorTable.
-    d.  Extended tests, probably using integration tests facility.
-    e.  bin/rust.main.neophyte
-    f.  Compliance with acceptance tests.
-    g.  Check in with tag.  Mention to folks.
-B. Tasks:
-    2.  Look at cross tests between sums of diffs and sums of xs, and try to maximize, then revisit Python and Ruby.
-    3.  Begin to look at A.b. above.
-    4.  Begin to look at bin/rust.main.neophyte, and figure out the stuff needed in lrust... to make sure the subtype is recognized.
-C.  Node/Javascript next.
+    2.  Second of two passes for the day:
+        c.      try to pick up anything remaining that might be missed, and write tests or code with tests.
+
+    3.  Start working on TableVector stuff.
+
+        i.      Try to nail down best method for multiple classes in the same vector.
+        ii.     Bring over ruby code and start translating.
+        iii.    Bring over ruby tests for reference commented out, but translate as things become stuck.
+
+    4.  Plan last steps:
+
+        x.      Extended tests, probably in form of Rust integration tests.
+        y.      bin/rust.main.neophyte
+        z.      Acceptance tests.
+
+    5.  Be aware of Javascript / Node goals next.
+
+    6.  Be hopeful about Ruby latex and HTML document generation soon.
+
+    7.  Try to get better draft of resume tool into sames, perhaps doing a Python3, Node and even Rust version.
 
 Done:
-    B. Tasks:
-    1.  Get as many tests passing for Sums of Powers as possible.
+    X1.  One of two more passes for the day to cover:
+    X   a.      global procedures.
+    X   b.      Empty tests already added to bottom.
+
