@@ -1,0 +1,7 @@
+https://stackoverflow.com/questions/74165821/casting-a-struct-to-a-trait-object-with-associated-types-in-rust
+https://users.rust-lang.org/t/object-safe-traits-consuming-self/102978/8
+https://doc.rust-lang.org/reference/macros-by-example.html#metavariables
+https://dev.to/rogertorres/first-steps-with-rust-declarative-macros-1f8m
+
+https://www.possiblerust.com/guide/what-can-coerce-and-where-in-rust
+https://stackoverflow.com/questions/33687447/how-to-get-a-reference-to-a-concrete-type-from-a-trait-object

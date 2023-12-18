@@ -40,21 +40,11 @@ macro_rules! collection_json_table_fmt_str {
     }
 }
 
-//use core::str;
-//use csv;
-//use phf;
-//use phf_macros::phf_map;
-//use num::{BigUint, One};
-//use num_bigfloat::BigFloat;
+use csv::ReaderBuilder;
 use regex::Regex;
-//use serde::{Serialize, Deserialize};
-//use serde;
-//use serde::Serialize;
 use std::collections::*;
-//use std::{error::Error, fmt};
-//use std::process::{ExitCode, Termination};
-//use thiserror::Error;
-//use std::collections::HashMap;
+use std::error::Error;
+use std::fs::read_to_string;
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Validation Errors
@@ -73,6 +63,8 @@ pub enum ValidationError {
     FloatCapacityExceeded(String),
     #[error("Invalid argument: {0}")]
     InvalidArgument(String),
+    #[error("Invalid index: {0} out of range [{1},{2}]")]
+    InvalidIndex(usize,usize,usize),
     #[error("Method may only be used with Differences from Mean Data.")]
     MethodOnlyForDiffFromMeanData(),
     #[error("Method may only be used with Sums of Xs Data.")]
@@ -107,6 +99,8 @@ pub enum ValidationError {
     ValueOrderWrong(f64,f64),
     #[error("Value Range Conflict [{0},{1}] overlaps [{2},{3}]")]
     ValueRangeConflict(f64,f64,f64,f64),
+    #[error("Vector Pair Lengths ({0},{1}) must be equal.")]
+    VectorPairLengthsNotEqual(usize,usize),
     #[error("Zero Result not considered valid.")]
     ZeroResultInvalid(),
 }
@@ -1965,6 +1959,212 @@ impl VectorOfDiscrete {
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
+// VectorTable for reading and processing contents of 2 dimentional matrices.
+// NOTE:  Indexing for columns and vectors in this class are reversed from
+// normal in accommodation of the way things are used.
+
+enum VectorObject {
+    VectorOfContinuousEnum(VectorOfContinuous),
+    VectorOfDiscreteEnum(VectorOfDiscrete),
+}
+
+enum VectorClassId {
+    VOCID,
+    VODID,
+}
+
+pub struct VectorTable { 
+    table_of_vectors:   Vec<VectorObject>,          // Columns in the CSV input sense.
+    vector_count:       usize,                      // My terms are transposed from the orientation of the CSV file.  You'll see I call these columns.
+    vector_of_classes:  Vec<VectorClassId>,
+    vector_of_headers:  Vec<String>,
+    vector_length:      usize,                      // Rows in the CSV input sense.
+}
+
+impl Default for VectorTable {
+    fn default() -> Self {
+        VectorTable {
+            table_of_vectors:   Vec::new(),
+            vector_of_classes:  Vec::new(),
+            vector_of_headers:  Vec::new(),
+            vector_count:       0,
+            vector_length:      0,
+        }
+    }
+}
+
+impl VectorTable {
+
+    fn _parse_csv_string(data_string: String) -> Option<Vec<String>> {
+        let mut iterable =
+            ReaderBuilder::new().delimiter(b',').from_reader(data_string.as_bytes());
+        if let Some(result) = iterable.records().next() {
+            match result {
+                Ok(buffer)      => return Some(buffer),
+                Err(_err)       => return None,
+            }
+        }
+    }
+
+    fn _skip_indicated(on_bad_data: BadDataAction,ll: String) -> bool {
+        match on_bad_data {
+            BadDataAction::ExcludeRowOnBadData  => {
+                let re = Regex::new(r",,").unwrap();
+                let sstr = ll.trim();
+                if re.is_match(sstr) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    pub fn array_of_char_2_vector_of_classes(a_a: Vec<&str>) -> Result<Vec<VectorClassId>,ValidationError> {
+        let oa: Vec<VectorClassId> = Vec::new();
+        for lc in a_a.iter() {
+            match lc {
+                "C" => oa.push(VectorClassId::VOCID),
+                "D" => oa.push(VectorClassId::VODID),
+                _   => {
+                    let m = "Identifier '{lc}' is not recognized.  Allowed identifier characters are {{C,D}}.";
+                    return Err(ValidationError::ArgumentError(m));
+                },
+            }
+        }
+        return oa;
+    }
+
+    pub fn array_of_class_labels_2_vector_of_classes(a_a: Vec<&str>) -> Result<Vec<VectorClassId>,ValidationError> {
+        let oa: Vec<VectorClassId> = Vec::new();
+        for llabel in a_a.iter() {
+            match llabel {
+                "VectorOfContinuous"    => oa.push(VectorClassId::VOCID),
+                "VectorOfDiscrete"      => oa.push(VectorClassId::VODID),
+                _   => {
+                    let m = "'#{llabel}' is Invalid. Allowed are: {{VectorOfContinuous,VectorOfDiscrete}}.";
+                    return Err(ValidationError::ArgumentError(m));
+                },
+            }
+        }
+        return oa;
+    }
+
+    pub fn new_from_csv(vc_spec: Vec<VectorClassId>,f_spec: &str,on_bad_data: BadDataAction,see_first_line_as_header: bool) -> Option<VectorTable> {
+        let localo = VectorTable::new(vc_spec);
+        let i = 0;
+        for llresult in read_to_string(f_spec).unwrap().lines() {
+            if let Some(llstring) = llresult {
+                let llst = llstring.trim();
+                if VectorTable::_skip_indicated(on_bad_data,llst) {
+                    continue;
+                }
+                if ( i == 0 ) {
+                    if see_first_line_as_header {
+                        if let Some(hv) = VectorTable::_parse_csv_string(llst) {
+                            localo.use_array_for_column_identifiers(hv);
+                            i += 1;
+                            continue;
+                        } else {
+                            return None;
+                        }
+                    }
+                }
+                if let Some(dv) = VectorTable::_parse_csv_string(llst) {
+                    localo.push_table_row(dv,on_bad_data);
+                    i += 1;
+                }
+            }
+        }
+        localo.vector_length = i;
+        return Some(localo);
+    }
+
+    pub fn new(vector_of_classes: Vec<VectorClassId>) -> Self {
+        let mut buffer: VectorTable = Default::default();
+        let i = 0;
+        buffer.vector_of_classes    = vector_of_classes;
+        for lci in buffer.vector_of_classes.iter() {
+            let b = match lci {
+                VectorClassId::VOCID  => VectorObject::VectorOfContinuousEnum(  VectorOfContinuous::new()),
+                VectorClassId::VODID    => VectorObject::VectorOfDiscreteEnum(    VectorOfDiscrete::new()),
+            };
+            buffer.vector_of_headers.push("Column {i}"); // Use offset index as column numbers, NOT traditional.
+            buffer.table_of_vectors.push(b);
+            i                       += 1;
+        }
+        buffer.vector_count         = i;
+        return buffer;
+    }
+
+    /*
+    fn each_column_vector(&self) {
+        self.table_of_vectors.each do |lvo|
+            yield lvo
+        }
+    }
+     */
+
+    pub fn get_column_count(&self) -> usize {               // My terms are transposed from the orientation of the CSV file.
+        return self.vector_count;
+    }
+
+    pub fn get_row_count(&self) -> usize {   // My terms are transposed from the orientation of the CSV file.
+        // As of 2023/11/14 I have put little thought into regular data, and hope simple
+        // validations will keep it away for now.
+        return self.vector_length;
+    }
+
+    pub fn get_vector_object(&self,index_no: usize) -> Result<VectorObject,ValidationError> {
+        // May need to use Option here.
+        if index_no < 0 || self.vector_count <= index_no {
+            return Err(ValidationError::InvalidIndex(index_no,0,self.vector_count-1));
+        }
+        let lvoe = match self.table_of_vectors[index_no] {
+            VectorObject::VectorOfContinuousEnum(b)  => b,
+            VectorObject::VectorOfDiscreteEnum(b)    => b,
+        };
+        return lvoe;
+    }
+
+    pub fn push_table_row(&self,array_a: Vec<String>,on_bad_data: BadDataAction) -> Result<(),ValidationError> {
+        let alen    = array_a.len();
+        let tlen    = self.table_of_vectors.len();
+        if alen != tlen {
+            return Err(ValidationError::VectorPairLengthsNotEqual(alen,tlen));
+        }
+        if on_bad_data == BadDataAction::SkipDataItem {
+            let m = "Skip Action Not Allowed within VectorTable.";
+            return Err(ValidationError::ArgumentError(m.to_string()));
+        }
+        let i = 0;
+        for leoe in self.table_of_vectors.iter() {
+            let lvoe = match leoe {
+                VectorObject::VectorOfContinuousEnum(b)  => b,
+                VectorObject::VectorOfDiscreteEnum(b)    => b,
+            };
+            lvoe.push_x_string(array_a[i],on_bad_data)?;
+            i += 1;
+        }
+    }
+
+    pub fn use_array_for_column_identifiers(&self,hdr_columns: Vec<String>) -> Result<(),ValidationError> {
+        let alen    = hdr_columns.len();
+        let hlen    = self.vector_of_headers.len();
+        if alen != hlen {
+            return Err(ValidationError::VectorPairLengthsNotEqual(alen,hlen));
+        }
+        // May Need to transform from one kind of string to another. xc NOTE:TBD
+        let i = 0;
+        for lc in hdr_columns.iter() {
+            self.vector_of_headers = hdr_columns[i];
+            i += 1;
+        }
+    }
+
+}
+
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Unit Tests
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -3168,6 +3368,7 @@ mod tests {
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
     // Tests for VectorOfDiscrete
 
+    #[test]
     fn test_constructs_with_no_argument() {
         let mut localo = VectorOfDiscrete::new();
         localo.push_x_str("5.333");
@@ -3176,6 +3377,7 @@ mod tests {
         assert_eq!( 3, localo.get_count());
     }
 
+    #[test]
     fn test_constructs_with_a_str_slice_vec() {
         let a       = vec!["1.5","99","5876.1234","some old string"];
         let localo  = match VectorOfDiscrete::new_from_str_number_vector(a) {
@@ -3185,6 +3387,7 @@ mod tests {
         assert_eq!( 4, localo.get_count());
     }
 
+    #[test]
     fn test_has_a_binomial_probability_calculation() {
         let a       = vec!["1","2","3","4","5","6","7","8","9","8"];
         let localo  = match VectorOfDiscrete::new_from_str_number_vector(a) {
@@ -3204,6 +3407,7 @@ mod tests {
         }
     }
 
+    #[test]
     fn test_has_a_method_to_get_the_mode() {
         let a       = vec!["1.5","99","5876.1234","some old string","99"];
         let localo  = match VectorOfDiscrete::new_from_str_number_vector(a) {
@@ -3219,6 +3423,35 @@ mod tests {
     }
 
     // VectorTable
+
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
+    // Tests for VectorTable
+
+    // Primary Example:  ./testdata/doexampledata.csv
+    // year_month,month_of_release,passenger_type,direction,sex,age,estimate,standard_error,status
+    // 2001-01,2020-09,Long-term migrant,Arrivals,Female,0-4 years,344,0,Final
+
+    #[test]
+    fn test_Constructs_with_just_a_class_column_argument() {
+           // 2001-01,2020-09,Long-term migrant,Arrivals,Male,0-4 years,341,0,Final
+        let vcsa = [VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VOCID,VectorClassId::VOCID,VectorClassId::VODID];
+        if let Some(localo) = VectorTable::new(vcsa) {
+            assert!(localo);
+        } else {
+            panic!("Test failed.");
+        }
+    }
+    
+    #[test]
+    fn test_Allows_adding_a_data_row_s_of_vector_elements() {
+           // 2001-01,2020-09,Long-term migrant,Arrivals,Male,0-4 years,341,0,Final
+        let vcsa = [VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VOCID,VectorClassId::VOCID,VectorClassId::VODID];
+        let localo = VectorTable::new(vcsa);
+        let a = ["Nil0".to_string(),"Nil1".to_string(),"Nil2".to_string(),"Nil3".to_string(),"Nil4".to_string(),"Nil5".to_string(),123456,77,"Nil8".to_string()];
+        localo.push_table_row(a);
+        let lvi6o = localo.get_vector_object(6);
+        let lvi7o = localo.get_vector_object(7);
+    }
 
 }
 

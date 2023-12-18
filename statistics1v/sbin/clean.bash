@@ -14,6 +14,7 @@ rm -rf ctree
 rm -rf cpptree
 rm -rf __pycache__
 rm -rf extras/rusttree
+rm -f $(grep -rIL .)
 
 #2345678901234567890123456789012345678901234567890123456789012345678901234567890
 # End of clean.bash
