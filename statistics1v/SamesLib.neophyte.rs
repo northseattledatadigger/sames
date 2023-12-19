@@ -41,6 +41,7 @@ macro_rules! collection_json_table_fmt_str {
 }
 
 use csv::ReaderBuilder;
+use csv::StringRecord;
 use regex::Regex;
 use std::collections::*;
 use std::error::Error;
@@ -65,6 +66,8 @@ pub enum ValidationError {
     InvalidArgument(String),
     #[error("Invalid index: {0} out of range [{1},{2}]")]
     InvalidIndex(usize,usize,usize),
+    #[error("Invalid VectorObject: Index {0} is NOT for a Vector class of type {1}.")]
+    InvalidVectorObject(usize,String),
     #[error("Method may only be used with Differences from Mean Data.")]
     MethodOnlyForDiffFromMeanData(),
     #[error("Method may only be used with Sums of Xs Data.")]
@@ -907,23 +910,28 @@ impl SumsOfPowersAccess for SumsOfPowers {
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // VectorOfX - Representing a kind of base class area.
 
-enum BadDataAction {
-    BlankField,
-    DefaultFill,
-    ExcludeRow,
-    Fail,
-    SkipDataItem,
-    ZeroFloat,
-    ZeroInteger,
-}
+type BadDataAction  = &'static str;
 
-const BLANKFIELD:    BadDataAction  = BadDataAction::BlankField;
-const DEFAULTFILL:   BadDataAction  = BadDataAction::DefaultFill;
-const EXCLUDEROW:    BadDataAction  = BadDataAction::ExcludeRow;
-const FAIL:          BadDataAction  = BadDataAction::Fail;
-const SKIPDATAITEM:  BadDataAction  = BadDataAction::SkipDataItem;
-const ZEROFLOAT:     BadDataAction  = BadDataAction::ZeroFloat;
-const ZEROINTEGER:   BadDataAction  = BadDataAction::ZeroInteger;
+const BLANKFIELD:    BadDataAction  = "BlankField";
+const DEFAULTFILL:   BadDataAction  = "DefaultFill";
+const EXCLUDEROW:    BadDataAction  = "ExcludeRow";
+const FAIL:          BadDataAction  = "Fail";
+const SKIPDATAITEM:  BadDataAction  = "SkipDataItem";
+const ZEROFLOAT:     BadDataAction  = "ZeroFloat";
+const ZEROINTEGER:   BadDataAction  = "ZeroInteger";
+
+/*
+    May not be able to use this for now:
+let BadDataActionSet = HashSet::from([
+    BLANKFIELD,
+    DEFAULTFILL,
+    EXCLUDEROW,
+    FAIL,
+    SKIPDATAITEM,
+    ZEROFLOAT,
+    ZEROINTEGER,
+]);
+ */
 
 pub trait VectorOfX {
 
@@ -933,8 +941,8 @@ pub trait VectorOfX {
     fn new() -> Self;
     fn new_from_str_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self;
     fn new_from_string_after_invalidated_dropped(vector_of_x: Vec<String>) -> Self;
-    fn push_x_str(&mut self, x_str: &str) -> Result<(), ValidationError>;
-    fn push_x_string(&mut self, x_string: String) -> Result<(), ValidationError>;
+    fn push_x_str(&mut self, x_str: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError>;
+    fn push_x_string(&mut self, x_string: String,on_bad_data: BadDataAction) -> Result<(), ValidationError>;
 
 }
 
@@ -943,7 +951,6 @@ pub trait VectorOfX {
 // VectorOfContinouos for floating point based distributions.  All Xs floats.
 
 pub struct VectorOfContinuous {
-    on_bad_data:    BadDataAction,
     in_precision: i32,
     out_precision: i32,
     population: bool,
@@ -957,7 +964,6 @@ pub struct VectorOfContinuous {
 impl Default for VectorOfContinuous {
     fn default() -> Self {
         VectorOfContinuous {
-            on_bad_data: BadDataAction::Fail,
             in_precision: 4,
             out_precision: 4,
             population: false,
@@ -1000,8 +1006,9 @@ impl VectorOfX for VectorOfContinuous {
     fn new_from_str_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
+            // Need to remove or justify the unwrap here:
             if is_a_num_str(lx) {
-                buffer.push_x_str(lx).unwrap();
+                buffer.push_x_str(lx,SKIPDATAITEM).unwrap();
             }
         }
         return buffer;
@@ -1010,29 +1017,31 @@ impl VectorOfX for VectorOfContinuous {
     fn new_from_string_after_invalidated_dropped(vector_of_x: Vec<String>) -> Self {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
+            // Need to remove or justify the unwrap here:
             if is_a_num_str(lx.as_str()) {
-                buffer.push_x_str(lx).unwrap();
+                buffer.push_x_str(lx,SKIPDATAITEM).unwrap();
             }
         }
         return buffer;
     }
 
-    fn push_x_str(&mut self,x_item: &str) -> Result<(), ValidationError> {
-        self.push_x_string(x_item.to_string())?;
+    fn push_x_str(&mut self,x_item: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
+        self.push_x_string(x_item.to_string(),on_bad_data)?;
         return Ok(());
     }
 
-    fn push_x_string(&mut self,x_item: String) -> Result<(), ValidationError> {
+    fn push_x_string(&mut self,x_item: String,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
         let mut x_mut               = x_item;
         if x_mut.len() == 0 {
-            match self.on_bad_data {
-                BadDataAction::BlankField   => x_mut=" ".to_string(),
-                BadDataAction::DefaultFill  => x_mut=" ".to_string(),
-                BadDataAction::ExcludeRow   => return Err(ValidationError::OptionMayNotBeUsedHere("ExcludeRow".to_string())),
-                BadDataAction::Fail         => return Err(ValidationError::ValueMayNotBeMissing()),
-                BadDataAction::SkipDataItem => return Ok(()),
-                BadDataAction::ZeroFloat    => x_mut="0.0".to_string(),
-                BadDataAction::ZeroInteger  => x_mut="0".to_string(),
+            match on_bad_data {
+                BlankField      => x_mut=" ".to_string(),
+                DefaultFill     => x_mut=" ".to_string(),
+                ExcludeRow      => return Err(ValidationError::OptionMayNotBeUsedHere("ExcludeRow".to_string())),
+                Fail            => return Err(ValidationError::ValueMayNotBeMissing()),
+                SkipDataItem    => return Ok(()),
+                ZeroFloat       => x_mut="0.0".to_string(),
+                ZeroInteger     => x_mut="0".to_string(),
+                _               => panic!("Should never happen.  Programmer error."),
             };
         }
         let result                  = x_mut.trim().parse();
@@ -1380,18 +1389,18 @@ impl VectorOfContinuous {
         return buffer;
     }
 
-    pub fn new_from_str_number_vector(vector_of_x: Vec<&str>) -> Result<VectorOfContinuous, ValidationError> {
+    pub fn new_from_str_number_vector(vector_of_x: Vec<&str>,on_bad_data: BadDataAction) -> Result<VectorOfContinuous, ValidationError> {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
-            buffer.push_x_str(lx)?;
+            buffer.push_x_str(lx,on_bad_data)?;
         }
         return Ok(buffer);
     }
 
-    pub fn new_from_string_number_vector(vector_of_x: Vec<String>) -> Result<VectorOfContinuous, ValidationError> {
+    pub fn new_from_string_number_vector(vector_of_x: Vec<String>,on_bad_data: BadDataAction) -> Result<VectorOfContinuous, ValidationError> {
         let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
-            buffer.push_x_string(lx.to_string())?;
+            buffer.push_x_string(lx.to_string(),on_bad_data)?;
         }
         return Ok(buffer);
     }
@@ -1671,7 +1680,6 @@ impl VectorOfContinuous {
 // VectorOfDiscrete - catchall for arbitrary X that could be a string.
 
 pub struct VectorOfDiscrete {
-    on_bad_data:    BadDataAction,
     out_precision: i32,
     frequencies_aa: BTreeMap<String,u32>,
     vector_of_x: Vec<String>,
@@ -1680,7 +1688,6 @@ pub struct VectorOfDiscrete {
 impl Default for VectorOfDiscrete {
     fn default() -> Self {
         VectorOfDiscrete {
-            on_bad_data: BadDataAction::Fail,
             out_precision: 4,
             frequencies_aa: BTreeMap::new(),
             vector_of_x: Vec::new(),
@@ -1719,7 +1726,8 @@ impl VectorOfX for VectorOfDiscrete {
         let mut buffer: VectorOfDiscrete = Default::default();
         for lx in vector_of_x.iter() {
             if lx.len() > 0 {
-                buffer.push_x_str(lx).unwrap();
+                // Always skip data item by definition.
+                buffer.push_x_str(lx,SKIPDATAITEM).unwrap();
             }
         }
         return buffer;
@@ -1729,28 +1737,30 @@ impl VectorOfX for VectorOfDiscrete {
         let mut buffer: VectorOfDiscrete = Default::default();
         for lx in vector_of_x.iter() {
             if lx.len() > 0 {
-                buffer.push_x_string(lx.to_string()).unwrap();
+                // Always skip data item by definition.
+                buffer.push_x_string(lx.to_string(),SKIPDATAITEM).unwrap();
             }
         }
         return buffer;
     }
 
-    fn push_x_str(&mut self,x_item: &str) -> Result<(), ValidationError> {
-        self.push_x_string(x_item.to_string())?;
+    fn push_x_str(&mut self,x_item: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
+        self.push_x_string(x_item.to_string(),on_bad_data)?;
         return Ok(());
     }
 
-    fn push_x_string(&mut self,x_item: String) -> Result<(), ValidationError> {
+    fn push_x_string(&mut self,x_item: String,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
         let mut x_mut   = x_item;
         if x_mut.len() == 0 {
-            match self.on_bad_data {
-                BadDataAction::BlankField   => x_mut=" ".to_string(),
-                BadDataAction::DefaultFill  => x_mut=" ".to_string(),
-                BadDataAction::ExcludeRow   => return Err(ValidationError::OptionMayNotBeUsedHere("ExcludeRow".to_string())),
-                BadDataAction::Fail         => return Err(ValidationError::ValueMayNotBeMissing()),
-                BadDataAction::SkipDataItem => return Ok(()),
-                BadDataAction::ZeroFloat    => x_mut="0.0".to_string(),
-                BadDataAction::ZeroInteger  => x_mut="0".to_string(),
+            match on_bad_data {
+                BlankField   => x_mut=" ".to_string(),
+                DefaultFill  => x_mut=" ".to_string(),
+                ExcludeRow   => return Err(ValidationError::OptionMayNotBeUsedHere("ExcludeRow".to_string())),
+                Fail         => return Err(ValidationError::ValueMayNotBeMissing()),
+                SkipDataItem => return Ok(()),
+                ZeroFloat    => x_mut="0.0".to_string(),
+                ZeroInteger  => x_mut="0".to_string(),
+                _               => panic!("Should never happen.  Programmer error."),
             };
         }
         match self.frequencies_aa.get(&x_mut) {
@@ -1850,18 +1860,18 @@ impl VectorOfDiscrete {
         which I have NOT yet figured out how to put into a unique
         area like a trait.
      */  
-    pub fn new_from_str_number_vector(vector_of_x: Vec<&str>) -> Result<VectorOfDiscrete, ValidationError> {
+    pub fn new_from_str_number_vector(vector_of_x: Vec<&str>,on_bad_data: BadDataAction) -> Result<VectorOfDiscrete, ValidationError> {
         let mut buffer: VectorOfDiscrete = Default::default();
         for lx in vector_of_x.iter() {
-            buffer.push_x_str(lx)?;
+            buffer.push_x_str(lx,on_bad_data)?;
         }
         return Ok(buffer);
     }
 
-    pub fn new_from_string_number_vector(vector_of_x: Vec<String>) -> Result<VectorOfDiscrete, ValidationError> {
+    pub fn new_from_string_number_vector(vector_of_x: Vec<String>,on_bad_data: BadDataAction) -> Result<VectorOfDiscrete, ValidationError> {
         let mut buffer: VectorOfDiscrete = Default::default();
         for lx in vector_of_x.iter() {
-            buffer.push_x_string(lx.to_string())?;
+            buffer.push_x_string(lx.to_string(),on_bad_data)?;
         }
         return Ok(buffer);
     }
@@ -1996,66 +2006,154 @@ impl Default for VectorTable {
 impl VectorTable {
 
     fn _parse_csv_string(data_string: String) -> Option<Vec<String>> {
+        if data_string.len() == 0 {
+            return None;
+        }
+        let mut dsb = data_string.to_string();
+        let trimbeginquote  = Regex::new(r#"^""#).unwrap();
+        let trimendquote    = Regex::new(r#""$"#).unwrap();
+        if trimbeginquote.is_match(dsb.as_str()) {
+            dsb = dsb[1..dsb.len()].to_string();
+        }
+        if trimendquote.is_match(data_string.as_str()) {
+            dsb = dsb[0..dsb.len()-1].to_string();
+        }
+        let seperator   = Regex::new(r#""?,"?"#).expect("Invalid regex");
+        let result: Vec<String> = seperator.split(dsb.as_str()).map(|s| s.to_string()).collect();
+
+        Some(result)
+    }
+
+    /*
+    fn _parse_csv_string(data_string: String) -> Result<Vec<String>,ValidationError> {
+        let mut rdr = ReaderBuilder::new().from_reader(data_string.as_bytes());
+
+        let records = match rdr 
+            .records()
+            .collect::<Result<Vec<StringRecord>, csv::Error>>() {
+            Ok(b)       => b,
+            Err(_err)   => {
+                let m = "parse by ReaderBuilder of csv data error.".to_string();
+                return Err(ValidationError::ArgumentError(m));
+            },
+        };
+        let vb: Vec<String> = Vec::new();
+        for lstr in records.iter() {
+            vb.push(lstr.to_string());
+        }
+        return Ok(vb);
+    }
+
+    fn example() -> Result<(), Box<dyn Error>> {
+        // Build the CSV reader and iterate over each record.
+        let mut rdr = csv::Reader::from_reader(io::stdin());
+        for result in rdr.records() {
+            // The iterator yields Result<StringRecord, Error>, so we check the
+            // error here.
+            let record = result?;
+            println!("{:?}", record);
+        }
+        Ok(())
+    }
+
+    fn _parse_csv_string(data_string: String) -> Option<Vec<String>> {
         let mut iterable =
             ReaderBuilder::new().delimiter(b',').from_reader(data_string.as_bytes());
         if let Some(result) = iterable.records().next() {
-            match result {
-                Ok(buffer)      => return Some(buffer),
-                Err(_err)       => return None,
+            let vb: Vec<String> = Vec::new();
+            for lstr in result.iter() {
+                //vb.push(lstr.to_string());
+                vb.push(lstr);
             }
+            return Some(vb);
         }
+        return None;
     }
+     */
 
     fn _skip_indicated(on_bad_data: BadDataAction,ll: String) -> bool {
         match on_bad_data {
-            BadDataAction::ExcludeRowOnBadData  => {
+            ExcludeRow  => {
                 let re = Regex::new(r",,").unwrap();
                 let sstr = ll.trim();
                 if re.is_match(sstr) {
                     return true;
-                }
-            }
+                };
+            },
+            _                           => return false,
         }
         return false;
     }
 
     pub fn array_of_char_2_vector_of_classes(a_a: Vec<&str>) -> Result<Vec<VectorClassId>,ValidationError> {
-        let oa: Vec<VectorClassId> = Vec::new();
+        let mut oa: Vec<VectorClassId> = Vec::new();
         for lc in a_a.iter() {
-            match lc {
+            match *lc {
                 "C" => oa.push(VectorClassId::VOCID),
                 "D" => oa.push(VectorClassId::VODID),
                 _   => {
                     let m = "Identifier '{lc}' is not recognized.  Allowed identifier characters are {{C,D}}.";
-                    return Err(ValidationError::ArgumentError(m));
+                    return Err(ValidationError::ArgumentError(m.to_string()));
                 },
             }
         }
-        return oa;
+        return Ok(oa);
     }
 
     pub fn array_of_class_labels_2_vector_of_classes(a_a: Vec<&str>) -> Result<Vec<VectorClassId>,ValidationError> {
-        let oa: Vec<VectorClassId> = Vec::new();
+        let mut oa: Vec<VectorClassId> = Vec::new();
         for llabel in a_a.iter() {
-            match llabel {
+            match *llabel {
                 "VectorOfContinuous"    => oa.push(VectorClassId::VOCID),
                 "VectorOfDiscrete"      => oa.push(VectorClassId::VODID),
                 _   => {
                     let m = "'#{llabel}' is Invalid. Allowed are: {{VectorOfContinuous,VectorOfDiscrete}}.";
-                    return Err(ValidationError::ArgumentError(m));
+                    return Err(ValidationError::ArgumentError(m.to_string()));
                 },
             }
         }
-        return oa;
+        return Ok(oa);
+    }
+
+    pub fn get_column_count(&self) -> usize {
+        return self.vector_count;
+    }
+
+    pub fn get_row_count(&self) -> usize {
+        // As of 2023/11/14 I have put little thought into regular data, and hope simple
+        // validations will keep it away for now.
+        return self.vector_length;
+    }
+
+    pub fn get_vector_of_continuous_object(&self,index_no: usize) -> Result<VectorOfContinuous,ValidationError> {
+        if index_no < 0 || self.vector_count <= index_no {
+            return Err(ValidationError::InvalidIndex(index_no,0,self.vector_count-1));
+        }
+        if let VectorObject::VectorOfContinuousEnum(vo) = &self.table_of_vectors[index_no] {
+            return Ok(*vo);
+        } else {
+            return Err(ValidationError::InvalidVectorObject(index_no,"VectorOfContinuous".to_string()));
+        }
+    }
+
+    pub fn get_vector_of_discrete_object(&self,index_no: usize) -> Result<VectorOfDiscrete,ValidationError> {
+        if index_no < 0 || self.vector_count <= index_no {
+            return Err(ValidationError::InvalidIndex(index_no,0,self.vector_count-1));
+        }
+        if let VectorObject::VectorOfDiscreteEnum(vo) = &self.table_of_vectors[index_no] {
+            return Ok(*vo);
+        } else {
+            return Err(ValidationError::InvalidVectorObject(index_no,"VectorOfContinuous".to_string()));
+        }
     }
 
     pub fn new_from_csv(vc_spec: Vec<VectorClassId>,f_spec: &str,on_bad_data: BadDataAction,see_first_line_as_header: bool) -> Option<VectorTable> {
-        let localo = VectorTable::new(vc_spec);
-        let i = 0;
+        let mut localo = VectorTable::new(vc_spec);
+        let mut i = 0;
         for llresult in read_to_string(f_spec).unwrap().lines() {
-            if let Some(llstring) = llresult {
-                let llst = llstring.trim();
-                if VectorTable::_skip_indicated(on_bad_data,llst) {
+            if llresult.len() > 0 {
+                let llst = llresult.trim().to_string();
+                if VectorTable::_skip_indicated(on_bad_data,llst.to_string()) {
                     continue;
                 }
                 if ( i == 0 ) {
@@ -2081,14 +2179,14 @@ impl VectorTable {
 
     pub fn new(vector_of_classes: Vec<VectorClassId>) -> Self {
         let mut buffer: VectorTable = Default::default();
-        let i = 0;
+        let mut i = 0;
         buffer.vector_of_classes    = vector_of_classes;
         for lci in buffer.vector_of_classes.iter() {
             let b = match lci {
                 VectorClassId::VOCID  => VectorObject::VectorOfContinuousEnum(  VectorOfContinuous::new()),
                 VectorClassId::VODID    => VectorObject::VectorOfDiscreteEnum(    VectorOfDiscrete::new()),
             };
-            buffer.vector_of_headers.push("Column {i}"); // Use offset index as column numbers, NOT traditional.
+            buffer.vector_of_headers.push("Column {i}".to_string()); // Use offset index as column numbers, NOT traditional.
             buffer.table_of_vectors.push(b);
             i                       += 1;
         }
@@ -2104,61 +2202,43 @@ impl VectorTable {
     }
      */
 
-    pub fn get_column_count(&self) -> usize {               // My terms are transposed from the orientation of the CSV file.
-        return self.vector_count;
-    }
-
-    pub fn get_row_count(&self) -> usize {   // My terms are transposed from the orientation of the CSV file.
-        // As of 2023/11/14 I have put little thought into regular data, and hope simple
-        // validations will keep it away for now.
-        return self.vector_length;
-    }
-
-    pub fn get_vector_object(&self,index_no: usize) -> Result<VectorObject,ValidationError> {
-        // May need to use Option here.
-        if index_no < 0 || self.vector_count <= index_no {
-            return Err(ValidationError::InvalidIndex(index_no,0,self.vector_count-1));
-        }
-        let lvoe = match self.table_of_vectors[index_no] {
-            VectorObject::VectorOfContinuousEnum(b)  => b,
-            VectorObject::VectorOfDiscreteEnum(b)    => b,
-        };
-        return lvoe;
-    }
-
-    pub fn push_table_row(&self,array_a: Vec<String>,on_bad_data: BadDataAction) -> Result<(),ValidationError> {
+    pub fn push_table_row(&mut self,array_a: Vec<String>,on_bad_data: BadDataAction) -> Result<(),ValidationError> {
         let alen    = array_a.len();
         let tlen    = self.table_of_vectors.len();
         if alen != tlen {
             return Err(ValidationError::VectorPairLengthsNotEqual(alen,tlen));
         }
-        if on_bad_data == BadDataAction::SkipDataItem {
-            let m = "Skip Action Not Allowed within VectorTable.";
-            return Err(ValidationError::ArgumentError(m.to_string()));
+        match on_bad_data {
+            SkipDataItem => {
+                    let m = "Skip Action Not Allowed within VectorTable.";
+                    return Err(ValidationError::ArgumentError(m.to_string()));
+                },
+            _                           => (),
         }
-        let i = 0;
-        for leoe in self.table_of_vectors.iter() {
-            let lvoe = match leoe {
-                VectorObject::VectorOfContinuousEnum(b)  => b,
-                VectorObject::VectorOfDiscreteEnum(b)    => b,
+        let mut i = 0;
+        for &mut VectorObject in leoe in self.table_of_vectors.iter() {
+            match leoe {
+                VectorObject::VectorOfContinuousEnum(ref mut b)  => b.push_x_string(array_a[i].to_string(),on_bad_data)?,
+                VectorObject::VectorOfDiscreteEnum(ref mut b)    => b.push_x_string(array_a[i].to_string(),on_bad_data)?,
             };
-            lvoe.push_x_string(array_a[i],on_bad_data)?;
             i += 1;
         }
+        return Ok(());
     }
 
-    pub fn use_array_for_column_identifiers(&self,hdr_columns: Vec<String>) -> Result<(),ValidationError> {
+    pub fn use_array_for_column_identifiers(&mut self,hdr_columns: Vec<String>) -> Result<(),ValidationError> {
         let alen    = hdr_columns.len();
         let hlen    = self.vector_of_headers.len();
         if alen != hlen {
             return Err(ValidationError::VectorPairLengthsNotEqual(alen,hlen));
         }
         // May Need to transform from one kind of string to another. xc NOTE:TBD
-        let i = 0;
+        let mut i = 0;
         for lc in hdr_columns.iter() {
-            self.vector_of_headers = hdr_columns[i];
+            self.vector_of_headers[i] = lc.to_string();
             i += 1;
         }
+        return Ok(());
     }
 
 }
@@ -2749,13 +2829,14 @@ mod tests {
         assert_eq!(bdaa.len(),7);
         for lbda in bdaa.iter() {
             match lbda {
-                BadDataAction::BlankField   => assert!(true),
-                BadDataAction::DefaultFill  => assert!(true),
-                BadDataAction::ExcludeRow   => assert!(true),
-                BadDataAction::Fail         => assert!(true),
-                BadDataAction::SkipDataItem => assert!(true),
-                BadDataAction::ZeroFloat    => assert!(true),
-                BadDataAction::ZeroInteger  => assert!(true),
+                BlankField      => assert!(true),
+                DefaultFill     => assert!(true),
+                ExcludeRow      => assert!(true),
+                Fail            => assert!(true),
+                SkipDataItem    => assert!(true),
+                ZeroFloat       => assert!(true),
+                ZeroInteger     => assert!(true),
+                _               => panic!("Test failed."),
             };
         }
     }
@@ -2763,7 +2844,7 @@ mod tests {
     #[test]
     fn test_basic_construction_and_get_count_method() {
         let mut localo = VectorOfContinuous::new();
-        localo.push_x_str("1234.56").unwrap();
+        localo.push_x_str("1234.56",FAIL).unwrap();
         let n = localo.get_count();
         assert_eq!(n,1);
     }
@@ -2771,7 +2852,7 @@ mod tests {
     #[test]
     fn test_various_array_construction_methods() {
         let a: Vec<&str>    = vec!["3", "2", "1"];
-        let localo          = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
+        let localo          = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         assert_eq!(localo.get_count(),3);
         let a: Vec<&str>    = vec!["1.5","99","5876.1234","String"];
         let localo          = VectorOfContinuous::new_from_str_after_invalidated_dropped(a);
@@ -2790,7 +2871,7 @@ mod tests {
     #[test]
     fn test_sorted_vector_function_and_get_x_method() {
         let a: Vec<&str>    = vec!["3", "2", "1"];
-        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         let n               = localo.get_count();
         assert_eq!(n,3);
         localo._assure_sorted_vector_of_x(false);
@@ -2808,9 +2889,9 @@ mod tests {
     #[test]
     fn test_push_x_methods() {
         let mut localo      = VectorOfContinuous::new();
-        localo.push_x_str("11234.51234").unwrap();
+        localo.push_x_str("11234.51234",FAIL).unwrap();
         assert_eq!(localo.get_count(),1);
-        localo.push_x_string("98765.43210".to_string()).unwrap();
+        localo.push_x_string("98765.43210".to_string(),FAIL).unwrap();
         assert_eq!(localo.get_count(),2);
         localo.push_x(10101010.202020202);
         assert_eq!(localo.get_count(),3);
@@ -2819,9 +2900,9 @@ mod tests {
     #[test]
     fn test_request_result_aa_output_methods() {
         let a: Vec<&str>    = vec!["3", "2", "1"];
-        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
-        localo.push_x_str("11234.51234").unwrap();
-        localo.push_x_string("98765.43210".to_string()).unwrap();
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
+        localo.push_x_str("11234.51234",FAIL).unwrap();
+        localo.push_x_string("98765.43210".to_string(),FAIL).unwrap();
         localo.push_x(10101010.202020202);
         let resultbm        = match localo.request_summary_collection().unwrap() {
             None            => panic!("Test failed."),
@@ -2856,7 +2937,7 @@ mod tests {
     #[test]
     fn test_has_internal_focused_method_to_construct_a_new_sums_of_powers_object_for_moment_statistics() {
         let a: Vec<&str>    = vec!["3", "2", "1"];
-        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         assert_eq!(3,localo.get_count());
         localo._add_up_xs_to_sums_of_powers(false,false).unwrap();
         localo._add_up_xs_to_sums_of_powers(false,true).unwrap();
@@ -2869,7 +2950,7 @@ mod tests {
     #[test]
     fn test_has_internal_focused_method_to_decide_startno_value_for_histogram() {
         let a: Vec<&str>    = vec!["1", "2", "3"];
-        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         assert_eq!(3,localo.get_count());
         let startno = localo._decide_histogram_start_number(true,1.0);
         assert_eq!(1.0,startno);
@@ -2880,7 +2961,7 @@ mod tests {
     #[test]
     fn test_calculates_arithmetic_mean_in_two_places() {
         let a: Vec<&str>    = vec!["1", "2", "3"];
-        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         let vocoam          = localo.calculate_arithmetic_mean().unwrap();
         localo._add_up_xs_to_sums_of_powers(false,false).unwrap();
         assert_eq!(vocoam,localo.sums_of_powers_object.arithmetic_mean);
@@ -2896,7 +2977,7 @@ mod tests {
     #[test]
     fn test_calculates_geometric_mean() {
         let a               = vec!["1","2","3","4","5"];
-        let localo          = VectorOfContinuous::new_from_str_number_vector(a).unwrap();
+        let localo          = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         let gmean           = localo.calculate_geometric_mean().unwrap();
         assert_eq!(2.6052,gmean);
         let a               = vec![2.0,2.0,2.0,2.0];
@@ -3356,7 +3437,7 @@ mod tests {
     fn test_input_routine_pushx_validates_arguments() {
         let mut localo  = VectorOfContinuous::new();
         localo.push_x(123.456);
-        localo.push_x_str("9999999999999999999999999999").unwrap();
+        localo.push_x_str("9999999999999999999999999999",FAIL).unwrap();
     }
 
     #[test]
@@ -3371,16 +3452,16 @@ mod tests {
     #[test]
     fn test_constructs_with_no_argument() {
         let mut localo = VectorOfDiscrete::new();
-        localo.push_x_str("5.333");
-        localo.push_x_str("Any old str");
-        localo.push_x_string("Any old string".to_string());
+        localo.push_x_str("5.333",FAIL);
+        localo.push_x_str("Any old str",FAIL);
+        localo.push_x_string("Any old string".to_string(),FAIL);
         assert_eq!( 3, localo.get_count());
     }
 
     #[test]
     fn test_constructs_with_a_str_slice_vec() {
         let a       = vec!["1.5","99","5876.1234","some old string"];
-        let localo  = match VectorOfDiscrete::new_from_str_number_vector(a) {
+        let localo  = match VectorOfDiscrete::new_from_str_number_vector(a,FAIL) {
             Ok(b)   => b,
             Err(_e) => panic!("Failed test."),
         };
@@ -3390,7 +3471,7 @@ mod tests {
     #[test]
     fn test_has_a_binomial_probability_calculation() {
         let a       = vec!["1","2","3","4","5","6","7","8","9","8"];
-        let localo  = match VectorOfDiscrete::new_from_str_number_vector(a) {
+        let localo  = match VectorOfDiscrete::new_from_str_number_vector(a,FAIL) {
             Ok(b)   => b,
             Err(_e) => panic!("Failed test."),
         };
@@ -3410,7 +3491,7 @@ mod tests {
     #[test]
     fn test_has_a_method_to_get_the_mode() {
         let a       = vec!["1.5","99","5876.1234","some old string","99"];
-        let localo  = match VectorOfDiscrete::new_from_str_number_vector(a) {
+        let localo  = match VectorOfDiscrete::new_from_str_number_vector(a,FAIL) {
             Ok(b)   => b,
             Err(_e) => panic!("Failed test."),
         };
@@ -3434,23 +3515,24 @@ mod tests {
     #[test]
     fn test_Constructs_with_just_a_class_column_argument() {
            // 2001-01,2020-09,Long-term migrant,Arrivals,Male,0-4 years,341,0,Final
-        let vcsa = [VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VOCID,VectorClassId::VOCID,VectorClassId::VODID];
-        if let Some(localo) = VectorTable::new(vcsa) {
-            assert!(localo);
-        } else {
-            panic!("Test failed.");
-        }
+        let vcsa = vec![VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VOCID,VectorClassId::VOCID,VectorClassId::VODID];
+        let localo = VectorTable::new(vcsa);
+        assert_eq!(9,localo.get_column_count());
+        assert_eq!(0,localo.get_row_count());
     }
     
     #[test]
     fn test_Allows_adding_a_data_row_s_of_vector_elements() {
            // 2001-01,2020-09,Long-term migrant,Arrivals,Male,0-4 years,341,0,Final
-        let vcsa = [VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VOCID,VectorClassId::VOCID,VectorClassId::VODID];
-        let localo = VectorTable::new(vcsa);
-        let a = ["Nil0".to_string(),"Nil1".to_string(),"Nil2".to_string(),"Nil3".to_string(),"Nil4".to_string(),"Nil5".to_string(),123456,77,"Nil8".to_string()];
-        localo.push_table_row(a);
-        let lvi6o = localo.get_vector_object(6);
-        let lvi7o = localo.get_vector_object(7);
+        let vcsa = vec![VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VOCID,VectorClassId::VOCID,VectorClassId::VODID];
+        let mut localo = VectorTable::new(vcsa);
+        let a = vec!["Nil0".to_string(),"Nil1".to_string(),"Nil2".to_string(),"Nil3".to_string(),"Nil4".to_string(),"Nil5".to_string(),123456.to_string(),77.to_string(),"Nil8".to_string()];
+        localo.push_table_row(a,FAIL);
+        assert_eq!(9,localo.get_column_count());
+        assert_eq!(1,localo.get_row_count());
+        let lvi6oeo = localo.get_vector_of_continuous_object(6);
+        let lvi7oeo = localo.get_vector_of_continuous_object(7);
+        let lvi8oeo = localo.get_vector_of_discrete_object(8);
     }
 
 }
