@@ -1,26 +1,3 @@
-    2.  Second of two passes for the day:
-        c.      try to pick up anything remaining that might be missed, and write tests or code with tests.
-
-    3.  Start working on TableVector stuff.
-
-        i.      Try to nail down best method for multiple classes in the same vector.
-        ii.     Bring over ruby code and start translating.
-        iii.    Bring over ruby tests for reference commented out, but translate as things become stuck.
-
-    4.  Plan last steps:
-
-        x.      Extended tests, probably in form of Rust integration tests.
-        y.      bin/rust.main.neophyte
-        z.      Acceptance tests.
-
-    5.  Be aware of Javascript / Node goals next.
-
-    6.  Be hopeful about Ruby latex and HTML document generation soon.
-
-    7.  Try to get better draft of resume tool into sames, perhaps doing a Python3, Node and even Rust version.
-
-Done:
-    X1.  One of two more passes for the day to cover:
-    X   a.      global procedures.
-    X   b.      Empty tests already added to bottom.
-
+    1.  Look for options around Enum arrays, and see about finishing up with that.
+    2.  Probably proceed back to trait objects, and simply add in get struct methods and creation of subtype objects that have all the methods.  This will ally more with what we've
+    read on recommendations.
