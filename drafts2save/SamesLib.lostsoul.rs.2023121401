@@ -92,8 +92,6 @@ pub enum ValidationError {
     ValueAtOrAboveHighStop(f64,f64),
     #[error("Value {0} below low limit {1}")]
     ValueBelowLowLimit(f64,f64),
-    #[error("Value ({0}) Must be number String.")]
-    ValueMustBeNumberString(String),
     #[error("Value May NOT be missing.")]
     ValueMayNotBeMissing(),
     #[error("Value {0} may not be negative.")]
@@ -936,13 +934,16 @@ let BadDataActionSet = HashSet::from([
  */
 
 pub trait VectorOfX {
+
     fn get_count(&self) -> usize;
     fn is_n_even(&self) -> bool;
     fn is_n_zero(&self) -> bool;
-    fn load_from_str_vector(&mut self,vector_of_x: Vec<&str>,on_bad_data: BadDataAction) -> Result<(), ValidationError>;
-    fn load_from_string_vector(&mut self,vector_of_x: Vec<String>,on_bad_data: BadDataAction) -> Result<(), ValidationError>;
+    fn new() -> Self;
+    fn new_from_str_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self;
+    fn new_from_string_after_invalidated_dropped(vector_of_x: Vec<String>) -> Self;
     fn push_x_str(&mut self, x_str: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError>;
     fn push_x_string(&mut self, x_string: String,on_bad_data: BadDataAction) -> Result<(), ValidationError>;
+
 }
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -956,33 +957,22 @@ pub struct VectorOfContinuous {
     sorted_vector_of_x: Vec<i128>,
     sums_of_powers_object: SumsOfPowers,
     use_diff_from_mean_calculations: bool,
-    validate_string_numbers: bool,
+    //validate_string_numbers: bool,
     vector_of_x: Vec<f64>,
 }
 
-pub fn init_vector_of_continuous() -> VectorOfContinuous {
-    VectorOfContinuous {
-        in_precision: 4,
-        out_precision: 4,
-        population: false,
-        sorted_vector_of_x: Vec::new(),
-        sums_of_powers_object: SumsOfPowers::new(false),
-        use_diff_from_mean_calculations: true,
-        validate_string_numbers: false,
-        vector_of_x: Vec::new(),
-    }
-}
-
-pub fn init_vector_of_continuous_(in_precision: i32,out_precision: i32, population: bool, use_diff_from_mean_calculations: bool, validate_string_numbers: bool) -> VectorOfContinuous {
-    VectorOfContinuous {
-        in_precision,
-        out_precision,
-        population,
-        sorted_vector_of_x: Vec::new(),
-        sums_of_powers_object: SumsOfPowers::new(false),
-        use_diff_from_mean_calculations,
-        validate_string_numbers,
-        vector_of_x: Vec::new(),
+impl Default for VectorOfContinuous {
+    fn default() -> Self {
+        VectorOfContinuous {
+            in_precision: 4,
+            out_precision: 4,
+            population: false,
+            sorted_vector_of_x: Vec::new(),
+            sums_of_powers_object: SumsOfPowers::new(false),
+            use_diff_from_mean_calculations: true,
+            //validate_string_numbers: false,
+            vector_of_x: Vec::new(),
+        }
     }
 }
 
@@ -1008,18 +998,31 @@ impl VectorOfX for VectorOfContinuous {
         return false;
     }
 
-    fn load_from_str_vector(&mut self,vector_of_x: Vec<&str>,on_bad_data: BadDataAction) -> Result<(),ValidationError> {
-        for lx in vector_of_x.iter() {
-            self.push_x_string(lx.to_string(),on_bad_data)?;
-        }
-        return Ok(());
+    fn new() -> Self {
+        let buffer: VectorOfContinuous = Default::default();
+        return buffer;
     }
 
-    fn load_from_string_vector(&mut self,vector_of_x: Vec<String>,on_bad_data: BadDataAction) -> Result<(),ValidationError> {
+    fn new_from_str_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self {
+        let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
-            self.push_x_string(lx.to_string(),on_bad_data)?;
+            // Need to remove or justify the unwrap here:
+            if is_a_num_str(lx) {
+                buffer.push_x_str(lx,SKIPDATAITEM).unwrap();
+            }
         }
-        return Ok(());
+        return buffer;
+    }
+
+    fn new_from_string_after_invalidated_dropped(vector_of_x: Vec<String>) -> Self {
+        let mut buffer: VectorOfContinuous = Default::default();
+        for lx in vector_of_x.iter() {
+            // Need to remove or justify the unwrap here:
+            if is_a_num_str(lx.as_str()) {
+                buffer.push_x_str(lx,SKIPDATAITEM).unwrap();
+            }
+        }
+        return buffer;
     }
 
     fn push_x_str(&mut self,x_item: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
@@ -1028,16 +1031,16 @@ impl VectorOfX for VectorOfContinuous {
     }
 
     fn push_x_string(&mut self,x_item: String,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
-        let mut x_mut               = x_item.to_string();
-        if ! is_a_num_str(x_mut.as_str()) {
+        let mut x_mut               = x_item;
+        if x_mut.len() == 0 {
             match on_bad_data {
-                BLANKFIELD      => x_mut=" ".to_string(),
-                DEFAULTFILL     => x_mut=" ".to_string(),
-                EXCLUDEROW      => return Err(ValidationError::OptionMayNotBeUsedHere("ExcludeRow".to_string())),
-                FAIL         => return Err(ValidationError::ValueMustBeNumberString(x_item)),
-                SKIPDATAITEM    => return Ok(()),
-                ZEROFLOAT       => x_mut="0.0".to_string(),
-                ZEROINTEGER     => x_mut="0".to_string(),
+                BlankField      => x_mut=" ".to_string(),
+                DefaultFill     => x_mut=" ".to_string(),
+                ExcludeRow      => return Err(ValidationError::OptionMayNotBeUsedHere("ExcludeRow".to_string())),
+                Fail            => return Err(ValidationError::ValueMayNotBeMissing()),
+                SkipDataItem    => return Ok(()),
+                ZeroFloat       => x_mut="0.0".to_string(),
+                ZeroInteger     => x_mut="0".to_string(),
                 _               => panic!("Should never happen.  Programmer error."),
             };
         }
@@ -1370,16 +1373,36 @@ impl VectorOfContinuous {
         return Some(buffer);
     }
 
-    pub fn load_from_f64(&mut self,vector_of_x: Vec<f64>) {
+    pub fn new_from_f64(vector_of_x: Vec<f64>) -> Self {
+        let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
-            self.push_x(*lx);
+            buffer.push_x(*lx);
         }
+        return buffer;
     }
 
-    pub fn load_from_i32(&mut self,vector_of_x: Vec<i32>) {
+    pub fn new_from_i32(vector_of_x: Vec<i32>) -> Self {
+        let mut buffer: VectorOfContinuous = Default::default();
         for lx in vector_of_x.iter() {
-            self.push_x(*lx as f64);
+            buffer.push_x(*lx as f64);
         }
+        return buffer;
+    }
+
+    pub fn new_from_str_number_vector(vector_of_x: Vec<&str>,on_bad_data: BadDataAction) -> Result<VectorOfContinuous, ValidationError> {
+        let mut buffer: VectorOfContinuous = Default::default();
+        for lx in vector_of_x.iter() {
+            buffer.push_x_str(lx,on_bad_data)?;
+        }
+        return Ok(buffer);
+    }
+
+    pub fn new_from_string_number_vector(vector_of_x: Vec<String>,on_bad_data: BadDataAction) -> Result<VectorOfContinuous, ValidationError> {
+        let mut buffer: VectorOfContinuous = Default::default();
+        for lx in vector_of_x.iter() {
+            buffer.push_x_string(lx.to_string(),on_bad_data)?;
+        }
+        return Ok(buffer);
     }
 
     pub fn push_x(&mut self, x_float_unrounded: f64) {
@@ -1662,11 +1685,13 @@ pub struct VectorOfDiscrete {
     vector_of_x: Vec<String>,
 }
 
-pub fn init_vector_of_discrete() -> VectorOfDiscrete {
-    VectorOfDiscrete {
-        out_precision: 4,
-        frequencies_aa: BTreeMap::new(),
-        vector_of_x: Vec::new(),
+impl Default for VectorOfDiscrete {
+    fn default() -> Self {
+        VectorOfDiscrete {
+            out_precision: 4,
+            frequencies_aa: BTreeMap::new(),
+            vector_of_x: Vec::new(),
+        }
     }
 }
 
@@ -1692,18 +1717,31 @@ impl VectorOfX for VectorOfDiscrete {
         return false;
     }
 
-    fn load_from_str_vector(&mut self,vector_of_x: Vec<&str>,on_bad_data: BadDataAction) -> Result<(),ValidationError> {
-        for lx in vector_of_x.iter() {
-            self.push_x_string(lx.to_string(),on_bad_data)?;
-        }
-        return Ok(());
+    fn new() -> Self {
+        let buffer: VectorOfDiscrete = Default::default();
+        return buffer;
     }
 
-    fn load_from_string_vector(&mut self,vector_of_x: Vec<String>,on_bad_data: BadDataAction) -> Result<(),ValidationError> {
+    fn new_from_str_after_invalidated_dropped(vector_of_x: Vec<&str>) -> Self {
+        let mut buffer: VectorOfDiscrete = Default::default();
         for lx in vector_of_x.iter() {
-            self.push_x_string(lx.to_string(),on_bad_data)?;
+            if lx.len() > 0 {
+                // Always skip data item by definition.
+                buffer.push_x_str(lx,SKIPDATAITEM).unwrap();
+            }
         }
-        return Ok(());
+        return buffer;
+    }
+
+    fn new_from_string_after_invalidated_dropped(vector_of_x: Vec<String>) -> Self {
+        let mut buffer: VectorOfDiscrete = Default::default();
+        for lx in vector_of_x.iter() {
+            if lx.len() > 0 {
+                // Always skip data item by definition.
+                buffer.push_x_string(lx.to_string(),SKIPDATAITEM).unwrap();
+            }
+        }
+        return buffer;
     }
 
     fn push_x_str(&mut self,x_item: &str,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
@@ -1712,23 +1750,22 @@ impl VectorOfX for VectorOfDiscrete {
     }
 
     fn push_x_string(&mut self,x_item: String,on_bad_data: BadDataAction) -> Result<(), ValidationError> {
-        let mut x_mut   = x_item.to_string();
+        let mut x_mut   = x_item;
         if x_mut.len() == 0 {
             match on_bad_data {
-                BLANKFIELD   => x_mut=" ".to_string(),
-                DEFAULTFILL  => x_mut=" ".to_string(),
-                EXCLUDEROW   => return Err(ValidationError::OptionMayNotBeUsedHere("ExcludeRow".to_string())),
-                FAIL            => return Err(ValidationError::ValueMayNotBeMissing()),
-                SKIPDATAITEM => return Ok(()),
-                ZEROFLOAT    => x_mut="0.0".to_string(),
-                ZEROINTEGER  => x_mut="0".to_string(),
+                BlankField   => x_mut=" ".to_string(),
+                DefaultFill  => x_mut=" ".to_string(),
+                ExcludeRow   => return Err(ValidationError::OptionMayNotBeUsedHere("ExcludeRow".to_string())),
+                Fail         => return Err(ValidationError::ValueMayNotBeMissing()),
+                SkipDataItem => return Ok(()),
+                ZeroFloat    => x_mut="0.0".to_string(),
+                ZeroInteger  => x_mut="0".to_string(),
                 _               => panic!("Should never happen.  Programmer error."),
             };
         }
-        self.vector_of_x.push(x_mut.to_string());
         match self.frequencies_aa.get(&x_mut) {
-            Some(b) => self.frequencies_aa.insert(x_mut.to_string(),b + 1),
-            None    => self.frequencies_aa.insert(x_mut.to_string(),1),
+            Some(b) => self.frequencies_aa.insert(x_mut,b + 1),
+            None    => self.frequencies_aa.insert(x_mut,1),
         };
         return Ok(());
     }
@@ -1755,8 +1792,8 @@ impl VectorOfDiscrete {
         if n_successes == 0 {
             return Err(ValidationError::ValueMayNotBeZero(n_successes as f64));
         }
-        if n_trials <= n_successes {
-            let m = "Number of Successes ({n_successes}) must be less than number of trials ({n_trials}).".to_string();
+        if n_trials >= n_successes {
+            let m = "Number of Successes must be less than number of trials.".to_string();
             return Err(ValidationError::ArgumentError(m));
         }
         let n_failures                  = n_trials - n_successes;
@@ -1817,6 +1854,26 @@ impl VectorOfDiscrete {
             return None;
         }
         return Some(self.vector_of_x[index_a].clone());
+    }
+
+    /* NOTE:  This follows one of many areas of duplicated code
+        which I have NOT yet figured out how to put into a unique
+        area like a trait.
+     */  
+    pub fn new_from_str_number_vector(vector_of_x: Vec<&str>,on_bad_data: BadDataAction) -> Result<VectorOfDiscrete, ValidationError> {
+        let mut buffer: VectorOfDiscrete = Default::default();
+        for lx in vector_of_x.iter() {
+            buffer.push_x_str(lx,on_bad_data)?;
+        }
+        return Ok(buffer);
+    }
+
+    pub fn new_from_string_number_vector(vector_of_x: Vec<String>,on_bad_data: BadDataAction) -> Result<VectorOfDiscrete, ValidationError> {
+        let mut buffer: VectorOfDiscrete = Default::default();
+        for lx in vector_of_x.iter() {
+            buffer.push_x_string(lx.to_string(),on_bad_data)?;
+        }
+        return Ok(buffer);
     }
 
     pub fn request_mode(&self) -> Option<String> {
@@ -1916,13 +1973,18 @@ impl VectorOfDiscrete {
 // NOTE:  Indexing for columns and vectors in this class are reversed from
 // normal in accommodation of the way things are used.
 
-pub enum VectorClassId {
+enum VectorObject {
+    VectorOfContinuousEnum(VectorOfContinuous),
+    VectorOfDiscreteEnum(VectorOfDiscrete),
+}
+
+enum VectorClassId {
     VOCID,
     VODID,
 }
 
 pub struct VectorTable { 
-    table_of_vectors:   Vec<Box<dyn VectorOfX>>,          // Columns in the CSV input sense.
+    table_of_vectors:   Vec<VectorObject>,          // Columns in the CSV input sense.
     vector_count:       usize,                      // My terms are transposed from the orientation of the CSV file.  You'll see I call these columns.
     vector_of_classes:  Vec<VectorClassId>,
     vector_of_headers:  Vec<String>,
@@ -1962,9 +2024,56 @@ impl VectorTable {
         Some(result)
     }
 
+    /*
+    fn _parse_csv_string(data_string: String) -> Result<Vec<String>,ValidationError> {
+        let mut rdr = ReaderBuilder::new().from_reader(data_string.as_bytes());
+
+        let records = match rdr 
+            .records()
+            .collect::<Result<Vec<StringRecord>, csv::Error>>() {
+            Ok(b)       => b,
+            Err(_err)   => {
+                let m = "parse by ReaderBuilder of csv data error.".to_string();
+                return Err(ValidationError::ArgumentError(m));
+            },
+        };
+        let vb: Vec<String> = Vec::new();
+        for lstr in records.iter() {
+            vb.push(lstr.to_string());
+        }
+        return Ok(vb);
+    }
+
+    fn example() -> Result<(), Box<dyn Error>> {
+        // Build the CSV reader and iterate over each record.
+        let mut rdr = csv::Reader::from_reader(io::stdin());
+        for result in rdr.records() {
+            // The iterator yields Result<StringRecord, Error>, so we check the
+            // error here.
+            let record = result?;
+            println!("{:?}", record);
+        }
+        Ok(())
+    }
+
+    fn _parse_csv_string(data_string: String) -> Option<Vec<String>> {
+        let mut iterable =
+            ReaderBuilder::new().delimiter(b',').from_reader(data_string.as_bytes());
+        if let Some(result) = iterable.records().next() {
+            let vb: Vec<String> = Vec::new();
+            for lstr in result.iter() {
+                //vb.push(lstr.to_string());
+                vb.push(lstr);
+            }
+            return Some(vb);
+        }
+        return None;
+    }
+     */
+
     fn _skip_indicated(on_bad_data: BadDataAction,ll: String) -> bool {
         match on_bad_data {
-            EXCLUDEROW  => {
+            ExcludeRow  => {
                 let re = Regex::new(r",,").unwrap();
                 let sstr = ll.trim();
                 if re.is_match(sstr) {
@@ -2016,17 +2125,29 @@ impl VectorTable {
         return self.vector_length;
     }
 
-/*
-    pub fn get_vector_object(&self,index_no: usize) -> Result<Box<dyn VectorOfX>,ValidationError> {
+    pub fn get_vector_of_continuous_object(&self,index_no: usize) -> Result<VectorOfContinuous,ValidationError> {
         if index_no < 0 || self.vector_count <= index_no {
             return Err(ValidationError::InvalidIndex(index_no,0,self.vector_count-1));
         }
-        self.table_of_vectors[index_no]
-        return Ok(b);
+        if let VectorObject::VectorOfContinuousEnum(vo) = &self.table_of_vectors[index_no] {
+            return Ok(*vo);
+        } else {
+            return Err(ValidationError::InvalidVectorObject(index_no,"VectorOfContinuous".to_string()));
+        }
     }
- */
 
-    pub fn new_from_csv(vc_spec: Vec<VectorClassId>,f_spec: &str,on_bad_data: BadDataAction,see_first_line_as_header: bool) -> Result<Option<VectorTable>,ValidationError> {
+    pub fn get_vector_of_discrete_object(&self,index_no: usize) -> Result<VectorOfDiscrete,ValidationError> {
+        if index_no < 0 || self.vector_count <= index_no {
+            return Err(ValidationError::InvalidIndex(index_no,0,self.vector_count-1));
+        }
+        if let VectorObject::VectorOfDiscreteEnum(vo) = &self.table_of_vectors[index_no] {
+            return Ok(*vo);
+        } else {
+            return Err(ValidationError::InvalidVectorObject(index_no,"VectorOfContinuous".to_string()));
+        }
+    }
+
+    pub fn new_from_csv(vc_spec: Vec<VectorClassId>,f_spec: &str,on_bad_data: BadDataAction,see_first_line_as_header: bool) -> Option<VectorTable> {
         let mut localo = VectorTable::new(vc_spec);
         let mut i = 0;
         for llresult in read_to_string(f_spec).unwrap().lines() {
@@ -2038,21 +2159,22 @@ impl VectorTable {
                 if ( i == 0 ) {
                     if see_first_line_as_header {
                         if let Some(hv) = VectorTable::_parse_csv_string(llst) {
-                            localo.use_array_for_column_identifiers(hv)?;
+                            localo.use_array_for_column_identifiers(hv);
                             i += 1;
                             continue;
                         } else {
-                            return Ok(None);
+                            return None;
                         }
                     }
                 }
                 if let Some(dv) = VectorTable::_parse_csv_string(llst) {
-                    localo.push_table_row(dv,on_bad_data)?;
+                    localo.push_table_row(dv,on_bad_data);
                     i += 1;
                 }
             }
         }
-        return Ok(Some(localo));
+        localo.vector_length = i;
+        return Some(localo);
     }
 
     pub fn new(vector_of_classes: Vec<VectorClassId>) -> Self {
@@ -2060,19 +2182,12 @@ impl VectorTable {
         let mut i = 0;
         buffer.vector_of_classes    = vector_of_classes;
         for lci in buffer.vector_of_classes.iter() {
-            match lci {
-                VectorClassId::VOCID    => {
-                        let b = init_vector_of_continuous();
-                        buffer.table_of_vectors.push(Box::new(b));
-                        println!("vector {i} is a VOC.");
-                    },
-                VectorClassId::VODID    => {
-                        let b = init_vector_of_discrete();
-                        buffer.table_of_vectors.push(Box::new(b));
-                        println!("vector {i} is a VOD.");
-                    },
+            let b = match lci {
+                VectorClassId::VOCID  => VectorObject::VectorOfContinuousEnum(  VectorOfContinuous::new()),
+                VectorClassId::VODID    => VectorObject::VectorOfDiscreteEnum(    VectorOfDiscrete::new()),
             };
             buffer.vector_of_headers.push("Column {i}".to_string()); // Use offset index as column numbers, NOT traditional.
+            buffer.table_of_vectors.push(b);
             i                       += 1;
         }
         buffer.vector_count         = i;
@@ -2080,7 +2195,6 @@ impl VectorTable {
     }
 
     /*
-    // This can be done it appears, but it's low priority.  Do it in the naive draft. NOTE:TBD202312192224
     fn each_column_vector(&self) {
         self.table_of_vectors.each do |lvo|
             yield lvo
@@ -2095,18 +2209,20 @@ impl VectorTable {
             return Err(ValidationError::VectorPairLengthsNotEqual(alen,tlen));
         }
         match on_bad_data {
-            SKIPDATAITEM => {
+            SkipDataItem => {
                     let m = "Skip Action Not Allowed within VectorTable.";
                     return Err(ValidationError::ArgumentError(m.to_string()));
                 },
             _                           => (),
         }
         let mut i = 0;
-        for ltovo in self.table_of_vectors.iter_mut() {
-            ltovo.push_x_string(array_a[i].to_owned(),on_bad_data)?;
+        for &mut VectorObject in leoe in self.table_of_vectors.iter() {
+            match leoe {
+                VectorObject::VectorOfContinuousEnum(ref mut b)  => b.push_x_string(array_a[i].to_string(),on_bad_data)?,
+                VectorObject::VectorOfDiscreteEnum(ref mut b)    => b.push_x_string(array_a[i].to_string(),on_bad_data)?,
+            };
             i += 1;
         }
-        self.vector_length += 1;
         return Ok(());
     }
 
@@ -2711,15 +2827,15 @@ mod tests {
          */
         let bdaa = [BLANKFIELD,DEFAULTFILL,EXCLUDEROW,FAIL,SKIPDATAITEM,ZEROFLOAT,ZEROINTEGER];
         assert_eq!(bdaa.len(),7);
-        for &lbda in bdaa.iter() {
+        for lbda in bdaa.iter() {
             match lbda {
-                BLANKFIELD      => assert!(true),
-                DEFAULTFILL     => assert!(true),
-                EXCLUDEROW      => assert!(true),
-                FAIL            => assert!(true),
-                SKIPDATAITEM    => assert!(true),
-                ZEROFLOAT       => assert!(true),
-                ZEROINTEGER     => assert!(true),
+                BlankField      => assert!(true),
+                DefaultFill     => assert!(true),
+                ExcludeRow      => assert!(true),
+                Fail            => assert!(true),
+                SkipDataItem    => assert!(true),
+                ZeroFloat       => assert!(true),
+                ZeroInteger     => assert!(true),
                 _               => panic!("Test failed."),
             };
         }
@@ -2727,41 +2843,35 @@ mod tests {
 
     #[test]
     fn test_basic_construction_and_get_count_method() {
-        let mut localo  = init_vector_of_continuous();
+        let mut localo = VectorOfContinuous::new();
         localo.push_x_str("1234.56",FAIL).unwrap();
-        let n           = localo.get_count();
+        let n = localo.get_count();
         assert_eq!(n,1);
     }
 
     #[test]
     fn test_various_array_construction_methods() {
         let a: Vec<&str>    = vec!["3", "2", "1"];
-        let mut localo      = init_vector_of_continuous();
-        localo.load_from_str_vector(a,FAIL).unwrap();
+        let localo          = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         assert_eq!(localo.get_count(),3);
         let a: Vec<&str>    = vec!["1.5","99","5876.1234","String"];
-        let mut localo      = init_vector_of_continuous();
-        localo.load_from_str_vector(a,SKIPDATAITEM).unwrap();
+        let localo          = VectorOfContinuous::new_from_str_after_invalidated_dropped(a);
         assert_eq!(localo.get_count(),3);
         let a: Vec<f64>     = vec![1.5,99.0,5876.1234,3.0,2.0,1.0];
-        let mut localo      = init_vector_of_continuous();
-        localo.load_from_f64(a);
+        let localo          = VectorOfContinuous::new_from_f64(a);
         assert_eq!(localo.get_count(),6);
         let a: Vec<f64>     = vec![1.5,99.0,5876.1234,3.0,2.0,1.0,1.0,2.0,3.0];
-        let mut localo      = init_vector_of_continuous();
-        localo.load_from_f64(a);
+        let localo          = VectorOfContinuous::new_from_f64(a);
         assert_eq!(localo.get_count(),9);
         let a: Vec<i32>     = vec![1,99,5876,3,2,1,1,2,3];
-        let mut localo      = init_vector_of_continuous();
-        localo.load_from_i32(a);
+        let localo          = VectorOfContinuous::new_from_i32(a);
         assert_eq!(localo.get_count(),9);
     }
 
     #[test]
     fn test_sorted_vector_function_and_get_x_method() {
         let a: Vec<&str>    = vec!["3", "2", "1"];
-        let mut localo      = init_vector_of_continuous();
-        localo.load_from_str_vector(a,FAIL).unwrap();
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         let n               = localo.get_count();
         assert_eq!(n,3);
         localo._assure_sorted_vector_of_x(false);
@@ -2771,15 +2881,14 @@ mod tests {
         assert_eq!(2.0,localo.get_x(1).unwrap());
         assert_eq!(1.0,localo.get_x(2).unwrap());
         let a: Vec<&str>    = vec!["1.5","99","5876.1234","String"];
-        let mut localo      = init_vector_of_continuous();
-        localo.load_from_str_vector(a,SKIPDATAITEM).unwrap();
+        let localo          = VectorOfContinuous::new_from_str_after_invalidated_dropped(a);
         assert_eq!(localo.get_count(),3);
     }
 
 
     #[test]
     fn test_push_x_methods() {
-        let mut localo = init_vector_of_continuous();
+        let mut localo      = VectorOfContinuous::new();
         localo.push_x_str("11234.51234",FAIL).unwrap();
         assert_eq!(localo.get_count(),1);
         localo.push_x_string("98765.43210".to_string(),FAIL).unwrap();
@@ -2791,8 +2900,7 @@ mod tests {
     #[test]
     fn test_request_result_aa_output_methods() {
         let a: Vec<&str>    = vec!["3", "2", "1"];
-        let mut localo = init_vector_of_continuous();
-        localo.load_from_str_vector(a,FAIL).unwrap();
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         localo.push_x_str("11234.51234",FAIL).unwrap();
         localo.push_x_string("98765.43210".to_string(),FAIL).unwrap();
         localo.push_x(10101010.202020202);
@@ -2829,11 +2937,7 @@ mod tests {
     #[test]
     fn test_has_internal_focused_method_to_construct_a_new_sums_of_powers_object_for_moment_statistics() {
         let a: Vec<&str>    = vec!["3", "2", "1"];
-        let mut localo = init_vector_of_continuous();
-        match localo.load_from_str_vector(a,FAIL) {
-            Ok(())          => (),
-            Err(_err)       => panic!("Test failed."),
-        }
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         assert_eq!(3,localo.get_count());
         localo._add_up_xs_to_sums_of_powers(false,false).unwrap();
         localo._add_up_xs_to_sums_of_powers(false,true).unwrap();
@@ -2846,11 +2950,7 @@ mod tests {
     #[test]
     fn test_has_internal_focused_method_to_decide_startno_value_for_histogram() {
         let a: Vec<&str>    = vec!["1", "2", "3"];
-        let mut localo = init_vector_of_continuous();
-        match localo.load_from_str_vector(a,FAIL) {
-            Ok(())          => (),
-            Err(_err)       => panic!("Test failed."),
-        }
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         assert_eq!(3,localo.get_count());
         let startno = localo._decide_histogram_start_number(true,1.0);
         assert_eq!(1.0,startno);
@@ -2861,11 +2961,7 @@ mod tests {
     #[test]
     fn test_calculates_arithmetic_mean_in_two_places() {
         let a: Vec<&str>    = vec!["1", "2", "3"];
-        let mut localo = init_vector_of_continuous();
-        match localo.load_from_str_vector(a,FAIL) {
-            Ok(())          => (),
-            Err(_err)       => panic!("Test failed."),
-        }
+        let mut localo      = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         let vocoam          = localo.calculate_arithmetic_mean().unwrap();
         localo._add_up_xs_to_sums_of_powers(false,false).unwrap();
         assert_eq!(vocoam,localo.sums_of_powers_object.arithmetic_mean);
@@ -2881,19 +2977,16 @@ mod tests {
     #[test]
     fn test_calculates_geometric_mean() {
         let a               = vec!["1","2","3","4","5"];
-        let mut localo      = init_vector_of_continuous();
-        localo.load_from_str_vector(a,FAIL).unwrap();
+        let localo          = VectorOfContinuous::new_from_str_number_vector(a,FAIL).unwrap();
         let gmean           = localo.calculate_geometric_mean().unwrap();
         assert_eq!(2.6052,gmean);
         let a               = vec![2.0,2.0,2.0,2.0];
-        let mut localo      = init_vector_of_continuous();
-        localo.load_from_f64(a);
+        let localo          = VectorOfContinuous::new_from_f64(a);
         let amean           = localo.calculate_arithmetic_mean().unwrap();
         let gmean           = localo.calculate_geometric_mean().unwrap();
         assert_eq!(amean,gmean);
         let a               = vec![1,2,3,4,5,6,7,8,9];
-        let mut localo      = init_vector_of_continuous();
-        localo.load_from_i32(a);
+        let localo          = VectorOfContinuous::new_from_i32(a);
         let amean           = localo.calculate_arithmetic_mean().unwrap();
         let gmean           = localo.calculate_geometric_mean().unwrap();
         assert!(amean > gmean);
@@ -2902,16 +2995,14 @@ mod tests {
     #[test]
     fn test_calculates_harmonic_mean() {
         let a = vec![1,2,3,4,5];
-        let mut localo = init_vector_of_continuous();
-        localo.load_from_i32(a);
+        let localo          = VectorOfContinuous::new_from_i32(a);
         let hmean           = match localo.calculate_harmonic_mean().unwrap() {
             None            => panic!("Test failed."),
             Some(buffer)    => buffer,
         };
         assert_eq!( 2.1898, hmean );
         let a               = vec![2,2,2,2];
-        let mut localo      = init_vector_of_continuous();
-        localo.load_from_i32(a);
+        let localo          = VectorOfContinuous::new_from_i32(a);
         let amean           = localo.calculate_arithmetic_mean().unwrap();
         let gmean           = localo.calculate_geometric_mean().unwrap();
         let hmean           = match localo.calculate_harmonic_mean().unwrap() {
@@ -2921,8 +3012,7 @@ mod tests {
         assert_eq!(amean,gmean);
         assert_eq!(amean,hmean);
         let a               = vec![1,2,3,4,5,6,7,8,9];
-        let mut localo      = init_vector_of_continuous();
-        localo.load_from_i32(a);
+        let localo          = VectorOfContinuous::new_from_i32(a);
         let amean           = localo.calculate_arithmetic_mean().unwrap();
         let gmean           = localo.calculate_geometric_mean().unwrap();
         let hmean           = match localo.calculate_harmonic_mean().unwrap() {
@@ -2937,8 +3027,7 @@ mod tests {
     fn test_has_a_calculate_quartile_method_which_returns_the_value_for_a_designated_quartile() {
         let mut a       = vec![0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0];
         a.sort();
-        let mut localo = init_vector_of_continuous();
-        localo.load_from_i32(a);
+        let mut localo  = VectorOfContinuous::new_from_i32(a);
         let qv      = match localo.calculate_quartile(1).unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -2946,8 +3035,7 @@ mod tests {
         assert_eq!( qv, 3.0 );
 
         let a       = vec![1,2,3,4,5];
-        let mut localo = init_vector_of_continuous();
-        localo.load_from_i32(a);
+        let mut localo          = VectorOfContinuous::new_from_i32(a);
         let qv      = match localo.calculate_quartile(0).unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -2975,8 +3063,7 @@ mod tests {
         assert_eq!( qv, 5.0 );
 
         let a       = vec![0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0];
-        let mut localo = init_vector_of_continuous();
-        localo.load_from_i32(a);
+        let mut localo  = VectorOfContinuous::new_from_i32(a);
         let qv      = match localo.calculate_quartile(0).unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3006,9 +3093,8 @@ mod tests {
 
     #[test]
     fn test_generates_a_average_absolute_deviation_for_arithmetic_geometric_harmonic_means_median_min_max_mode() {
-        let mut localo = init_vector_of_continuous();
         let a           = vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.9];
-        localo.load_from_f64(a);
+        let mut localo  = VectorOfContinuous::new_from_f64(a);
         let amaad       = match localo.generate_average_absolute_deviation(VectorOfContinuous::ARITHMETICMEANID).unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3048,8 +3134,7 @@ mod tests {
         needs to be implemented in other language versions. NOTE:  TBD.
          */
         let a           = vec![0,1,2,3,4,5,6,7,8,9,8,9,9,9,9,9,8,7,8,7,8,7,6,5,4,3,2,1,0];
-        let mut localo = init_vector_of_continuous();
-        localo.load_from_i32(a);
+        let mut localo  = VectorOfContinuous::new_from_i32(a);
         let aad         = match localo.generate_average_absolute_deviation(VectorOfContinuous::ARITHMETICMEANID).unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3064,9 +3149,8 @@ mod tests {
 
     #[test]
     fn test_generates_a_coefficient_of_variation() {
-        let mut localo = init_vector_of_continuous();
         let a           = vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.9];
-        localo.load_from_f64(a);
+        let mut localo  = VectorOfContinuous::new_from_f64(a);
         let amean       = localo.calculate_arithmetic_mean().unwrap();
         let stddev      = match localo.request_standard_deviation().unwrap() {
             None    => panic!("Test failed."),
@@ -3082,9 +3166,8 @@ mod tests {
 
     #[test]
     fn test_has_two_methods_to_generate_a_matrix_of_histogram_data() {
-        let mut localo = init_vector_of_continuous();
         let a           = vec![1,2,3,4,5,6,7,8,9];
-        localo.load_from_i32(a);
+        let mut localo  = VectorOfContinuous::new_from_i32(a);
         let hdaa        = match localo.generate_histogram_aa_by_number_of_segments(3,true,1.0).unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3128,9 +3211,8 @@ mod tests {
 
     #[test]
     fn test_generates_a_mean_absolute_difference() {
-        let mut localo = init_vector_of_continuous();
         let a       = vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.9];
-        localo.load_from_f64(a);
+        let localo  = VectorOfContinuous::new_from_f64(a);
         let mad     = match localo.generate_mean_absolute_difference().unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3140,9 +3222,8 @@ mod tests {
 
     #[test]
     fn test_can_get_the_minimum_median_maximum_and_mode() {
-        let mut localo = init_vector_of_continuous();
         let a           = vec![1,2,3,4,5,6,7,8,9];
-        localo.load_from_i32(a);
+        let mut localo  = VectorOfContinuous::new_from_i32(a);
         assert_eq!( localo.get_count(), 9 );
         assert_eq!( 1.0, localo.get_min().unwrap() );
         assert_eq!( 5.0, localo.request_median().unwrap() );
@@ -3152,9 +3233,8 @@ mod tests {
             Some(_b) => panic!("Test failed."),
         }; // New method designates no mode when there are none with more than 1 occurrence.
         assert!(modefailure);
-        let mut localo = init_vector_of_continuous();
         let a           = vec![1,2,3,4,5,6,7,8,9,8,7,8];
-        localo.load_from_i32(a);
+        let mut localo  = VectorOfContinuous::new_from_i32(a);
         let mma         = localo.request_range().unwrap();
         assert_eq!( localo.get_count(), 12 );
         assert_eq!( 1.0, mma[0] );
@@ -3169,30 +3249,26 @@ mod tests {
 
     #[test]
     fn test_has_a_method_to_test_if_the_vector_of_x_has_an_even_n() {
-        let mut localo = init_vector_of_continuous();
         let a       = vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.9];
-        localo.load_from_f64(a);
+        let localo  = VectorOfContinuous::new_from_f64(a);
         assert!(localo.is_n_even());
-        let mut localo = init_vector_of_continuous();
         let a       = vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.9,11.0];
-        localo.load_from_f64(a);
+        let localo  = VectorOfContinuous::new_from_f64(a);
         assert!( ! localo.is_n_even() );
     }
 
     #[test]
     fn test_has_an_method_to_return_get_because_it_is_direct_call_to_language_method_the_sum() {
         let a       = vec![1,2,2,3,3,3];
-        let mut localo = init_vector_of_continuous();
-        localo.load_from_i32(a);
+        let localo  = VectorOfContinuous::new_from_i32(a);
         assert_eq!( localo.get_count(), 6 );
         assert_eq!( 14.0, localo.calculate_sum() );
     }
 
     #[test]
     fn test_can_request_calculation_of_kurtosis() {
-        let mut localo = init_vector_of_continuous();
         let a                                   = vec![1,2,3,4,5,6,7,8,9];
-        localo.load_from_i32(a);
+        let mut localo                          = VectorOfContinuous::new_from_i32(a);
         let ek                                  = match localo.request_excess_kurtosis(2).unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3219,9 +3295,8 @@ mod tests {
 
     #[test]
     fn test_can_request_a_complete_collection_of_all_5_quartiles_in_an_array() {
-        let mut localo = init_vector_of_continuous();
         let a           = vec![1,2,3,4,5];
-        localo.load_from_i32(a);
+        let mut localo  = VectorOfContinuous::new_from_i32(a);
         let qv          = match localo.request_quartile_collection().unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3232,8 +3307,7 @@ mod tests {
         assert_eq!( 4.0, qv[3] );
         assert_eq!( 5.0, qv[4] );
         let a           = vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,8.0,9.0,9.0,9.0,9.0,9.0,8.0,7.0,8.0,7.0,8.0,7.0,6.0,5.0,4.0,3.0,2.0,1.0,0.0,1.0,2.0,2.0,3.0,3.0,3.0,99.336,5.9,259.0,1133.7,1234.0];
-        let mut localo = init_vector_of_continuous();
-        localo.load_from_f64(a);
+        let mut localo  = VectorOfContinuous::new_from_f64(a);
         let qv          = match localo.request_quartile_collection().unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3247,9 +3321,9 @@ mod tests {
 
     #[test]
     fn test_has_some_formatted_result_methods() {
-        let mut localo = init_vector_of_continuous();
         let a               = vec![1,2,3,4,5,6,7,8,9];
-        localo.load_from_i32(a);
+        let mut localo      = VectorOfContinuous::new_from_i32(a);
+    //pub fn request_result_aa_csv(&mut self) -> Result<Option<String>, ValidationError> {
         let aacsvstr        = match localo.request_result_aa_csv().unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3269,9 +3343,8 @@ mod tests {
 
     #[test]
     fn test_can_request_a_calculation_of_skewness() {
-        let mut localo = init_vector_of_continuous();
         let a           = vec![1,2,3,4,5,6,7,8,9];
-        localo.load_from_i32(a);
+        let mut localo  = VectorOfContinuous::new_from_i32(a);
         let sk          = match localo.request_skewness(1).unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3288,8 +3361,7 @@ mod tests {
         };
         assert_eq!( 0.0, sk );
         let a           = vec![1,2,2,3,3,3,4,4,4,4,4,4];
-        let mut localo = init_vector_of_continuous();
-        localo.load_from_i32(a);
+        let mut localo  = VectorOfContinuous::new_from_i32(a);
         let sk          = match localo.request_skewness(1).unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3309,9 +3381,8 @@ mod tests {
 
     #[test]
     fn test_has_four_standard_deviation_calculations_corresponding_to_the_four_variance_combinations() {
-        let mut localo = init_vector_of_continuous();
         let a                                   = vec![1,2,3];
-        localo.load_from_i32(a);
+        let mut localo                          = VectorOfContinuous::new_from_i32(a);
         let sdsd                                = match localo.request_standard_deviation().unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3338,9 +3409,8 @@ mod tests {
 
     #[test]
     fn test_has_two_variance_generation_methods() {
-        let mut localo = init_vector_of_continuous();
         let a           = vec![1.0,2.0,2.0,3.0,3.0,3.0,99.336,5.9,601.0,1133.7,1234.0];
-        localo.load_from_f64(a);
+        let mut localo  = VectorOfContinuous::new_from_f64(a);
         let v           = match localo.request_variance_sum_of_differences_from_mean(false).unwrap() {
             None    => panic!("Test failed."),
             Some(b) => b,
@@ -3365,14 +3435,14 @@ mod tests {
 
     #[test]
     fn test_input_routine_pushx_validates_arguments() {
-        let mut localo = init_vector_of_continuous();
+        let mut localo  = VectorOfContinuous::new();
         localo.push_x(123.456);
         localo.push_x_str("9999999999999999999999999999",FAIL).unwrap();
     }
 
     #[test]
     fn test_fails_differently_according_to_special_arguments_to_pushx() {
-        let mut localo = init_vector_of_continuous();
+        let localo  = VectorOfContinuous::new();
         assert_eq!( 0, localo.get_count() );
     }
 
@@ -3381,7 +3451,7 @@ mod tests {
 
     #[test]
     fn test_constructs_with_no_argument() {
-        let mut localo = init_vector_of_discrete();
+        let mut localo = VectorOfDiscrete::new();
         localo.push_x_str("5.333",FAIL);
         localo.push_x_str("Any old str",FAIL);
         localo.push_x_string("Any old string".to_string(),FAIL);
@@ -3391,9 +3461,8 @@ mod tests {
     #[test]
     fn test_constructs_with_a_str_slice_vec() {
         let a       = vec!["1.5","99","5876.1234","some old string"];
-        let mut localo  = init_vector_of_discrete();
-        match localo.load_from_str_vector(a,FAIL) {
-            Ok(())   => (),
+        let localo  = match VectorOfDiscrete::new_from_str_number_vector(a,FAIL) {
+            Ok(b)   => b,
             Err(_e) => panic!("Failed test."),
         };
         assert_eq!( 4, localo.get_count());
@@ -3402,12 +3471,12 @@ mod tests {
     #[test]
     fn test_has_a_binomial_probability_calculation() {
         let a       = vec!["1","2","3","4","5","6","7","8","9","8"];
-        let mut localo  = init_vector_of_discrete();
-        match localo.load_from_str_vector(a,FAIL) {
-            Ok(())   => (),
+        let localo  = match VectorOfDiscrete::new_from_str_number_vector(a,FAIL) {
+            Ok(b)   => b,
             Err(_e) => panic!("Failed test."),
         };
         assert_eq!( 10, localo.get_count() );
+        //assert_equal 0.384, localo.calculateBinomialProbability(8,3,1) # The calculation returned at:  https://stattrek.com/online-calculator/binomial
         match localo.calculate_binomial_probability("8".to_string(),3,1) {
             Ok(b)       => {
                 match b {
@@ -3415,20 +3484,19 @@ mod tests {
                     Some(b2)    => assert_eq!( 0.3840000000000001, b2 ),
                 }
             },
-            Err(_err)   => panic!("Test failed:  {:?}",_err),
+            Err(_err)   => panic!("Test failed."),
         }
     }
 
     #[test]
     fn test_has_a_method_to_get_the_mode() {
-        let a           = vec!["1.5","99","5876.1234","some old string","99"];
-        let mut localo  = init_vector_of_discrete();
-        match localo.load_from_str_vector(a,FAIL) {
-            Ok(())  => (),
+        let a       = vec!["1.5","99","5876.1234","some old string","99"];
+        let localo  = match VectorOfDiscrete::new_from_str_number_vector(a,FAIL) {
+            Ok(b)   => b,
             Err(_e) => panic!("Failed test."),
         };
         assert_eq!( 5, localo.get_count() );
-        let lmode       = match localo.request_mode() {
+        let lmode   = match localo.request_mode() {
             None    => panic!("Test failed."),
             Some(b) => b,
         };
@@ -3445,27 +3513,26 @@ mod tests {
     // 2001-01,2020-09,Long-term migrant,Arrivals,Female,0-4 years,344,0,Final
 
     #[test]
-    fn test_constructs_with_just_a_class_column_argument() {
+    fn test_Constructs_with_just_a_class_column_argument() {
            // 2001-01,2020-09,Long-term migrant,Arrivals,Male,0-4 years,341,0,Final
-        let vcsa    = vec![VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VOCID,VectorClassId::VOCID,VectorClassId::VODID];
-        let localo  = VectorTable::new(vcsa);
+        let vcsa = vec![VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VOCID,VectorClassId::VOCID,VectorClassId::VODID];
+        let localo = VectorTable::new(vcsa);
         assert_eq!(9,localo.get_column_count());
         assert_eq!(0,localo.get_row_count());
     }
     
     #[test]
-    fn test_allows_adding_a_data_row_s_of_vector_elements() {
+    fn test_Allows_adding_a_data_row_s_of_vector_elements() {
            // 2001-01,2020-09,Long-term migrant,Arrivals,Male,0-4 years,341,0,Final
         let vcsa = vec![VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VODID,VectorClassId::VOCID,VectorClassId::VOCID,VectorClassId::VODID];
         let mut localo = VectorTable::new(vcsa);
-        assert_eq!(0,localo.get_row_count());
         let a = vec!["Nil0".to_string(),"Nil1".to_string(),"Nil2".to_string(),"Nil3".to_string(),"Nil4".to_string(),"Nil5".to_string(),123456.to_string(),77.to_string(),"Nil8".to_string()];
-        localo.push_table_row(a,FAIL).unwrap();
+        localo.push_table_row(a,FAIL);
         assert_eq!(9,localo.get_column_count());
         assert_eq!(1,localo.get_row_count());
-        //let lvi6oeo = localo.get_vector_object(6);
-        //let lvi7oeo = localo.get_vector_object(7);
-        //let lvi8oeo = localo.get_vector_object(8);
+        let lvi6oeo = localo.get_vector_of_continuous_object(6);
+        let lvi7oeo = localo.get_vector_of_continuous_object(7);
+        let lvi8oeo = localo.get_vector_of_discrete_object(8);
     }
 
 }

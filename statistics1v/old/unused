@@ -1,0 +1,6 @@
+
+enum VectorObject {
+    VectorOfContinuousEnum(VectorOfContinuous),
+    VectorOfDiscreteEnum(VectorOfDiscrete),
+}
+
