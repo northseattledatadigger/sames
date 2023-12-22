@@ -2316,6 +2316,16 @@ mod tests {
     }
 
     #[test]
+    fn test_get_vector_of_f64_from_strings() {
+        //let b = get_vector_of_f64_from_strings(v_a: &Vec<String>) -> Result<Vec<f64>,ValidationError> {
+        let a   = vec!["1".to_string(),"2".to_string(),"3".to_string()];
+        let b   = get_vector_of_f64_from_strings(&a).unwrap();
+        assert_eq!(1.0,b[0]);
+        assert_eq!(2.0,b[1]);
+        assert_eq!(3.0,b[2]);
+    }
+
+    #[test]
     fn test_insert_op_data_to_aa() {
         let mut btmo: BTreeMap<String,String>    = BTreeMap::new();
         const BID: &str  = "BoinkId";
@@ -3576,10 +3586,12 @@ mod tests {
         localo.push_table_row(a,FAIL).unwrap();
         assert_eq!(9,localo.get_column_count());
         assert_eq!(1,localo.get_row_count());
-        //let lvi6oeo = localo.get_vector_object(6);
-        //let lvi7oeo = localo.get_vector_object(7);
-        //let lvi8oeo = localo.get_vector_object(8);
-        //assert_eq!("statistics1v::VectorOfDiscrete",localo.get_implementation_name());
+        let lvi6oeo = localo.get_vector_of_continuous_object(6).unwrap();
+        assert_eq!("statistics1v::VectorOfContinuous",lvi6oeo.get_implementation_name());
+        let lvi7oeo = localo.get_vector_of_continuous_object(7).unwrap();
+        assert_eq!("statistics1v::VectorOfContinuous",lvi7oeo.get_implementation_name());
+        let lvi8oeo = localo.get_vector_of_discrete_object(8).unwrap();
+        assert_eq!("statistics1v::VectorOfDiscrete",lvi8oeo.get_implementation_name());
     }
 
 }
