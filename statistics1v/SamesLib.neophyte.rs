@@ -141,6 +141,22 @@ pub fn from_i128_to_f64(precision: i32,subject_integer: i128) -> f64 {
     return newfloat;
 }
 
+pub fn get_vector_of_f64_from_strings(v_a: &Vec<String>) -> Result<Vec<f64>,ValidationError> {
+    let mut vb: Vec<f64>    = Vec::new();
+    for element in v_a.iter() {
+        if is_a_num_str(element) {
+            let x_float: f64 = match element.to_string().trim().parse::<f64>() {
+                Ok(b)       => b,
+                Err(_err)   => return Err(ValidationError::ParseErrorOnWouldBeNumberString(element.to_string())),
+            };
+            vb.push(x_float.to_owned());
+        } else {
+            return Err(ValidationError::ParseErrorOnWouldBeNumberString(element.to_string()));
+        }
+    }
+    return Ok(vb);
+}
+
 pub fn generate_mode_from_frequency_aa(faa_a: &BTreeMap<String, u32>) -> Option<String> {
     let mut k: String = "".to_string();
     let mut m: u32 = 0;
@@ -937,6 +953,12 @@ let BadDataActionSet = HashSet::from([
 
 pub trait VectorOfX {
     fn get_count(&self) -> usize;
+    fn get_in_precision(&self) -> i32;
+    fn get_out_precision(&self) -> i32;
+    fn get_implementation_name(&self) -> &'static str {
+        return std::any::type_name::<Self>();
+    }
+    fn get_vector_of_strings(&self) -> Option<Vec<String>>;
     fn is_n_even(&self) -> bool;
     fn is_n_zero(&self) -> bool;
     fn load_from_str_vector(&mut self,vector_of_x: Vec<&str>,on_bad_data: BadDataAction) -> Result<(), ValidationError>;
@@ -993,6 +1015,26 @@ impl VectorOfX for VectorOfContinuous {
         return n;
     }
 
+    fn get_in_precision(&self) -> i32 {
+        return self.in_precision;
+    }
+
+    fn get_out_precision(&self) -> i32 {
+        return self.out_precision;
+    }
+
+    fn get_vector_of_strings(&self) -> Option<Vec<String>> {
+        if self.is_n_zero() {
+            return None;
+        }
+        let mut vb: Vec<String> = Vec::new();
+        for lx in self.vector_of_x.iter() {
+            let s   = format!("{:.prec$}", lx, prec = self.in_precision as usize);
+            vb.push(s);
+        }
+        return Some(vb);
+    }
+
     fn is_n_even(&self) -> bool {
         let n = self.get_count();
         if n % 2 == 0 {
@@ -1034,17 +1076,17 @@ impl VectorOfX for VectorOfContinuous {
                 BLANKFIELD      => x_mut=" ".to_string(),
                 DEFAULTFILL     => x_mut=" ".to_string(),
                 EXCLUDEROW      => return Err(ValidationError::OptionMayNotBeUsedHere("ExcludeRow".to_string())),
-                FAIL         => return Err(ValidationError::ValueMustBeNumberString(x_item)),
+                FAIL            => return Err(ValidationError::ValueMustBeNumberString(x_item)),
                 SKIPDATAITEM    => return Ok(()),
                 ZEROFLOAT       => x_mut="0.0".to_string(),
                 ZEROINTEGER     => x_mut="0".to_string(),
                 _               => panic!("Should never happen.  Programmer error."),
             };
         }
-        let result                  = x_mut.trim().parse();
-        let x_float_unrounded = match result {
-            Ok(unrounded)   => unrounded,
-            Err(_err)       => return Err(ValidationError::ParseErrorOnWouldBeNumberString(x_mut)),
+        let result                  = x_mut.trim().parse::<f64>();
+        let x_float_unrounded:  f64 = match result {
+            Ok(unrounded)       => unrounded,
+            Err(_err)           => return Err(ValidationError::ParseErrorOnWouldBeNumberString(x_mut)),
         };
         let x_float                 = round_to_f64_precision(x_float_unrounded, self.in_precision);
         self.vector_of_x.push(x_float);
@@ -1657,6 +1699,7 @@ impl VectorOfContinuous {
 // VectorOfDiscrete - catchall for arbitrary X that could be a string.
 
 pub struct VectorOfDiscrete {
+    in_precision: i32,
     out_precision: i32,
     frequencies_aa: BTreeMap<String,u32>,
     vector_of_x: Vec<String>,
@@ -1664,6 +1707,7 @@ pub struct VectorOfDiscrete {
 
 pub fn init_vector_of_discrete() -> VectorOfDiscrete {
     VectorOfDiscrete {
+        in_precision: -1,
         out_precision: 4,
         frequencies_aa: BTreeMap::new(),
         vector_of_x: Vec::new(),
@@ -1675,6 +1719,21 @@ impl VectorOfX for VectorOfDiscrete {
     fn get_count(&self) -> usize {
         let n = self.vector_of_x.len();
         return n;
+    }
+
+    fn get_in_precision(&self) -> i32 {
+        return -1;
+    }
+
+    fn get_out_precision(&self) -> i32 {
+        return self.out_precision;
+    }
+
+    fn get_vector_of_strings(&self) -> Option<Vec<String>> {
+        if self.is_n_zero() {
+            return None;
+        }
+        return Some(self.vector_of_x.to_owned());
     }
 
     fn is_n_even(&self) -> bool {
@@ -1741,6 +1800,17 @@ impl VectorOfDiscrete {
     const ISEVENID:             &str  = "IsEven";
     const MODEID:               &str  = "Mode";
     const NID:                  &str  = "N";
+
+    fn _refill_frequencies_btree(&mut self) -> Result<(), ValidationError> {
+        self.frequencies_aa.clear();
+        for lx in self.vector_of_x.iter() {
+            match self.frequencies_aa.get(lx) {
+                Some(b) => self.frequencies_aa.insert(lx.to_string(),b + 1),
+                None    => self.frequencies_aa.insert(lx.to_string(),1),
+            };
+        }
+        return Ok(());
+    }
 
     pub fn calculate_binomial_probability(&self,subject_value: String,n_trials: u32,n_successes: u32) -> Result<Option<f64>, ValidationError> {
         if self.is_n_zero() {
@@ -2016,15 +2086,56 @@ impl VectorTable {
         return self.vector_length;
     }
 
-/*
-    pub fn get_vector_object(&self,index_no: usize) -> Result<Box<dyn VectorOfX>,ValidationError> {
-        if index_no < 0 || self.vector_count <= index_no {
+    pub fn get_vector_of_continuous_object(&self,index_no: usize) -> Result<VectorOfContinuous,ValidationError> {
+        if self.vector_count <= index_no {
             return Err(ValidationError::InvalidIndex(index_no,0,self.vector_count-1));
         }
-        self.table_of_vectors[index_no]
-        return Ok(b);
+        let vosb: Vec<String>   = match self.table_of_vectors[index_no].get_vector_of_strings() {
+            Some(b)     => b,
+            None        => Vec::new(),
+        };
+        let vofb: Vec<f64>      = match get_vector_of_f64_from_strings(&vosb) {
+            Ok(b)       => b,
+            Err(_err)   => return Err(ValidationError::InvalidVectorObject(index_no,"VectorOfContinuous".to_string())),
+        };
+        if self.table_of_vectors[index_no].get_implementation_name() == "statistics1v::VectorOfContinuous" {
+            let b = VectorOfContinuous {
+                in_precision:                               self.table_of_vectors[index_no].get_in_precision(),
+                out_precision:                              self.table_of_vectors[index_no].get_out_precision(),
+                population:                                 false,
+                sorted_vector_of_x:                         Vec::new(),
+                sums_of_powers_object: SumsOfPowers::new(   false),
+                use_diff_from_mean_calculations:            false,
+                validate_string_numbers:                    false,
+                vector_of_x:                                vofb,
+            };
+            return Ok(b);
+        } else {
+            return Err(ValidationError::InvalidVectorObject(index_no,"VectorOfContinuous".to_string()));
+        }
     }
- */
+
+    pub fn get_vector_of_discrete_object(&self,index_no: usize) -> Result<VectorOfDiscrete,ValidationError> {
+        if self.vector_count <= index_no {
+            return Err(ValidationError::InvalidIndex(index_no,0,self.vector_count-1));
+        }
+        let vosb: Vec<String>   = match self.table_of_vectors[index_no].get_vector_of_strings() {
+            Some(b)     => b,
+            None        => Vec::new(),
+        };
+        if self.table_of_vectors[index_no].get_implementation_name() == "statistics1v::VectorOfDiscrete" {
+            let mut b = VectorOfDiscrete {
+                in_precision:                               self.table_of_vectors[index_no].get_in_precision(),
+                out_precision:                              self.table_of_vectors[index_no].get_out_precision(),
+                frequencies_aa:                             BTreeMap::new(),
+                vector_of_x:                                vosb,
+            };
+            b._refill_frequencies_btree()?;
+            return Ok(b);
+        } else {
+            return Err(ValidationError::InvalidVectorObject(index_no,"VectorOfContinuous".to_string()));
+        }
+    }
 
     pub fn new_from_csv(vc_spec: Vec<VectorClassId>,f_spec: &str,on_bad_data: BadDataAction,see_first_line_as_header: bool) -> Result<Option<VectorTable>,ValidationError> {
         let mut localo = VectorTable::new(vc_spec);
@@ -2731,6 +2842,7 @@ mod tests {
         localo.push_x_str("1234.56",FAIL).unwrap();
         let n           = localo.get_count();
         assert_eq!(n,1);
+        assert_eq!("statistics1v::VectorOfContinuous",localo.get_implementation_name());
     }
 
     #[test]
@@ -3386,6 +3498,7 @@ mod tests {
         localo.push_x_str("Any old str",FAIL);
         localo.push_x_string("Any old string".to_string(),FAIL);
         assert_eq!( 3, localo.get_count());
+        assert_eq!("statistics1v::VectorOfDiscrete",localo.get_implementation_name());
     }
 
     #[test]
@@ -3466,6 +3579,7 @@ mod tests {
         //let lvi6oeo = localo.get_vector_object(6);
         //let lvi7oeo = localo.get_vector_object(7);
         //let lvi8oeo = localo.get_vector_object(8);
+        //assert_eq!("statistics1v::VectorOfDiscrete",localo.get_implementation_name());
     }
 
 }

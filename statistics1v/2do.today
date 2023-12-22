@@ -1,3 +1,8 @@
-    1.  Look for options around Enum arrays, and see about finishing up with that.
-    2.  Probably proceed back to trait objects, and simply add in get struct methods and creation of subtype objects that have all the methods.  This will ally more with what we've
-    read on recommendations.
+    1.  Review code generally.  Try to fill in missing features and mis-organized stuff.
+        i.      Look at all NOTE, TODO, TBD items.
+        ii.     Uncomment and debug get_vector_object.
+    2.  Make tactical copies
+    3.  Begin extended tests.
+    4.  Begin bin/rust.main.neophyte
+    5.  Add to instructional document.
+    6.  Begin acceptance test additions.
