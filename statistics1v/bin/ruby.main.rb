@@ -106,7 +106,7 @@ VoCHash = {
     'resultsummary'     => '_requestResultSummary',
     'skewness'          => 'requestSkewness',
     'stddev'            => 'requestStandardDeviation',
-    'variance'          => '_requestVariance',
+  ;
 }
 
 ArgumentsVoC = {

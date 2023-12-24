@@ -1,161 +1,150 @@
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // rust.main - Objectives:
+// NOTE:  For first pass at least, I'll use match blocks to deal with commands
+// instead of arrays like I did in other languages, as that seems to comply
+// better with rust's model of memory management.  It would be interesting to
+// see if anyone has done the array of commands way, or even a function
+// executed from a string with varying argument lists, but I see no sign of
+// such functionality, and it seems likely it would not be allowed.
 
-require 'getoptlong'
+use std::env;
+use std::process;
 
-SAMESHOME=File.expand_path("../..", __dir__)
-SamesProjectDs=File.expand_path("..", __dir__)
+const SamesProjectLibraryInUse  = "{SamesProjectDs}/SamesLib.{AppVersion}.rs";
 
-AppNodes = $0.split('/')
-AppLanguage,AppId,AppVersion = AppNodes[-1].split('.')
-if AppVersion == 'rb' {
-    STDERR.puts <<-EOERROR
-    ERROR:  Please use the symbolic link version of the app. 
-    the ruby.main.rb version is designed to know the App Version int}ed by
-    the last node of the symbolic link evoked, so it will not run directly.
-    EOERROR
-    exit 1
-}
-
-SamesProjectLibraryInUse="#{SamesProjectDs}/SamesLib.#{AppVersion}.rb"
-
-require "#{SAMESHOME}/slib/SamesTopLib.rb"
-require SamesProjectLibraryInUse
+require "{SAMESHOME}/slib/SamesTopLib.rb";
+require SamesProjectLibraryInUse;
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Constant Identifiers
 
-SamesClassColumnsDs = "#{SamesProjectDs}/classcolumns"
-SamesTmpDataDs      = "#{SAMESHOME}/tmpdata"
+SamesClassColumnsDs = "{SamesProjectDs}/classcolumns";
+SamesTmpDataDs      = "{SAMESHOME}/tmpdata";
 
-SegmentCountHistogramGeneration = 1
-SegmentSizeHistogramGeneration = 2
-SegmentSpecificationHistogramGeneration = 3
+SegmentCountHistogramGeneration = 1;
+SegmentSizeHistogramGeneration = 2;
+SegmentSpecificationHistogramGeneration = 3;
 
-VoCHash = {
-    'aad'               => 'generateAverageAbsoluteDeviation',
-    'arithmeticmean'    => 'calculateArithmeticMean',
-    'cov'               => 'generateCoefficientOfVariation',
-    'csvlineOfx'        => 'transformToCSVLine',
-    'excesskurtosis'    => 'requestExcessKurtosis',
-    'geometricmean'     => 'calculateGeometricMean',
-    'getx'              => 'getX',
-    'harmonicmean'      => 'calculateHarmonicMean',
-    'iseven?'           => 'isEvenN?',
-    'jsonofx'           => 'transformToJSON',
-    'histogram'         => '_generateHistogram',
-    'kurtosis'          => 'requestKurtosis',
-    'mad'               => 'generateMeanAbsoluteDifference',
-    'max'               => 'getMax',
-    'mean'              => 'calculateArithmeticMean',
-    'median'            => 'requestMedian',
-    'min'               => 'getMin',
-    'mode'              => 'generateMode',
-    'n'                 => 'getCount',
-    'quartile'          => 'calculateQuartile',
-    'quartileset'       => 'requestQuartileCollection',
-    'range'             => 'requestRange',
-    'sum'               => 'getSum',
-    'resultsummary'     => '_requestResultSummary',
-    'skewness'          => 'requestSkewness',
-    'stddev'            => 'requestStandardDeviation',
-    'variance'          => '_requestVariance',
+fn parse_vector_of_continuous_calls(command_string: String, voxo: VectorOfContinuous, argv: Vec<String>, argc: usize) -> String {
+    let bool_data:          bool;
+    let bool_result:        Option<bool>;
+    let btree_map_data:     BTreeMap<String,String>;
+    let btree_map_result:   Option<BTreeMap<String,String>>;
+    let float_data:         f64;
+    let float_result:       Option<f64>;
+    let histogram_data:     Vec<(f64,f64,usize)>;
+    let histogram_result:   Option<Vec<(f64,f64,usize)>>;
+    let string_data:        String;
+    let string_result:      Option<String>;
+    let vector_data:        Option<Vec<f64>>;
+    let vector_result:      Vec<f64>;
+    match command_string {
+        'aad'               => float_result     = generate_average_absolute_deviation(),
+        'arithmeticmean'    => float_result     = calculate_arithmetic_mean(),
+        'cov'               => float_result     = generate_coefficient_of_variation(),
+        'csvlineOfx'        => string_result    = transform_to_csv_line(),
+        'excesskurtosis'    => float_result     = request_excess_kurtosis(),
+        'geometricmean'     => float_result     = calculate_geometric_mean(),
+        'getx'              => float_result     = get_x(),
+        'harmonicmean'      => float_result     = calculate_harmonic_mean(),
+        'iseven?'           => bool_result      = is_even_n(),
+        'jsonofx'           => string_result    = transform_to_json(),
+        'histogram'         => histogram_result = _generate_histogram(),
+        'kurtosis'          => float_result     = request_kurtosis(),
+        'mad'               => float_result     = generate_mean_absolute_difference(),
+        'max'               => float_result     = get_max(),
+        'mean'              => float_result     = calculate_arithmetic_mean(),
+        'median'            => float_result     = request_median(),
+        'min'               => float_result     = get_min(),
+        'mode'              => float_result     = generate_mode(),
+        'n'                 => integer_result   = get_count(),
+        'quartile'          => float_result     = calculate_quartile(),
+        'quartileset'       => btree_map_result = request_quartile_collection(),
+        'range'             => float_result     = request_range(),
+        'sum'               => float_result     = get_sum(),
+        'resultsummary'     => btree_map_result = _request_result_summary(),
+        'skewness'          => float_result     = request_skewness(),
+        'stddev'            => float_result     = request_standard_deviation(),
+        'variance'          => float_result     = _request_variance(),
+    }
 }
 
-ArgumentsVoC = {
-    'aad'               => '<centerPoint>',
-    'getx'              => '<indexOfX>',
-    'histogram'         => '<HistogramType>',
-    'quartile'          => '<indexOfQuartile>',
-    'resultsummary'     => '<summaryOption>',
-    'variance'          => '<varianceOption>',
-}
+    //get_frequency_aa(&self,subject_value: String) -> Option<BTreeMap<String,u32>>;
 
-VoDHash = {
-    'binomialprobability'   => 'calculateBinomialProbability',
-    'csvlineOfx'            => 'transformToCSVLine',
-    'csvlistOfx'            => 'transformToCSVList',
-    'jsonofx'               => 'transformToJSON',
-    'frequencyTable'        => 'generateFrequencyTable',
-    'getFrequency'          => 'getFrequency',
-    'getx'                  => 'getX',
-    'mode'                  => 'requestMode',
-    'n'                     => 'getCount',
-    'resultsummary'         => '_requestResultSummary'
-}
-
-ArgumentsVoD = {
-    'binomialprobability'   => '<subjectValue> <nTrials> <nSuccesses>',
-    'getFrequency'          => '',
-    'getx'                  => '<indexOfX>',
-    'resultsummary'         => '<summaryOption>'
+fn parse_vector_of_discrete_calls(command_string: String, voxo: VectorOfDiscrete, argv: Vec<String>, argc: usize) -> String {
+    match command_string {
+        'binomialprobability'   => float_result     = calculate_binomial_probability(),
+        'csvlineOfx'            => string_result    = transform_to_csv_line(),
+        'csvlistOfx'            => string_result    = transform_to_csv_list(),
+        'jsonofx'               => string_result    = transform_to_json(),
+        'frequency_table'       => string_result    = generate_frequency_table(),
+        'get_frequency'         => string_result    = get_frequency(),
+        'get_x'                 => string_result    = get_x(),
+        'mode'                  => string_result    = request_mode(),
+        'n'                     => integer_result   = get_count(),
+        'resultsummary'         => btree_map_result = _request_result_summary()
+    }
 }
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Lowest Level Procedures
 
-fn __validateImplementationForThisFileType(fName)
-    return true if fName =~ /\.csv$/
-    return false
+fn __validateImplementationForThisFileType(fName) -> bool {
+    return true if fName =~ /\.csv$/;
+    return false;
 }
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Lower Level Procedures
 
-fn _determineDataInputFile(fName)
-    unless __validateImplementationForThisFileType(fName)
-        m = "No implementation in this application for file type of '#{fName}'."
-        raise ArgumentError, m
+fn _determineDataInputFile(fName) -> Result<String,ValidationError> {
+    if ! __validateImplementationForThisFileType(fName) {
+        m = "No implementation in this application for file type of '{fName}'.";
+        raise ArgumentError, m;
     }
-    return fName    if File.exist?(fName)
-    ds  = SamesTmpDataDs
-    fn  = fName
+    return fName    if File.exist?(fName);
+    ds  = SamesTmpDataDs;
+    def = fName;
     if fName =~ /^(.*)\/(.*)$/ {
-        ds  = $1
-        fn  = $2
+        ds  = $1;
+        fn  = $2;
     }
-    fs = "#{ds}/#{fn}"
-    return fs       if File.exist?(fs)
-    fileurl = getKeptFileURL(fn)
-    unless assureInternetDataFileCopy(ds,fn,fileurl)
-        raise ArgumentError, "File name '#{fName}' not procured."
+    fs = "{ds}/{fn}";
+    return fs       if File.exist?(fs);
+    fileurl = getKeptFileURL(fn);
+    if ! assureInternetDataFileCopy(ds,fn,fileurl) {
+        raise ArgumentError, "File name '{fName}' not procured.";
     }
-    return fs if File.exist?(fs)
-    m = "Downloaded File '#{fName}' still not there?  Programmer error?"
-    raise ArgumentError, m
-}
-
-fn _displayCommands(labelStr,cmdHash,cmdArguments)
-    puts "\t#{labelStr} Commands:"
-    cmdHash.keys.sort.each do |lkey|
-        puts "\t\t#{lkey}(#{cmdArguments[lkey]})"   if cmdArguments.has_key?(lkey)
-        puts "\t\t#{lkey}"                      unless cmdArguments.has_key?(lkey)
+    if File.exist?(fs) {
+        return fs
     }
+    m = "Downloaded File '{fName}' still not there?  Programmer error?";
+    raise ArgumentError, m;
 }
 
-fn _generateHistogram(genType,segmentSpecNo,startNumber)
-    #generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber)
-    generateHistogramAAbySegmentSize(segmentSize,startNumber)
+fn _generateHistogram(genType,segmentSpecNo,startNumber) {
+    //generateHistogramAAbyNumberOfSegments(desiredSegmentCount,startNumber);
+    generateHistogramAAbySegmentSize(segmentSize,startNumber);
 }
 
-fn _requestResultSummary
-    requestResultAACSV
-    requestResultCSVLine(includeHdr=false)
-    requestResultJSON
-    requestSummaryCollection
+fn _requestResultSummary {
+    requestResultAACSV();
+    requestResultCSVLine(includeHdr=false);
+    requestResultJSON();
+    requestSummaryCollection();
 }
 
-fn _requestVariance
-    requestVarianceSumOfDifferencesFromMean(populationCalculation)
-    requestVarianceXsSquaredMethod(populationCalculation)
+fn _requestVariance {
+    requestVarianceSumOfDifferencesFromMean(populationCalculation);
+    requestVarianceXsSquaredMethod(populationCalculation);
 }
 
-fn _scanDataClasses(clArg)
-    fn = clArg.sub(/.*\//,'')
-    positedclassfspec = "#{SamesClassColumnsDs}/#{fn}.vc.csv"
-    unless File.exist?(positedclassfspec)
-        STDERR.puts <<-INSTRUCTIONS
-        A column class file is required at #{positedclassfspec} to load the
+fn _scanDataClasses(clArg) {
+    fn = clArg.sub(/.*\//,'');
+    positedclassfspec = "{SamesClassColumnsDs}/{fn}.vc.csv";
+    if ! File.exist?(positedclassfspec);
+        println!("
+        A column class file is required at {positedclassfspec} to load the
         data.  You may use either of two formats:
 
         VectorOfContinuous,VectorOfDiscrete,..
@@ -164,30 +153,30 @@ fn _scanDataClasses(clArg)
 
         C,D,...
 
-        See examples in the #{SamesClassColumnsDs} folder.
-        INSTRUCTIONS
-        m="No column class input specification accompanies '#{clArg}'."
+        See examples in the {SamesClassColumnsDs} folder.
+        ",SamesClassColumnsDs);
+        m="No column class input specification accompanies '{clArg}'."
         raise ArgumentError, m
     }
-    csvstr      = File.read( positedclassfspec )
-    ba          = csvstr.split(',')
-    vcarray     = nil
+    csvstr      = File.read( positedclassfspec );
+    ba          = csvstr.split(',');
+    vcarray     = nil;
     if ba[0] == 'C' or ba[0] == 'D' {
-        vcarray = VectorTable.arrayOfChar2VectorOfClasses(ba)
+        vcarray = VectorTable.arrayOfChar2VectorOfClasses(ba);
     } else {
-        vcarray = VectorTable.arrayOfClassLabels2VectorOfClasses(ba)
+        vcarray = VectorTable.arrayOfClassLabels2VectorOfClasses(ba);
     }
-    return vcarray
+    return vcarray;
 }
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Top Level Procedures
 
-fn putsUsage
-    puts <<-EOUsage
-USAGE:  #{$0} <inputfile> [column[,...][:precision]] [cmd[,...]]
+fn printlnUsage(script_name: &str) {
+    println!("
+USAGE:  {} <inputfile> [column[,...][:precision]] [cmd[,...]]
     inputfile:  For now, a csv file, but with a corresponding class columns
-    file in the folder #{SamesClassColumnsDs}, with one of two syntaxes,
+    file in the folder {SamesClassColumnsDs}, with one of two syntaxes,
     indicating the vector type to use for each column in its corresponding
     csv input file.
     columns:  one or more integer in a csv string with only commas; no spaces.
@@ -198,50 +187,49 @@ USAGE:  #{$0} <inputfile> [column[,...][:precision]] [cmd[,...]]
     decimals.  This is especially important in acceptance tests, as rounding
     the output from comparision data from apps is not the best option, so the
     best alternative is to round to comply with the comparitor.
-    
-    EOUsage
-    _displayCommands("Continuous",VoCHash,ArgumentsVoC)
-    _displayCommands("Discrete",VoDHash,ArgumentsVoD)
+",script_name);
+    _displayCommands("Continuous",VoCHash,ArgumentsVoC);
+    _displayCommands("Discrete",VoDHash,ArgumentsVoD);
 }
 
-fn loadDataFile(clArg)
-    fspec = _determineDataInputFile(clArg)
-    vcarray = _scanDataClasses(fspec)
+fn loadDataFile(clArg) -> Result<VectorTable,ValidationError> {
+    let fspec   = _determineDataInputFile(clArg);
+    let vcarray = _scanDataClasses(fspec);
     if fspec =~ /.csv$/ {
         localo = VectorTable.newFromCSV(vcarray,fspec)
         return localo
     } else {
-        m = "This file type (#{fspec}) is not presently supported."
+        m = "This file type ({fspec}) is not presently supported."
         raise ArgumentError, m
     }
 }
 
-fn parseCommands(cvO,cmdsArray)
-    fn executeCmd(cvO,cmdStr,argumentsAA)
-        arga        = []
-        aspecsize   = 0
-        cmdid       = cmdStr
-        result      = nil
+fn parse_commands(cvO,cmdsArray) {
+    fn executeCmd(cvO,cmdStr,argumentsAA) {
+        arga        = [];
+        aspecsize   = 0;
+        cmdid       = cmdStr;
+        result      = nil;
         if cmdStr =~ /\(/
             if cmdStr =~ /^([^(]*)\(([^)]*)\)/
-                cmdid   = $1
-                argstr  = $2
-                arga    = argstr.split(',')
+                cmdid   = $1;
+                argstr  = $2;
+                arga    = argstr.split(',');
             } else {
-                m="Command '#{cmdStr}' does not comply with argument specifications."
-                raise ArgumentError, m
+                m="Command '{cmdStr}' does not comply with argument specifications.";
+                raise ArgumentError, m;
             }
-            aspecsize = argumentsAA[cmdid].split(' ').size if argumentsAA.has_key?(lcmdid)
+            aspecsize = argumentsAA[cmdid].split(' ').size if argumentsAA.has_key?(lcmdid);
         }
         unless arga.size == aspecsize 
-            m="Command '#{cmdStr}' does not comply with argument specifications:  #{argumentsAA[lcmdid]}."
-            raise ArgumentError, m
+            m="Command '{cmdStr}' does not comply with argument specifications:  {argumentsAA[lcmdid]}.";
+            raise ArgumentError, m;
         }
         unless VoCHash.has_key?(cmdid)
-            m="Command '#{cmdid}' is not implemented for class #{cvO.class}."
-            raise ArgumentError, m
+            m="Command '{cmdid}' is not implemented for class {cvO.class}.";
+            raise ArgumentError, m;
         }
-        case aspecsize
+        match aspecsize
         when 0
             result = cvO.s}(VoCHash[cmdid])
         when 1
@@ -254,8 +242,8 @@ fn parseCommands(cvO,cmdsArray)
             result = cvO.s}(VoCHash[cmdid],arga[0],arga[1],arga[2],arga[3])
         } else {
             m   =   "Programmer Error regarding argument specification:  "
-            m   +=  "[#{aspecsize},#{arga.size}]."  if arga.is_a? Array
-            m   +=  "#{aspecsize}."             unless arga.is_a? Array
+            m   +=  "[{aspecsize},{arga.size}]."  if arga.is_a? Array
+            m   +=  "{aspecsize}."             unless arga.is_a? Array
             raise ArgumentError, m
         }
         return result
@@ -268,75 +256,76 @@ fn parseCommands(cvO,cmdsArray)
             elsif   cvO.is_a? VectorOfDiscrete {
                 result = executeCmd(cvO,lcmd,ArgumentsVoD)
             } else {
-                m = "Column vector object class '#{cvO.class}' is NOT one for which this app is implemented."
+                m = "Column vector object class '{cvO.class}' is NOT one for which this app is implemented."
                 raise ArgumentError, m
             }
         rescue Exception
-            STDERR.puts "#{lcmd} is not valid for #{cvO.class}."
+            STDERR.puts "{lcmd} is not valid for {cvO.class}."
             exit 0
         }
         puts result
     }
 }
 
-fn scanDecimalPrecisionNumber(precisionStr)
-    return precisionStr.to_i    if isANumStr?(precisionStr)
-    return nil
+fn scan_decimal_precision_number(precisionStr) {
+    return precisionStr.to_i    if isANumStr?(precisionStr);
+    return nil;
 }
 
-fn scanListOfColumns(columnSet)
-    ca = nil
+fn scan_list_of_columns(columnSet) {
+    ca = nil;
     if  isANumStr?(columnSet) {
-        ca = [columnSet.to_i]
+        ca = [columnSet.to_i];
     elsif columnSet.is_a? String and columnSet =~ /\d,\d/ {
-        ca = columnSet.split(',').map(&:to_i)
+        ca = columnSet.split(',').map(&:to_i);
     }
-    return ca
+    return ca;
 }
 
-fn scanColumnsAndPrecisionFromParameters(cpAStr)
-    raise ArgumentError unless cpAStr and cpAStr.is_a? String and cpAStr.size > 0
-    clstr,dpstr = cpAStr.split(':')
-    cla         = scanListOfColumns(clstr)
-    dp          = scanDecimalPrecisionNumber(dpstr)
-    return cla,dp
+fn scan_columns_and_precision_from_parameters(cpAStr) {
+    raise ArgumentError unless cpAStr and cpAStr.is_a? String and cpAStr.size > 0;
+    clstr,dpstr = cpAStr.split(':');
+    cla         = scanListOfColumns(clstr);
+    dp          = scanDecimalPrecisionNumber(dpstr);
+    return cla,dp;
 }
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Init
 
-if ARGV.size == 0 {
-    STDERR.puts "Usage Error."
-    putsUsage
-    exit 1
+let args: Vec<String> = env::args().collect();
+if args.len <= 1 {
+    STDERR.puts "Usage Error.";
+    printlnUsage(args[0]);
+    process::exit(0);
 }
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Main
 
-tovo    = loadDataFile(ARGV[0])
-if ARGV.size > 1 {
-    columns,decimalprecision    = scanColumnsAndPrecisionFromParameters(ARGV[1])
-    cmds    = ARGV.drop(2)
-    columns.each do |lcolumn|
-        lcv = tovo.getVectorObject(lcolumn)
-        lcv.OutputDecimalPrecision = decimalprecision if decimalprecision
-        lcv.InputDecimalPrecision = 30 if decimalprecision and lcv.class == VectorOfContinuous
-        parseCommands(lcv,cmds)
-    }
-} else {
-    puts "Columns are as follows:"
-    i = 0
-    tovo.eachColumnVector do |lcv|
-        next unless lcv
-        puts "Column[#{i},#{lcv.class}]:"
-        result = lcv.requestResultAACSV
-        puts result
-        puts "--------------------------\n"
-        i += 1
-    }
-}
 fn main() {
+    tovo    = loadDataFile(ARGV[0])
+    if ARGV.size > 1 {
+        columns,decimalprecision    = scanColumnsAndPrecisionFromParameters(ARGV[1]);
+        cmds    = ARGV.drop(2);
+        columns.each do |lcolumn|;
+            lcv = tovo.getVectorObject(lcolumn);
+            lcv.OutputDecimalPrecision = decimalprecision if decimalprecision;
+            lcv.InputDecimalPrecision = 30 if decimalprecision and lcv.class == VectorOfContinuous;
+            parseCommands(lcv,cmds);
+        }
+    } else {
+        puts "Columns are as follows:";
+        i = 0;
+        tovo.eachColumnVector do |lcv|
+            next unless lcv;
+            puts "Column[{i},{lcv.class}]:";
+            result = lcv.requestResultAACSV;
+            puts result;
+            puts "--------------------------\n";
+            i += 1;
+        }
+    }
 
 }
 

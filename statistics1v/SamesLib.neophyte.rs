@@ -1321,8 +1321,8 @@ impl VectorOfContinuous {
         if self.is_n_zero() {
             return Ok(None);
         }
-        let lmax            = self.get_max().unwrap(); // Presuming from n > 0 this will always be a Some.
-        let startno         = self._decide_histogram_start_number(use_start_number,start_number);
+        let lmax                = self.get_max().unwrap(); // Presuming from n > 0 this will always be a Some.
+        let startno             = self._decide_histogram_start_number(use_start_number,start_number);
         let mut histo           = HistogramOfX::new_from_uniform_segment_size(startno,lmax,desired_segment_size)?;
         histo.validate_ranges_complete()?;
         for lx in self.vector_of_x.iter() {
@@ -1879,6 +1879,13 @@ impl VectorOfDiscrete {
             None    => return None,
         };
         return Some(frequency);
+    }
+
+    pub fn get_frequency_aa(&self,subject_value: String) -> Option<BTreeMap<String,u32>> {
+        if self.is_n_zero() {
+            return None;
+        }
+        return Some(self.frequencies_aa);
     }
 
     pub fn get_x(&mut self,index_a: usize) -> Option<String> {
