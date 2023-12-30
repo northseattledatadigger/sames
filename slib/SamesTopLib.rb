@@ -11,7 +11,11 @@ end
 SamesSBin           = "#{SAMESHOME}/sbin"
 SamesExamplesDs     = "#{SAMESHOME}/examples"
 SamesTopLibDs       = "#{SAMESHOME}/slib"
+SamesTestDataDs     = "#{SAMESHOME}/testdata"
+# NOTE:  TBD need to transition away from definitions in bin script.  See new
+# patterns in rust and make these roughly parallel to that.
 SamesTestData       = "#{SAMESHOME}/testdata"
+#SamesTmpDataDs      = "#{SAMESHOME}/tmpdata"
 SamesTmpData        = "#{SAMESHOME}/tmpdata"
 
 require "#{SamesTopLibDs}/SBinLib.rb"

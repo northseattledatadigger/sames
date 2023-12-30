@@ -7,19 +7,21 @@
 // executed from a string with varying argument lists, but I see no sign of
 // such functionality, and it seems likely it would not be allowed.
 
+use regex::Regex;
 use std::env;
 use std::process;
+use std::path::Path;
 
 const SamesProjectLibraryInUse  = "{SamesProjectDs}/SamesLib.{AppVersion}.rs";
 
-require "{SAMESHOME}/slib/SamesTopLib.rb";
-require SamesProjectLibraryInUse;
+//require "{SAMESHOME}/slib/SamesTopLib.rs";
+//require SamesProjectLibraryInUse;
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Constant Identifiers
 
-SamesClassColumnsDs = "{SamesProjectDs}/classcolumns";
-SamesTmpDataDs      = "{SAMESHOME}/tmpdata";
+SAMESCLASSCOLUMNSDS = "{SAMESPROJECTDS}/classcolumns";
+SAMESTMPDATADS      = "{SAMESHOME}/tmpdata";
 
 SegmentCountHistogramGeneration = 1;
 SegmentSizeHistogramGeneration = 2;
@@ -89,28 +91,36 @@ fn parse_vector_of_discrete_calls(command_string: String, voxo: VectorOfDiscrete
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Lowest Level Procedures
 
-fn __validateImplementationForThisFileType(fName) -> bool {
-    return true if fName =~ /\.csv$/;
+fn __validate_implementation_for_this_filetype(f_name: String) -> bool {
+    let re = Regex::new(r"\.csv$").unwrap();
+    if re.is_match(f_name) {
+        return true;
+    }
     return false;
 }
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Lower Level Procedures
 
-fn _determineDataInputFile(fName) -> Result<String,ValidationError> {
+fn _determineDataInputFile(f_name: String) -> Result<String,ValidationError> {
     if ! __validateImplementationForThisFileType(fName) {
-        m = "No implementation in this application for file type of '{fName}'.";
-        raise ArgumentError, m;
+        let m = "No implementation in this application for file type of '{f_name}'.";
+        return Err(ValidationError::ArgumentError(m.to_string()));
     }
-    return fName    if File.exist?(fName);
-    ds  = SamesTmpDataDs;
-    def = fName;
-    if fName =~ /^(.*)\/(.*)$/ {
-        ds  = $1;
-        fn  = $2;
+    if Path::new(f_name).is_file() {
+        return Ok(f_name);
     }
-    fs = "{ds}/{fn}";
-    return fs       if File.exist?(fs);
+    let ldspec  = SamesTmpDataDs;
+    let lfname  = f_name;
+    let re = Regex::new(r"^(.*)\/(.*)$").unwrap();
+    if let Some(dataitem) = re.captures(f_name) {
+        ldspec  = dataitem[1].to_string();
+        lfname  = dataitem[2].to_string();
+    }
+    let lfspec  = format!("{}/{}",ldspec,lfname);
+    if Path::new(lfspec).is_file() {
+        return Ok(lfspec);
+    }
     fileurl = getKeptFileURL(fn);
     if ! assureInternetDataFileCopy(ds,fn,fileurl) {
         raise ArgumentError, "File name '{fName}' not procured.";
@@ -118,8 +128,8 @@ fn _determineDataInputFile(fName) -> Result<String,ValidationError> {
     if File.exist?(fs) {
         return fs
     }
-    m = "Downloaded File '{fName}' still not there?  Programmer error?";
-    raise ArgumentError, m;
+    let m = "Downloaded File '{fName}' still not there?  Programmer error?";
+    return Err(ValidationError::ArgumentError(m));
 }
 
 fn _generateHistogram(genType,segmentSpecNo,startNumber) {
@@ -204,69 +214,6 @@ fn loadDataFile(clArg) -> Result<VectorTable,ValidationError> {
     }
 }
 
-fn parse_commands(cvO,cmdsArray) {
-    fn executeCmd(cvO,cmdStr,argumentsAA) {
-        arga        = [];
-        aspecsize   = 0;
-        cmdid       = cmdStr;
-        result      = nil;
-        if cmdStr =~ /\(/
-            if cmdStr =~ /^([^(]*)\(([^)]*)\)/
-                cmdid   = $1;
-                argstr  = $2;
-                arga    = argstr.split(',');
-            } else {
-                m="Command '{cmdStr}' does not comply with argument specifications.";
-                raise ArgumentError, m;
-            }
-            aspecsize = argumentsAA[cmdid].split(' ').size if argumentsAA.has_key?(lcmdid);
-        }
-        unless arga.size == aspecsize 
-            m="Command '{cmdStr}' does not comply with argument specifications:  {argumentsAA[lcmdid]}.";
-            raise ArgumentError, m;
-        }
-        unless VoCHash.has_key?(cmdid)
-            m="Command '{cmdid}' is not implemented for class {cvO.class}.";
-            raise ArgumentError, m;
-        }
-        match aspecsize
-        when 0
-            result = cvO.s}(VoCHash[cmdid])
-        when 1
-            result = cvO.s}(VoCHash[cmdid],arga[0])
-        when 2
-            result = cvO.s}(VoCHash[cmdid],arga[0],arga[1])
-        when 3
-            result = cvO.s}(VoCHash[cmdid],arga[0],arga[1],arga[2])
-        when 4
-            result = cvO.s}(VoCHash[cmdid],arga[0],arga[1],arga[2],arga[3])
-        } else {
-            m   =   "Programmer Error regarding argument specification:  "
-            m   +=  "[{aspecsize},{arga.size}]."  if arga.is_a? Array
-            m   +=  "{aspecsize}."             unless arga.is_a? Array
-            raise ArgumentError, m
-        }
-        return result
-    }
-    cmdsArray.each do |lcmd|
-        result = ""
-        begin
-            if      cvO.is_a? VectorOfContinuous {
-                result = executeCmd(cvO,lcmd,ArgumentsVoC)
-            elsif   cvO.is_a? VectorOfDiscrete {
-                result = executeCmd(cvO,lcmd,ArgumentsVoD)
-            } else {
-                m = "Column vector object class '{cvO.class}' is NOT one for which this app is implemented."
-                raise ArgumentError, m
-            }
-        rescue Exception
-            STDERR.puts "{lcmd} is not valid for {cvO.class}."
-            exit 0
-        }
-        puts result
-    }
-}
-
 fn scan_decimal_precision_number(precisionStr) {
     return precisionStr.to_i    if isANumStr?(precisionStr);
     return nil;
@@ -282,17 +229,22 @@ fn scan_list_of_columns(columnSet) {
     return ca;
 }
 
-fn scan_columns_and_precision_from_parameters(cpAStr) {
-    raise ArgumentError unless cpAStr and cpAStr.is_a? String and cpAStr.size > 0;
-    clstr,dpstr = cpAStr.split(':');
-    cla         = scanListOfColumns(clstr);
-    dp          = scanDecimalPrecisionNumber(dpstr);
-    return cla,dp;
+fn scan_columns_and_precision_from_parameters(cp_a_str: &str) {
+    if cp_a_str.len() <= 0 {
+    raise ArgumentError
+        return Err(ValidationError::ArgumentError("Empty String".to_string()));
+    }
+    let seperator   = Regex::new(r#":"#).expect("Invalid regex");
+    let result: Vec<String> = seperator.split(dsb.as_str()).map(|s| s.to_string()).collect();
+    let cla         = scanListOfColumns(result[0]);
+    let dp          = scanDecimalPrecisionNumber(result[1]);
+    return (cla,dp);
 }
 
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 // Init
 
+let mut dir = env::current_exe().expect("Should never fail.");
 let args: Vec<String> = env::args().collect();
 if args.len <= 1 {
     STDERR.puts "Usage Error.";
