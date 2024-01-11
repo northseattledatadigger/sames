@@ -1,0 +1,8 @@
+(getting back after holidays) My next sub-project is to figure out how to link a common top library to a lot of different and independently compiling sub-libraries. Basically I have this project demo tree and I want a common resource library with things that will be used in all the projects, partly as a convenience and avoiding duplicate work, but also to impose some common patterns across all the projects. I am guessing there are several options:
+Independent cargo builds then the project level then can link in the top library as an independent thing.
+Independent top cargo build but perhaps somehow the lower level cargo builds can know about the top level one to do things like chain the build there.
+Just copy the files into the project cargo build area and forget about the independent binary.
+I would really like to do 2, if possible, and I can already figure out 3,
+but I would also really like feedback about both what people commonly do, and any known advantages or disadvantages to each of the three.
+Thank you for any feedback.
+

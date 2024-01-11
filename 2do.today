@@ -1,0 +1,9 @@
+    1.  Put tests in SamesTop lib, and figure out way to compile it as a lib at that top point, along with SB*.rs.
+    2.  Figure out the inclusion problem for project level use of SB and SamesTop.
+    3.  Finish coding the bin/rust.main.neophyte, getting it to compile and run.
+    4.  Make sure all acceptance tests pass.
+    5.  Close out with formalities to move on to Javascript.
+
+    6.  Future:
+        i.  Do naive version adding in cleanups after reading the form and re-reading all of documentation.
+        ii. Begin to plan a "native" version, probably about a year from now.

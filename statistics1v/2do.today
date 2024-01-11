@@ -1,8 +1,8 @@
-    1.  Review code generally.  Try to fill in missing features and mis-organized stuff.
-        i.      Look at all NOTE, TODO, TBD items.
-        ii.     Uncomment and debug get_vector_object.
-    2.  Make tactical copies
-    3.  Begin extended tests.
-    4.  Begin bin/rust.main.neophyte
-    5.  Add to instructional document.
-    6.  Begin acceptance test additions.
+    0.  Bring up Bash script for rust compilation for general use and make work
+at top node.
+    1.  Finish putting together known basics of top libraries for Rust and get compiling.  
+    2.  Figure out linking of top libraries to project libraries, and figure
+    out dependency, both with and without cargo.  Try to get feedback on common
+    usage and usage advangages.
+
+xc
